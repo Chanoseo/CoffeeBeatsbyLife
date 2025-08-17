@@ -13,6 +13,7 @@ function Form() {
                     type="text"
                     placeholder="Your Name"
                     className="p-2 border border-gray-300 rounded"
+                    autoComplete="on"
                 />
                 <label className="text-lg font-semibold" htmlFor="email">Email</label>
                 <input
@@ -20,6 +21,7 @@ function Form() {
                     type="email"
                     placeholder="Your Email"
                     className="p-2 border border-gray-300 rounded"
+                    autoComplete="on"
                 />
                 <label className="text-lg font-semibold" htmlFor="message">Message</label>
                 <textarea

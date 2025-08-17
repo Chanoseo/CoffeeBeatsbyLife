@@ -18,6 +18,7 @@ function SectionOne() {
                     width={1500}
                     height={100}
                     className="h-full w-full object-cover absolute inset-0 -z-50 pointer-events-none"
+                    priority
                 />
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-[#3C604C]/70 -z-40"></div>
