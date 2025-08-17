@@ -19,8 +19,37 @@
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer components {
+  .line-hover {
+    @apply 
+    relative
+    before:w-0 
+    before:h-0.5 
+    before:content-[''] 
+    before:absolute 
+    before:bg-[#3E210F] 
+    before:top-full 
+    before:transition-[width] 
+    before:duration-300
+    hover:before:w-full;
+  }
+  .button-style {
+    @apply bg-[#3C604C] text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear;
+  }
+  .text-brown {
+    @apply text-[#3E210F];
+  }
+  .input-style {
+    @apply w-full p-2 outline-none border-2 border-[#3C604C] rounded text-black;
+  }
 }
