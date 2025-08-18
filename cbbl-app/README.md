@@ -48,3 +48,6 @@ npm i next-auth @auth/mongodb-adapter mongodb bcryptjs zod
 npm i next-auth @next-auth/google-provider
 
 
+npm install nodemailer
+
+

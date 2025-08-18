@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { mongoClientPromise } from "@/lib/mongodb";
 import { z } from "zod";
+import nodemailer from "nodemailer";
 
 // Validation schema
 const ContactSchema = z.object({
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
 
     const { name, email, message } = parsed.data;
 
+    // Save message in MongoDB
     const client = await mongoClientPromise;
     const db = client.db();
     const contacts = db.collection("contacts");
@@ -34,8 +36,48 @@ export async function POST(req: Request) {
       createdAt: new Date(),
     });
 
+    // Setup email transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // 1) Send notification to admin
+    await transporter.sendMail({
+      from: `"Coffee Beats Contact" <${process.env.EMAIL_USER}>`,
+      to: "hello@coffeebeats.com",
+      subject: `📩 New Contact Message from ${name}`,
+      text: `From: ${name} <${email}>\n\n${message}`,
+      html: `
+        <h3>New Contact Message</h3>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Message:</b> ${message}</p>
+      `,
+    });
+
+    // 2) Auto-reply to user
+    await transporter.sendMail({
+      from: `"Coffee Beats" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "✅ Thanks for contacting Coffee Beats!",
+      text: `Hi ${name},\n\nThanks for reaching out! We’ve received your message and will get back to you soon.\n\nBest regards,\nCoffee Beats Team`,
+      html: `
+        <p>Hi ${name},</p>
+        <p>Thanks for reaching out to <b>Coffee Beats</b>! ☕</p>
+        <p>We’ve received your message and will get back to you as soon as possible.</p>
+        <hr/>
+        <p><b>Your Message:</b></p>
+        <blockquote>${message}</blockquote>
+        <p>Best regards,<br/>Coffee Beats Team</p>
+      `,
+    });
+
     return NextResponse.json(
-      { id: result.insertedId, message: "Message received!" },
+      { id: result.insertedId, message: "Message received & emails sent!" },
       { status: 201 }
     );
   } catch (error) {
