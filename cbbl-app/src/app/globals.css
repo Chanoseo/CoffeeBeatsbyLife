@@ -55,4 +55,10 @@ body {
   .show-hide-password-style {
     @apply text-base;
   }
+  .message-error {
+    @apply text-red-500 mb-4 bg-red-100 p-4 rounded
+  }
+  .message-success {
+    @apply text-green-500 mb-4 bg-green-100 p-4 rounded;
+  }
 }
