@@ -50,4 +50,4 @@ npm i next-auth @next-auth/google-provider
 
 npm install nodemailer
 
-
+npm i prisma @prisma/client next-auth @auth/prisma-adapter zod bcryptjs

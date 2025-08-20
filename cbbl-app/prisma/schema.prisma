@@ -64,3 +64,48 @@ model PasswordResetToken {
   expires    DateTime
   createdAt  DateTime @default(now())
 }
+
+// Reservations (table booking)
+model Reservation {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  date      DateTime
+  timeSlot  String
+  guests    Int
+  status    String   @default("PENDING") // "CONFIRMED", "CANCELED"
+  createdAt DateTime @default(now())
+}
+
+// Virtual Queue
+model Queue {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  position  Int
+  status    String   @default("WAITING") // "SEATED", "LEFT"
+  createdAt DateTime @default(now())
+}
+
+// Pre-Orders for takeout
+model PreOrder {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  items     Json                     // list of menu items
+  pickupAt  DateTime
+  status    String   @default("PENDING") // "READY", "PICKEDUP"
+  createdAt DateTime @default(now())
+}
+
+// Feedback and ratings
+model Feedback {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}
+
+
