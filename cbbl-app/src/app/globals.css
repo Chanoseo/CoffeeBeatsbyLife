@@ -46,6 +46,9 @@ body {
   .button-style {
     @apply bg-[#3C604C] text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear;
   }
+  .modal-hover {
+    @apply hover:bg-[#3C604C]/10 px-4 py-2 rounded cursor-pointer text-left
+  }
   .text-brown {
     @apply text-[#3E210F];
   }

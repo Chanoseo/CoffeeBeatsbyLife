@@ -1,11 +1,23 @@
-import LogoutButton from "@/components/LogoutButton";
+import UserPageFooter from "@/components/user-page/footer/Footer";
+import UserPageHeader from "@/components/user-page/header/Header";
+import UserPageMain from "@/components/user-page/main/Main";
+
+export const metadata = {
+  title: "Home",
+  description: "Welcome to Coffee Beats By Life",
+  icons: {
+    icon: "/cbbl-logo.svg",
+    shortcut: "/cbbl-logo.svg",
+    apple: "/cbbl-logo.svg",
+  },
+};
 
 export default function UserHomePage() {
   return (
-    <div>
-      <h1>Welcome User</h1>
-      <p>Your role: user</p>
-      <LogoutButton />
-    </div>
+    <>
+      <UserPageHeader />
+      <UserPageMain />
+      <UserPageFooter />
+    </>
   );
 }
