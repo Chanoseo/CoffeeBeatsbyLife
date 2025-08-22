@@ -29,7 +29,7 @@ function UserPageHeader() {
               </Link>
             </li>
             <li>
-              <Link href="/orders" className="line-hover">
+              <Link href="/home/orders" className="line-hover">
                 Orders
               </Link>
             </li>
