@@ -55,6 +55,9 @@ body {
   .input-style {
     @apply w-full p-2 outline-none border-2 border-[#3C604C] rounded text-black;
   }
+  .message-input-style {
+    @apply p-2 border border-gray-300 rounded outline-none;
+  }
   .show-hide-password-style {
     @apply text-base;
   }
