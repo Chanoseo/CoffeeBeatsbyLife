@@ -28,6 +28,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+.recharts-surface:focus {
+  outline: none;
+}
 
 @layer components {
   .line-hover {
@@ -66,5 +69,35 @@ body {
   }
   .message-success {
     @apply text-green-500 mb-4 bg-green-100 p-4 rounded;
+  }
+  .admin-nav-btn-style {
+    @apply flex gap-4 items-center px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A]/10 transition-colors duration-200 ease-linear;
+  }
+  .keymetrics-card {
+    @apply bg-white shadow-sm rounded-xl p-6 flex-1;
+  }
+  .keymetrics-card-header {
+    @apply flex items-center justify-between mb-4;
+  }
+  .keymetrics-card-content {
+    @apply text-4xl font-bold;
+  }
+  .keymetrics-card-footer {
+    @apply text-sm mt-4;
+  }
+  .dashboard-card {
+    @apply bg-white mt-6 p-6 shadow-sm rounded-xl;
+  }
+  .dashboard-card-header {
+    @apply flex items-center justify-between;
+  }
+  .dashboard-card-title {
+    @apply flex items-center gap-2 text-lg;
+  }
+  .dashboard-customer-td-style {
+    @apply p-2
+  }
+  .dashboard-customer-th-style {
+    @apply p-2
   }
 }

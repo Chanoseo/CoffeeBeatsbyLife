@@ -1,11 +1,21 @@
-import LogoutButton from "@/components/LogoutButton";
+import DashboardMain from "@/components/admin-page/main/dashboardmain/DashboardMain";
+import Navigation from "@/components/admin-page/navigation/Navigation";
+
+export const metadata = {
+  title: "Dashboard",
+  description: "Coffee Beats By Life Dashboard - Manage reservations, track orders, monitor customers, and streamline your coffee shop operations in one place.",
+  icons: {
+    icon: "/cbbl-logo.svg",
+    shortcut: "/cbbl-logo.svg",
+    apple: "/cbbl-logo.svg",
+  },
+};
 
 export default function AdminDashboardPage() {
   return (
-    <div>
-      <h1>Admin Dashboard</h1>
-      <p>Your role: admin</p>
-      <LogoutButton />
+    <div className="flex">
+      <Navigation />
+      <DashboardMain />
     </div>
   );
 }
