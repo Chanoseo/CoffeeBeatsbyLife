@@ -71,6 +71,7 @@ model Message {
   email     String
   content   String
   createdAt DateTime @default(now())
+  replied   Boolean  @default(false)
 }
 
 // Reservations (table booking)
@@ -116,25 +117,25 @@ model Message {
 //   createdAt DateTime @default(now())
 // }
 
-model Seat {
-  id          String        @id @default(auto()) @map("_id") @db.ObjectId
-  seatNumber  String        @unique
-  capacity    Int
-  isAvailable Boolean       @default(true)
-  reservations Reservation[]
-}
+// model Seat {
+//   id          String        @id @default(auto()) @map("_id") @db.ObjectId
+//   seatNumber  String        @unique
+//   capacity    Int
+//   isAvailable Boolean       @default(true)
+//   reservations Reservation[]
+// }
 
-model Reservation {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id])
-  seatId    String?  @db.ObjectId
-  seat      Seat?    @relation(fields: [seatId], references: [id])
-  date      DateTime
-  timeSlot  String
-  guests    Int
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
-}
+// model Reservation {
+//   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+//   userId    String   @db.ObjectId
+//   user      User     @relation(fields: [userId], references: [id])
+//   seatId    String?  @db.ObjectId
+//   seat      Seat?    @relation(fields: [seatId], references: [id])
+//   date      DateTime
+//   timeSlot  String
+//   guests    Int
+//   status    String   @default("PENDING")
+//   createdAt DateTime @default(now())
+// }
 
 
