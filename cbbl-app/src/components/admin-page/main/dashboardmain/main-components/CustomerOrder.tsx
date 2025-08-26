@@ -19,7 +19,6 @@ function CustomerOrder() {
               <th className="dashboard-customer-th-style">Reservation Details</th>
               <th className="dashboard-customer-th-style">Order Date</th>
               <th className="dashboard-customer-th-style">Status</th>
-              <th className="dashboard-customer-th-style">Price</th>
             </tr>
           </thead>
           <tbody>
@@ -39,11 +38,8 @@ function CustomerOrder() {
               <td className="dashboard-customer-td-style">
                 <Link href="/customer">Aug 24 2025</Link>
               </td>
-              <td className="dashboard-customer-td-style">
-                <Link href="/customer">Pending</Link>
-              </td>
               <td className="dashboard-customer-td-style rounded-r-2xl">
-                <Link href="/customer">$100</Link>
+                <Link href="/customer">Pending</Link>
               </td>
             </tr>
           </tbody>

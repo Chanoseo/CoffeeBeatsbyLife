@@ -8,19 +8,19 @@ import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 function Orders() {
   const [orders, setOrders] = useState([
     {
-      id: "ORD001", customer: "Customer A", amount: "$100", reservation: "Table for 2, 7 PM", date: "Aug 24 2025", status: "Pending", price: "$100",
+      id: "ORD001", customer: "Customer A", amount: "$100", reservation: "Table for 2, 7 PM", date: "Aug 24 2025", status: "Pending"
     },
     {
-      id: "ORD002", customer: "Customer B", amount: "$200", reservation: "Table for 4, 8 PM", date: "Aug 24 2025", status: "Confirmed", price: "$200",
+      id: "ORD002", customer: "Customer B", amount: "$200", reservation: "Table for 4, 8 PM", date: "Aug 24 2025", status: "Confirmed"
     },
     {
-      id: "ORD003", customer: "Customer C", amount: "$150", reservation: "Table for 3, 6 PM", date: "Aug 24 2025", status: "Preparing", price: "$150",
+      id: "ORD003", customer: "Customer C", amount: "$150", reservation: "Table for 3, 6 PM", date: "Aug 24 2025", status: "Preparing"
     },
     {
-      id: "ORD004", customer: "Customer D", amount: "$120", reservation: "Table for 2, 5 PM", date: "Aug 24 2025", status: "Ready", price: "$120",
+      id: "ORD004", customer: "Customer D", amount: "$120", reservation: "Table for 2, 5 PM", date: "Aug 24 2025", status: "Ready"
     },
     {
-      id: "ORD005", customer: "Customer E", amount: "$250", reservation: "Table for 5, 9 PM", date: "Aug 24 2025", status: "Completed", price: "$250",
+      id: "ORD005", customer: "Customer E", amount: "$250", reservation: "Table for 5, 9 PM", date: "Aug 24 2025", status: "Completed"
     },
   ]);
 
@@ -68,7 +68,6 @@ function Orders() {
               </th>
               <th className="dashboard-customer-th-style">Order Date</th>
               <th className="dashboard-customer-th-style">Status</th>
-              <th className="dashboard-customer-th-style">Price</th>
             </tr>
           </thead>
           <tbody>
@@ -83,7 +82,7 @@ function Orders() {
                   {order.reservation}
                 </td>
                 <td className="dashboard-customer-td-style">{order.date}</td>
-                <td className="dashboard-customer-td-style">
+                <td className="dashboard-customer-td-style rounded-r-2xl">
                   <div className="w-34 relative inline-block">
                     <button
                       className="flex w-full justify-between items-center border-1 border-gray-200 rounded-lg px-4 py-2 bg-white shadow cursor-pointer"
@@ -108,9 +107,6 @@ function Orders() {
                       </ul>
                     )}
                   </div>
-                </td>
-                <td className="dashboard-customer-td-style rounded-r-2xl">
-                  {order.price}
                 </td>
               </tr>
             ))}

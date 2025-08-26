@@ -1,7 +1,7 @@
 import MessagesMain from "@/components/admin-page/main/messagesmain/MessagesMain";
 import Navigation from "@/components/admin-page/navigation/Navigation";
 
-function Messages() {
+function AdminMessagesPage() {
   return (
     <div className="flex">
       <Navigation />
@@ -9,4 +9,4 @@ function Messages() {
     </div>
   );
 }
-export default Messages;
+export default AdminMessagesPage;

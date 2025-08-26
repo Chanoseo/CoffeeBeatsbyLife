@@ -50,7 +50,7 @@ body {
     @apply bg-[#3C604C] text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear;
   }
   .modal-hover {
-    @apply hover:bg-[#3C604C]/10 px-4 py-2 rounded cursor-pointer text-left
+    @apply hover:bg-[#3C604C]/10 px-4 py-2 rounded cursor-pointer text-left;
   }
   .text-brown {
     @apply text-[#3E210F];
@@ -65,7 +65,7 @@ body {
     @apply text-base;
   }
   .message-error {
-    @apply text-red-500 mb-4 bg-red-100 p-4 rounded
+    @apply text-red-500 mb-4 bg-red-100 p-4 rounded;
   }
   .message-success {
     @apply text-green-500 mb-4 bg-green-100 p-4 rounded;
@@ -95,9 +95,12 @@ body {
     @apply flex items-center gap-2 text-lg;
   }
   .dashboard-customer-td-style {
-    @apply p-2
+    @apply p-2;
   }
   .dashboard-customer-th-style {
-    @apply p-2
+    @apply p-2;
+  }
+  .products-input-style {
+    @apply border rounded p-2 outline-none;
   }
 }

@@ -11,14 +11,12 @@ export const metadata = {
   },
 };
 
-function Orders() {
+function AdminOrdersPage() {
   return (
-    <>
       <div className="flex">
         <Navigation />
         <OrdersMain />
       </div>
-    </>
   );
 }
-export default Orders;
+export default AdminOrdersPage;
