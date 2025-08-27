@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAngleDown, faX } from "@fortawesome/free-solid-svg-icons";
 
 function AddProductForm() {
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
+    []
+  );
   const [newCategory, setNewCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [categoryLoading, setCategoryLoading] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // ✅ Fetch categories on mount
   useEffect(() => {
@@ -98,104 +104,134 @@ function AddProductForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Product Name */}
       {message && <p className="message-success">{message}</p>}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="add-product-name">Product Name</label>
-        <input
-          id="add-product-name"
-          name="name"
-          type="text"
-          placeholder="Enter product name"
-          className="products-input-style"
-          required
-        />
-      </div>
 
-      {/* Description */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="add-product-description">Description</label>
-        <textarea
-          id="add-product-description"
-          name="description"
-          placeholder="Enter product description"
-          className="products-input-style h-24 resize-none"
-        />
-      </div>
-
-      {/* Price */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="add-product-price">Price</label>
-        <input
-          id="add-product-price"
-          name="price"
-          type="number"
-          step="0.01"
-          placeholder="Enter price"
-          className="products-input-style"
-          required
-        />
-      </div>
-
-      {/* Image Upload */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="add-product-image">Upload Image</label>
-        <input
-          id="add-product-image"
-          name="image"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="products-input-style"
-        />
-        {imageFile && <p className="text-sm text-gray-600">Selected: {imageFile.name}</p>}
-      </div>
-
-      {/* Category */}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="add-product-category">Category</label>
-        <select
-          id="add-product-category"
-          name="categoryId"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="products-input-style"
-          required
-        >
-          <option value="">Select Category</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-
-        {/* Add New Category */}
-        <div className="flex gap-2 mt-2">
+      <div className="flex gap-4">
+        <div className="flex flex-col gap-2 flex-1">
+          {/* Image Upload */}
+          <label htmlFor="add-product-image">Upload Image</label>
           <input
-            type="text"
-            placeholder="New Category"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="products-input-style flex-1"
+            id="add-product-image"
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="products-input-style"
           />
-          <button
-            type="button"
-            onClick={handleAddCategory}
-            className="button-style"
-            disabled={categoryLoading}
-          >
-            {categoryLoading ? "Adding..." : "Add"}
-          </button>
+          {/* New/Best Seller */}
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="isNew" /> Is New
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="isBestSeller" /> Best Seller
+            </label>
+          </div>
         </div>
+        {/* Image Preview */}
+        {imageFile ? (
+          <Image
+            src={URL.createObjectURL(imageFile)}
+            alt="Selected Image"
+            className="mt-2 w-full h-40 object-cover rounded shadow-sm"
+            width={300}
+            height={300}
+          />
+        ) : null}
       </div>
 
-      {/* Checkboxes */}
-      <div className="flex flex-col gap-2">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" name="isNew" /> Is New
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" name="isBestSeller" /> Best Seller
-        </label>
+      <div className="flex gap-4">
+        <div className="flex flex-col gap-4">
+          {/* Product Name */}
+          <div className="flex flex-col gap-2">
+            <label htmlFor="add-product-name">Product Name</label>
+            <input
+              id="add-product-name"
+              name="name"
+              type="text"
+              placeholder="Enter product name"
+              className="products-input-style"
+              required
+            />
+          </div>
+          {/* Price */}
+          <div className="flex flex-col gap-2">
+            <label htmlFor="add-product-price">Price</label>
+            <input
+              id="add-product-price"
+              name="price"
+              type="number"
+              step="0.01"
+              placeholder="Enter price"
+              className="products-input-style"
+              required
+            />
+          </div>
+          {/* Category */}
+          <div className="flex flex-col gap-2">
+            <label>Category</label>
+
+            {/* Dropdown button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="products-input-style w-full flex items-center justify-between"
+              >
+                {categories.find((cat) => cat.id === selectedCategory)?.name ||
+                  "Select Category"}
+                <FontAwesomeIcon icon={faAngleDown} />
+              </button>
+              {/* Dropdown options */}
+              {dropdownOpen && (
+                <ul className="absolute w-full top-full bg-white border rounded mt-2 max-h-40 overflow-auto z-10 shadow">
+                  {categories.map((cat) => (
+                    <li
+                      key={cat.id}
+                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer flex items-center justify-between"
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      {cat.name}
+                      <FontAwesomeIcon icon={faX} className="z-50 hover:text-red-600"/>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+
+            {/* Add New Category */}
+            <div className="flex gap-2 mt-2">
+              <input
+                type="text"
+                placeholder="New Category"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                className="products-input-style flex-1"
+              />
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                className="button-style"
+                disabled={categoryLoading}
+              >
+                {categoryLoading ? "Adding..." : "Add"}
+              </button>
+            </div>
+          </div>
+        </div>
+        {/* Description */}
+        <div className="flex flex-col gap-2 w-full h-full">
+          <label htmlFor="add-product-description">Description</label>
+          <textarea
+            id="add-product-description"
+            name="description"
+            placeholder="Enter product description"
+            className="products-input-style h-68 resize-none"
+          />
+        </div>
       </div>
 
       {/* Submit Button */}
