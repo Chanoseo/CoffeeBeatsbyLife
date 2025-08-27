@@ -3,24 +3,52 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAngleDown,
+  faMagnifyingGlass,
+} from "@fortawesome/free-solid-svg-icons";
 
 function Orders() {
   const [orders, setOrders] = useState([
     {
-      id: "ORD001", customer: "Customer A", amount: "$100", reservation: "Table for 2, 7 PM", date: "Aug 24 2025", status: "Pending"
+      id: "ORD001",
+      customer: "Customer A",
+      amount: "$100",
+      reservation: "Table for 2, 7 PM",
+      date: "Aug 24 2025",
+      status: "Pending",
     },
     {
-      id: "ORD002", customer: "Customer B", amount: "$200", reservation: "Table for 4, 8 PM", date: "Aug 24 2025", status: "Confirmed"
+      id: "ORD002",
+      customer: "Customer B",
+      amount: "$200",
+      reservation: "Table for 4, 8 PM",
+      date: "Aug 24 2025",
+      status: "Confirmed",
     },
     {
-      id: "ORD003", customer: "Customer C", amount: "$150", reservation: "Table for 3, 6 PM", date: "Aug 24 2025", status: "Preparing"
+      id: "ORD003",
+      customer: "Customer C",
+      amount: "$150",
+      reservation: "Table for 3, 6 PM",
+      date: "Aug 24 2025",
+      status: "Preparing",
     },
     {
-      id: "ORD004", customer: "Customer D", amount: "$120", reservation: "Table for 2, 5 PM", date: "Aug 24 2025", status: "Ready"
+      id: "ORD004",
+      customer: "Customer D",
+      amount: "$120",
+      reservation: "Table for 2, 5 PM",
+      date: "Aug 24 2025",
+      status: "Ready",
     },
     {
-      id: "ORD005", customer: "Customer E", amount: "$250", reservation: "Table for 5, 9 PM", date: "Aug 24 2025", status: "Completed"
+      id: "ORD005",
+      customer: "Customer E",
+      amount: "$250",
+      reservation: "Table for 5, 9 PM",
+      date: "Aug 24 2025",
+      status: "Completed",
     },
   ]);
 
@@ -56,7 +84,17 @@ function Orders() {
     <section className="dashboard-card">
       <h1 className="text-2xl mb-4">Manage Orders</h1>
       <div>
-        <input type="text" placeholder="Search..." className="input-style" />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="border border-gray-300 rounded-md pl-10 p-2 outline-none w-full"
+          />
+          <FontAwesomeIcon
+            icon={faMagnifyingGlass}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
+        </div>
         <table className="w-full text-center border-separate border-spacing-y-2 mt-4">
           <thead>
             <tr>
@@ -73,7 +111,9 @@ function Orders() {
           <tbody>
             {orders.map((order, index) => (
               <tr key={order.id} className={`${getRowColor(order.status)}`}>
-                <td className="dashboard-customer-td-style rounded-l-2xl">{order.id}</td>
+                <td className="dashboard-customer-td-style rounded-l-2xl">
+                  {order.id}
+                </td>
                 <td className="dashboard-customer-td-style">
                   <Link href="/customers">{order.customer}</Link>
                 </td>

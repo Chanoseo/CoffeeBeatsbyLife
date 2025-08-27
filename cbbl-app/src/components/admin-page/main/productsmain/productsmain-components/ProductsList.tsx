@@ -18,8 +18,12 @@ type Product = {
     name: string;
   };
 };
+type ProductsListProps = {
+  selectedCategory?: string; // make it optional
+  searchInput: string;
+};
 
-function ProductsList() {
+function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
   const [showUpdateProduct, setShowUpdateProduct] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,24 +39,35 @@ function ProductsList() {
     const fetchProducts = async () => {
       try {
         const res = await fetch("/api/products");
-        if (!res.ok) {
-          throw new Error("Failed to fetch products");
+        if (!res.ok) throw new Error("Failed to fetch products");
+
+        let data: Product[] = await res.json();
+
+        // Filter by selected category if provided
+        if (selectedCategory) {
+          data = data.filter(
+            (product) => product.category?.id === selectedCategory
+          );
         }
-        const data: Product[] = await res.json();
+
+        // Filter by search input
+        if (searchInput) {
+          data = data.filter((product) =>
+            product.name.toLowerCase().includes(searchInput.toLowerCase())
+          );
+        }
+
         setProducts(data);
       } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unexpected error occurred");
-        }
+        if (err instanceof Error) setError(err.message);
+        else setError("An unexpected error occurred");
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [selectedCategory, searchInput]); // re-fetch or filter when category changes
 
   if (loading) return <p className="p-4 text-gray-600">Loading products...</p>;
   if (error) return <p className="p-4 text-red-500">Error: {error}</p>;
