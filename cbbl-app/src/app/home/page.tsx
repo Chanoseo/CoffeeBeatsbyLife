@@ -14,10 +14,18 @@ export const metadata = {
 
 export default function UserHomePage() {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
       <UserPageHeader />
-      <UserPageMain />
+
+      {/* Main content */}
+      <div className="flex-grow">
+        <UserPageMain />
+      </div>
+
+      {/* Footer */}
       <UserPageFooter />
-    </>
+    </div>
   );
 }
+
