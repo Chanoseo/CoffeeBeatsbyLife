@@ -1,22 +1,57 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 
 function AddProductForm() {
-  const [categories, setCategories] = useState([
-    "Hot Coffee",
-    "Cold Brew",
-    "Espresso",
-  ]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [categoryLoading, setCategoryLoading] = useState(false);
 
-  const handleAddCategory = () => {
-    if (newCategory.trim() !== "" && !categories.includes(newCategory)) {
-      setCategories([...categories, newCategory]);
-      setSelectedCategory(newCategory);
-      setNewCategory("");
+  // ✅ Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/products/categories");
+        const data = await res.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to load categories", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // ✅ Handle adding a new category
+  const handleAddCategory = async () => {
+    const trimmedCategory = newCategory.trim();
+    if (!trimmedCategory) return;
+
+    setCategoryLoading(true);
+    try {
+      const res = await fetch("/api/products/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmedCategory }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setCategories((prev) => [data.category, ...prev]); // ✅ Add new category to the list
+        setSelectedCategory(data.category.id); // Auto-select new category
+        setNewCategory(""); // Clear input
+      } else {
+        alert("Failed to add category.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while adding category.");
     }
+    setCategoryLoading(false);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,9 +60,44 @@ function AddProductForm() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+    formData.set("categoryId", selectedCategory);
+
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMessage("Product added successfully!");
+        (e.target as HTMLFormElement).reset();
+        setImageFile(null);
+        setSelectedCategory("");
+      } else {
+        setMessage("Failed to add product.");
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage("An error occurred.");
+    }
+
+    setLoading(false);
+  };
+
   return (
-    <form className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Product Name */}
+      {message && <p className="message-success">{message}</p>}
       <div className="flex flex-col gap-2">
         <label htmlFor="add-product-name">Product Name</label>
         <input
@@ -76,26 +146,24 @@ function AddProductForm() {
           onChange={handleImageChange}
           className="products-input-style"
         />
-        {imageFile && (
-          <p className="text-sm text-gray-600">Selected: {imageFile.name}</p>
-        )}
+        {imageFile && <p className="text-sm text-gray-600">Selected: {imageFile.name}</p>}
       </div>
 
-      {/* Category with Add Option */}
+      {/* Category */}
       <div className="flex flex-col gap-2">
         <label htmlFor="add-product-category">Category</label>
         <select
           id="add-product-category"
-          name="category"
+          name="categoryId"
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
           className="products-input-style"
           required
         >
           <option value="">Select Category</option>
-          {categories.map((cat, index) => (
-            <option key={index} value={cat}>
-              {cat}
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
             </option>
           ))}
         </select>
@@ -113,8 +181,9 @@ function AddProductForm() {
             type="button"
             onClick={handleAddCategory}
             className="button-style"
+            disabled={categoryLoading}
           >
-            Add
+            {categoryLoading ? "Adding..." : "Add"}
           </button>
         </div>
       </div>
@@ -130,11 +199,8 @@ function AddProductForm() {
       </div>
 
       {/* Submit Button */}
-      <button
-        type="submit"
-        className="button-style"
-      >
-        Add Product
+      <button type="submit" className="button-style" disabled={loading}>
+        {loading ? "Adding..." : "Add Product"}
       </button>
     </form>
   );

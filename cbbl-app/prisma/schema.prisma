@@ -74,6 +74,28 @@ model Message {
   replied   Boolean  @default(false)
 }
 
+model Category {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Product {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  description  String?
+  price        Float
+  imageUrl     String
+  categoryId   String    @db.ObjectId
+  category     Category  @relation(fields: [categoryId], references: [id])
+  isNew        Boolean   @default(false)
+  isBestSeller Boolean   @default(false)
+  totalOrders  Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
 // Reservations (table booking)
 // model Reservation {
 //   id        String   @id @default(auto()) @map("_id") @db.ObjectId
