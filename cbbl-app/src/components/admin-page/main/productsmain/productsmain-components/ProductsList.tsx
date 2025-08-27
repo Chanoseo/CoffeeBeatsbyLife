@@ -87,7 +87,7 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
             className="relative top-0 bg-white rounded-xl overflow-hidden shadow-sm shadow-black/20 h-auto flex flex-col cursor-pointer hover:bg-[#E8E4C9]/30 transition-colors duration-200 ease-linear group"
             onClick={() => handleProductClick(product)}
           >
-            <div className="flex gap-2 absolute top-[2%] right-[5%] z-20">
+            <div className="flex gap-2 absolute top-[2%] right-[5%] z-10">
               {product.isNew && (
                 <span className="bg-[#E8E4C9] py-1 px-4 rounded">New</span>
               )}

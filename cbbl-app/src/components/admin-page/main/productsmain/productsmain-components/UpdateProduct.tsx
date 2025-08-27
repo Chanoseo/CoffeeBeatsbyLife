@@ -8,7 +8,11 @@ interface UpdateProductProps {
   initialData: Product;
 }
 
-function UpdateProduct({ onClose, productId, initialData }: UpdateProductProps) {
+function UpdateProduct({
+  onClose,
+  productId,
+  initialData,
+}: UpdateProductProps) {
   // Function to call the DELETE API
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this product?")) return;
@@ -22,7 +26,10 @@ function UpdateProduct({ onClose, productId, initialData }: UpdateProductProps) 
 
       if (data.success) {
         alert("Product deleted successfully!");
-        onClose(); // close modal
+        // ✅ Close modal
+        onClose();
+        // ✅ Reload the page
+        window.location.reload();
       } else {
         alert(data.message || "Failed to delete product.");
       }

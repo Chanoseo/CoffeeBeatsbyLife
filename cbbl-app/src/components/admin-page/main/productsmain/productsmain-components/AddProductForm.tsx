@@ -14,6 +14,7 @@ function AddProductForm() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -69,9 +70,30 @@ function AddProductForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
     setMessage("");
 
-    const formData = new FormData(e.target as HTMLFormElement);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    // ✅ Extract values for validation
+    const name = (
+      form.elements.namedItem("name") as HTMLInputElement
+    ).value.trim();
+    const description = (
+      form.elements.namedItem("description") as HTMLTextAreaElement
+    ).value.trim();
+    const price = (
+      form.elements.namedItem("price") as HTMLInputElement
+    ).value.trim();
+
+    if (!name || !description || !price || !selectedCategory || !imageFile) {
+      setError("Fill all input fields.");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Append image and categoryId
     if (imageFile) {
       formData.append("image", imageFile);
     }
@@ -86,15 +108,18 @@ function AddProductForm() {
       const data = await res.json();
       if (data.success) {
         setMessage("Product added successfully!");
-        (e.target as HTMLFormElement).reset();
+        form.reset();
         setImageFile(null);
         setSelectedCategory("");
+
+        // ✅ Reload the page after 3 seconds
+        setTimeout(() => window.location.reload(), 3000);
       } else {
-        setMessage("Failed to add product.");
+        setError("Failed to add product.");
       }
     } catch (error) {
       console.error(error);
-      setMessage("An error occurred.");
+      setError("An error occurred.");
     }
 
     setLoading(false);
@@ -124,7 +149,7 @@ function AddProductForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {/* Product Name */}
+      {error && <p className="message-error">{error}</p>}
       {message && <p className="message-success">{message}</p>}
 
       <div className="flex gap-4">

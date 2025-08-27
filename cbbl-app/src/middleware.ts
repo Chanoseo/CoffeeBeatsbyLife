@@ -6,8 +6,12 @@ export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   const path = url.pathname;
 
-  // Only protect /home and /dashboard routes
-  if (!path.startsWith("/home") && !path.startsWith("/dashboard")) {
+  // Routes that are protected
+  const adminRoutes = ["/dashboard", "/products", "/orders", "/messages"];
+  const userRoutes = ["/home"];
+
+  // Skip routes that are not protected
+  if (!adminRoutes.some((r) => path.startsWith(r)) && !userRoutes.some((r) => path.startsWith(r))) {
     return NextResponse.next();
   }
 
@@ -17,34 +21,43 @@ export async function middleware(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // If not logged in → redirect to sign-in page
+  // Not logged in → redirect to sign-in page
   if (!token) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
   const role = (token.role ?? "user").toLowerCase();
 
-  // Admin pages: only admins allowed
-  if (path.startsWith("/dashboard")) {
+  // Admin routes: only admin allowed
+  if (adminRoutes.some((r) => path.startsWith(r))) {
     if (role !== "admin") {
-      // Normal users trying to access admin page → 404
-      return NextResponse.redirect(new URL("/404", req.url));
+      return NextResponse.redirect(new URL("/404", req.url)); // normal users → 404
     }
-    return NextResponse.next(); // Admin allowed
+    return NextResponse.next(); // admin allowed
   }
 
-  // User pages: only non-admins allowed
-  if (path.startsWith("/home")) {
+  // User routes: only non-admins allowed
+  if (userRoutes.some((r) => path.startsWith(r))) {
     if (role === "admin") {
-      // Admin trying to access user page → redirect to dashboard
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      return NextResponse.redirect(new URL("/dashboard", req.url)); // admin → dashboard
     }
-    return NextResponse.next(); // User allowed
+    return NextResponse.next(); // user allowed
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/home", "/home/:path*", "/dashboard", "/dashboard/:path*"],
+  matcher: [
+    "/home",
+    "/home/:path*",
+    "/dashboard",
+    "/dashboard/:path*",
+    "/products",
+    "/products/:path*",
+    "/orders",
+    "/orders/:path*",
+    "/messages",
+    "/messages/:path*",
+  ],
 };

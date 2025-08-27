@@ -25,11 +25,7 @@ type UpdateProductFormProps = {
   onSuccess: () => void;
 };
 
-function UpdateProductForm({
-  productId,
-  initialData,
-  onSuccess,
-}: UpdateProductFormProps) {
+function UpdateProductForm({ productId, initialData }: UpdateProductFormProps) {
   const [name, setName] = useState(initialData.name);
   const [description, setDescription] = useState(initialData.description || "");
   const [price, setPrice] = useState(initialData.price);
@@ -94,6 +90,19 @@ function UpdateProductForm({
     setMessage("");
     setError("");
 
+    // ✅ Validation: check required fields
+    if (
+      !name.trim() ||
+      !description.trim() ||
+      !price ||
+      !selectedCategory ||
+      (!imageFile && !initialData.imageUrl)
+    ) {
+      setError("Fill all input fields");
+      setLoading(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
@@ -108,11 +117,15 @@ function UpdateProductForm({
         method: "PUT",
         body: formData,
       });
+
       const data = await res.json();
       if (!data.success)
         throw new Error(data.message || "Failed to update product");
-      setMessage("✅ Product updated successfully!");
-      onSuccess();
+
+      setMessage("Product updated successfully!");
+
+      // ✅ Reload the page after 3 seconds
+      setTimeout(() => window.location.reload(), 3000);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -148,8 +161,8 @@ function UpdateProductForm({
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-      {error && <p className="text-red-600">{error}</p>}
-      {message && <p className="text-green-600">{message}</p>}
+      {error && <p className="message-error">{error}</p>}
+      {message && <p className="message-success">{message}</p>}
 
       <div className="flex gap-4">
         <div className="flex flex-col gap-2">

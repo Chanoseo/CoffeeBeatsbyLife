@@ -65,7 +65,7 @@ function Products() {
             </button>
 
             {dropdownOpen && (
-              <ul className="absolute w-full bg-white border border-gray-300 mt-1 rounded z-10">
+              <ul className="absolute w-full bg-white border border-gray-300 mt-2 rounded z-50">
                 <li
                   className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                   onClick={() => {
