@@ -1,6 +1,6 @@
 "use client";
 
-import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDown, faX } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -124,6 +124,28 @@ function UpdateProductForm({
     }
   };
 
+  const handleRemoveCategory = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this category?")) return;
+
+    try {
+      const res = await fetch(`/api/products/categories?id=${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        // Remove from local state
+        setCategories((prev) => prev.filter((cat) => cat.id !== id));
+        if (selectedCategory === id) setSelectedCategory("");
+      } else {
+        alert(data.error || "Failed to remove category");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while removing category");
+    }
+  };
+
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       {error && <p className="text-red-600">{error}</p>}
@@ -226,13 +248,21 @@ function UpdateProductForm({
                   {categories.map((cat) => (
                     <li
                       key={cat.id}
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer rounded"
+                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer flex items-center justify-between"
                       onClick={() => {
                         setSelectedCategory(cat.id);
                         setDropdownOpen(false);
                       }}
                     >
                       {cat.name}
+                      <FontAwesomeIcon
+                        icon={faX}
+                        className="z-50 hover:text-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent selecting category
+                          handleRemoveCategory(cat.id);
+                        }}
+                      />
                     </li>
                   ))}
                 </ul>

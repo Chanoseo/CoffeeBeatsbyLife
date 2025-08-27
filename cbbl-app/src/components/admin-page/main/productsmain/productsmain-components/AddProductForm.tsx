@@ -100,6 +100,28 @@ function AddProductForm() {
     setLoading(false);
   };
 
+  const handleRemoveCategory = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this category?")) return;
+
+    try {
+      const res = await fetch(`/api/products/categories?id=${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        // Remove from local state
+        setCategories((prev) => prev.filter((cat) => cat.id !== id));
+        if (selectedCategory === id) setSelectedCategory("");
+      } else {
+        alert(data.error || "Failed to remove category");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while removing category");
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Product Name */}
@@ -194,13 +216,19 @@ function AddProductForm() {
                       }}
                     >
                       {cat.name}
-                      <FontAwesomeIcon icon={faX} className="z-50 hover:text-red-600"/>
+                      <FontAwesomeIcon
+                        icon={faX}
+                        className="z-50 hover:text-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent selecting category
+                          handleRemoveCategory(cat.id);
+                        }}
+                      />
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-
 
             {/* Add New Category */}
             <div className="flex gap-2 mt-2">
