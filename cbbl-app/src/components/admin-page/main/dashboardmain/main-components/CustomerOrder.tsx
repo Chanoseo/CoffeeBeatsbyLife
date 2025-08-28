@@ -6,7 +6,7 @@ function CustomerOrder() {
   return (
     <section className="dashboard-card">
       <div className="dashboard-card-title">
-        <h1>Customer Order</h1>
+        <h1 className="md:block hidden">Customer Order</h1>
         <FontAwesomeIcon icon={faShoppingCart} />
       </div>
       <div className="h-74 overflow-auto">
@@ -27,7 +27,7 @@ function CustomerOrder() {
                 <Link href="/customer">ORD001</Link>
               </td>
               <td className="dashboard-customer-td-style">
-                <Link href="/customer">Customer A</Link>
+                <Link href="/customer" className="block truncate">Customer AAAAAAAAAAAAAAA</Link>
               </td>
               <td className="dashboard-customer-td-style">
                 <Link href="/customer">$100</Link>

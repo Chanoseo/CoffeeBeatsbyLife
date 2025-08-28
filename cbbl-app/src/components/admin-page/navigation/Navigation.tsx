@@ -25,11 +25,11 @@ function Navigation() {
   ];
 
   return (
-    <aside className="w-90 p-10 h-screen shadow-sm z-50 flex flex-col text-brown text-lg">
+    <aside className="lg:p-10 lg:w-90 w-fit px-2 py-10 h-screen shadow-sm z-50 flex flex-col text-brown text-lg">
       {/* Logo */}
       <div className="flex items-center gap-3 mb-15">
         <Image src="/cbbl-logo.svg" alt="Logo" width={50} height={50} />
-        <h1 className="text-2xl font-semibold">Coffee Beats</h1>
+        <h1 className="lg:block xl:text-2xl hidden text-xl font-semibold">Coffee Beats</h1>
       </div>
 
       {/* Navigation */}
@@ -42,12 +42,12 @@ function Navigation() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className={`admin-nav-btn-style ${
+                  className={`admin-nav-btn-style xl:text-xl text-base ${
                     isActive ? "bg-[#3C604C] text-white" : ""
                   }`}
                 >
                   <FontAwesomeIcon icon={link.icon} />
-                  <span>{link.label}</span>
+                  <span className="lg:block hidden">{link.label}</span>
                 </Link>
               </li>
             );
@@ -58,7 +58,7 @@ function Navigation() {
       {/* Logout button at the bottom */}
       <button className="admin-nav-btn-style" onClick={() => signOut()}>
         <FontAwesomeIcon icon={faArrowRightFromBracket} />
-        <span>Sign Out</span>
+        <span className="lg:block hidden">Sign Out</span>
       </button>
     </aside>
   );

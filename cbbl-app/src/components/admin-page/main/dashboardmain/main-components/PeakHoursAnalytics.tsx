@@ -37,52 +37,54 @@ function PearHoursAnalytics() {
     <section className="dashboard-card">
       <div className="dashboard-card-header">
         <div className="dashboard-card-title">
-          <h2>Peak Hours Analytics</h2>
+          <h2 className="md:block hidden">Peak Hours Analytics</h2>
           <FontAwesomeIcon icon={faClock} />
         </div>
         <p>Today</p>
       </div>
-      <div className="w-full h-74 mt-4">
-        <ResponsiveContainer>
-          <BarChart
-            data={data}
-            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-          >
-            <XAxis
-              dataKey="hour"
-              tick={{ fill: "#333", fontSize: 12 }}
-              tickLine={false}
-              padding={{ left: 10, right: 10 }}
-              axisLine={false}
-            />
-            <YAxis
-              tick={{ fill: "#333", fontSize: 12 }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <Tooltip
-              content={({ payload, label }) => {
-                if (payload && payload.length) {
-                  return (
-                    <div className="bg-white p-2 border border-gray-300 rounded shadow-sm">
-                      <p>{label}</p>
-                      <p>Sales: {payload[0].value}</p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-              cursor={{ fill: "rgba(60, 96, 76, 0.1)" }}
-            />
-            <Bar
-              dataKey="sales"
-              fill="#3C604C"
-              barSize={10}
-              radius={[15, 15, 15, 15]}
-              background={{ fill: "rgba(60, 96, 76, 0.1)", radius: 10 }}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="w-full h-80 mt-4 overflow-x-auto">
+        <div className="min-w-[600px] h-full">
+          <ResponsiveContainer>
+            <BarChart
+              data={data}
+              margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+            >
+              <XAxis
+                dataKey="hour"
+                tick={{ fill: "#333", fontSize: 12 }}
+                tickLine={false}
+                padding={{ left: 10, right: 10 }}
+                axisLine={false}
+              />
+              <YAxis
+                tick={{ fill: "#333", fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip
+                content={({ payload, label }) => {
+                  if (payload && payload.length) {
+                    return (
+                      <div className="bg-white p-2 border border-gray-300 rounded shadow-sm">
+                        <p>{label}</p>
+                        <p>Sales: {payload[0].value}</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+                cursor={{ fill: "rgba(60, 96, 76, 0.1)" }}
+              />
+              <Bar
+                dataKey="sales"
+                fill="#3C604C"
+                barSize={10}
+                radius={[15, 15, 15, 15]}
+                background={{ fill: "rgba(60, 96, 76, 0.1)", radius: 10 }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </section>
   );

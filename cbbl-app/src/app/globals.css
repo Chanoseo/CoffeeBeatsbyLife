@@ -74,16 +74,16 @@ body {
     @apply flex gap-4 items-center px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A]/10 transition-colors duration-200 ease-linear;
   }
   .keymetrics-card {
-    @apply bg-white shadow-sm rounded-xl p-6 flex-1;
+    @apply md:p-6 bg-white shadow-sm rounded-xl p-4 flex-1;
   }
   .keymetrics-card-header {
-    @apply flex items-center justify-between mb-4;
+    @apply flex items-center justify-between mb-4 text-nowrap;
   }
   .keymetrics-card-content {
-    @apply text-4xl font-bold;
+    @apply md:text-4xl text-3xl font-bold;
   }
   .keymetrics-card-footer {
-    @apply text-sm mt-4;
+    @apply md:text-sm text-xs mt-4;
   }
   .dashboard-card {
     @apply bg-white mt-6 p-6 shadow-sm rounded-xl;
@@ -92,13 +92,13 @@ body {
     @apply flex items-center justify-between;
   }
   .dashboard-card-title {
-    @apply flex items-center gap-2 text-lg;
+    @apply md:text-lg flex items-center gap-2 text-base;
   }
   .dashboard-customer-td-style {
-    @apply p-2;
+    @apply p-2 max-w-32 overflow-hidden whitespace-nowrap;;
   }
   .dashboard-customer-th-style {
-    @apply p-2;
+    @apply p-2 text-nowrap;
   }
   .products-input-style {
     @apply border rounded p-2 outline-none;
