@@ -47,7 +47,7 @@ body {
     hover:before:w-full;
   }
   .button-style {
-    @apply bg-[#3C604C] text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear;
+    @apply bg-[#3C604C] md:text-base text-sm text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear;
   }
   .modal-hover {
     @apply hover:bg-[#3C604C]/10 px-4 py-2 rounded cursor-pointer text-left;
@@ -56,13 +56,13 @@ body {
     @apply text-[#3E210F];
   }
   .input-style {
-    @apply w-full p-2 outline-none border-2 border-[#3C604C] rounded text-black;
+    @apply md:text-base w-full p-2 outline-none border-2 border-[#3C604C] rounded text-black text-sm;
   }
   .message-input-style {
-    @apply p-2 border border-gray-300 rounded outline-none;
+    @apply md:text-base p-2 border border-gray-300 rounded outline-none text-sm;
   }
   .show-hide-password-style {
-    @apply text-base;
+    @apply md:text-base text-sm;
   }
   .message-error {
     @apply text-red-500 mb-4 bg-red-100 p-4 rounded;

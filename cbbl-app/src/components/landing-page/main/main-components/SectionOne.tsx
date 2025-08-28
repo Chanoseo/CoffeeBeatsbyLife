@@ -9,7 +9,7 @@ function SectionOne() {
     const [showSignIn, setShowSignIn] = useState(false);
 
     return (
-        <section className="h-[75vh] relative shadow-md shadow-black/20">
+        <section className="lg:h-[75vh] h-[80vh] relative shadow-md shadow-black/20">
             <div className="absolute inset-0">
                 {/* Background Image */}
                 <Image
@@ -23,9 +23,9 @@ function SectionOne() {
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-[#3C604C]/70 -z-40"></div>
                 {/* Content */}
-                <div className="h-full w-2/4 flex flex-col justify-center p-20 text-white mt-5">
-                    <h1 className="text-5xl font-bold mb-4">Coffee Beats By Life</h1>
-                    <p className="text-lg mb-8">Brewed with passion, served with purpose.</p>
+                <div className="md:p-20 xl:text-start xl:w-2/4 h-full w-full flex flex-col justify-center p-5 text-white mt-5 text-center">
+                    <h1 className="md:text-5xl text-3xl font-bold mb-4">Coffee Beats By Life</h1>
+                    <p className="md:text-lg text-md mb-8">Brewed with passion, served with purpose.</p>
                     <div>
                         <ButtonOne onClick={() => setShowSignIn(true)}/>
                     </div>

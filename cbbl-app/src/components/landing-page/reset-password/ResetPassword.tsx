@@ -66,8 +66,8 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
-      <div className="bg-white p-8 rounded shadow-md w-96">
+    <div className="md:p-0 flex flex-col items-center justify-center min-h-screen p-5 bg-gray-50">
+      <div className="md:w-96 bg-white p-8 rounded shadow-md w-full">
         <h1 className="text-2xl font-bold mb-4">Reset Password</h1>
         {error && <p className="message-error mb-2">{error}</p>}
         {message && <p className="message-success mb-2">{message}</p>}

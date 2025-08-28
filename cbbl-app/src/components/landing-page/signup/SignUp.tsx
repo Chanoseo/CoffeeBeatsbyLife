@@ -88,7 +88,7 @@ function SignUp({ onSignIn }: SignUpProps) {
 
   return (
     <div className="fixed inset-0 w-full h-screen z-50 flex flex-col items-center justify-center text-[#3C604C]">
-      <div className="w-1/3 bg-white rounded-2xl p-7 text-left">
+      <div className="md:w-1/2 xl:w-1/3 md:h-fit md:rounded-2xl w-full h-full bg-white p-7 text-left">
         <div className="text-center">
           <h1 className="text-3xl font-bold mt-5">Sign Up</h1>
           <p className="mt-1">Create your Coffee Beats account.</p>

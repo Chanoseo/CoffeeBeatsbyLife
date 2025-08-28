@@ -46,9 +46,9 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white p-8 rounded shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-4">Reset Password</h1>
+    <div className="md:p-0 flex flex-col items-center justify-center min-h-screen p-5 bg-gray-50">
+      <div className="md:w-96 bg-white p-8 rounded shadow-md w-full">
+        <h1 className="md:text-2xl text-xl font-bold mb-4">Reset Password</h1>
         <p className="mb-4 text-sm text-gray-600">
           Enter your Gmail to receive a password reset link.
         </p>
