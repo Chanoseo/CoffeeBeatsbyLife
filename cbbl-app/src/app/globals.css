@@ -70,8 +70,9 @@ body {
   .message-success {
     @apply text-green-500 mb-4 bg-green-100 p-4 rounded;
   }
-  .admin-nav-btn-style {
-    @apply flex gap-4 items-center px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A]/10 transition-colors duration-200 ease-linear;
+  /* Admin Navigation Buttons */
+  .admin-navbar {
+    @apply flex gap-3 items-center px-4 py-2 rounded cursor-pointer text-base lg:text-lg hover:bg-[#052c17] transition-colors duration-200 ease-linear;
   }
   .keymetrics-card {
     @apply md:p-6 bg-white shadow-sm rounded-xl p-4 flex-1;
@@ -87,6 +88,10 @@ body {
   }
   .dashboard-card {
     @apply bg-white mt-6 p-6 shadow-sm rounded-xl;
+  }
+  /* Products Container */
+  .products-card {
+    @apply bg-[#3C604C]/5 p-6;
   }
   .dashboard-card-header {
     @apply flex items-center justify-between;

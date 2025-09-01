@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRightFromBracket,
   faBagShopping,
+  faBars,
   faClipboardList,
   faEnvelope,
   faGauge,
@@ -14,8 +15,23 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-function Navigation() {
+interface NavigationProps {
+  collapsed: boolean;
+  mobileOpen: boolean;
+  toggleMobile?: () => void;
+}
+
+function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
+  const { data: session } = useSession();
   const pathname = usePathname();
+
+  const fullName = session?.user?.name || "Guest User";
+  const nameParts = fullName.split(" ");
+  const displayName =
+    nameParts.length > 1
+      ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}`
+      : fullName;
+
   const links = [
     { href: "/dashboard", label: "Dashboard", icon: faGauge },
     { href: "/products", label: "Products", icon: faBagShopping },
@@ -25,11 +41,38 @@ function Navigation() {
   ];
 
   return (
-    <aside className="lg:p-10 lg:w-90 w-fit px-2 py-10 h-screen shadow-sm z-50 flex flex-col text-brown text-lg">
+    <aside
+      className={`
+        h-screen flex flex-col text-white bg-[#3C604C] z-50
+        transition-all duration-300 ease-in-out
+        ${collapsed ? "w-fit items-center" : "md:w-74"} px-4 py-10 overflow-hidden
+        fixed top-0 left-0 sm:relative
+        ${mobileOpen ? "translate-x-0" : "-translate-x-full"} 
+        sm:translate-x-0 sm:flex w-fit
+      `}
+    >
+      {/* Mobile close button */}
+      <div className="sm:hidden flex justify-end mb-4">
+        {toggleMobile && (
+          <FontAwesomeIcon icon={faBars} onClick={toggleMobile} className="text-white text-2xl"/>
+        )}
+      </div>
+
       {/* Logo */}
-      <div className="flex items-center gap-3 mb-15">
-        <Image src="/cbbl-logo.svg" alt="Logo" width={50} height={50} />
-        <h1 className="lg:block xl:text-2xl hidden text-xl font-semibold">Coffee Beats</h1>
+      <div
+        className={`flex items-center gap-2 mb-15 py-2 px-4 ${
+          collapsed ? "justify-center" : "justify-start"
+        }`}
+      >
+        <div className="relative w-[40px] h-[40px] flex-shrink-0">
+          <Image
+            src="/cbbl-logo.svg"
+            alt="Logo"
+            fill
+            className="object-contain brightness-0 invert"
+          />
+        </div>
+        {!collapsed && <h1 className="text-2xl font-semibold">CBBL</h1>}
       </div>
 
       {/* Navigation */}
@@ -37,17 +80,16 @@ function Navigation() {
         <ul className="flex flex-col gap-4">
           {links.map((link) => {
             const isActive = pathname === link.href;
-
             return (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className={`admin-nav-btn-style xl:text-xl text-base ${
-                    isActive ? "bg-[#3C604C] text-white" : ""
+                  className={`admin-navbar ${
+                    isActive ? "bg-white text-[#3C604C]" : ""
                   }`}
                 >
                   <FontAwesomeIcon icon={link.icon} />
-                  <span className="lg:block hidden">{link.label}</span>
+                  {!collapsed && <span>{link.label}</span>}
                 </Link>
               </li>
             );
@@ -55,12 +97,41 @@ function Navigation() {
         </ul>
       </nav>
 
-      {/* Logout button at the bottom */}
-      <button className="admin-nav-btn-style" onClick={() => signOut()}>
+      {/* Logout */}
+      <button
+        className="admin-navbar"
+        onClick={() => signOut()}
+      >
         <FontAwesomeIcon icon={faArrowRightFromBracket} />
-        <span className="lg:block hidden">Sign Out</span>
+        {!collapsed && <span>Sign Out</span>}
       </button>
+
+      {/* Avatar */}
+      <div
+        className={`flex items-center mt-8 px-4 ${
+          collapsed ? "justify-center" : "justify-start"
+        }`}
+      >
+        <div className="relative w-[40px] h-[40px] flex-shrink-0 rounded-full">
+          <Image
+            src={session?.user?.image || "/cbbl-image.jpg"}
+            alt="User Image"
+            fill
+            sizes="40px"
+            className="object-cover rounded-full"
+          />
+        </div>
+
+        {/* Only show name when not collapsed */}
+        {!collapsed && (
+          <div className="flex flex-col ml-2">
+            <span className="text-nowrap text-xs lg:text-sm">{displayName}</span>
+            <span className="text-nowrap text-xs lg:text-sm">Administrator</span>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }
+
 export default Navigation;

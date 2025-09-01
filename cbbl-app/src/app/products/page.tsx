@@ -1,22 +1,44 @@
+"use client";
+
 import ProductsMain from "@/components/admin-page/main/productsmain/ProductsMain";
 import Navigation from "@/components/admin-page/navigation/Navigation";
-
-export const metadata = {
-  title: "Products",
-  description: "Manage your products, update details, set prices, and organize categories with ease.",
-  icons: {
-    icon: "/cbbl-logo.svg",
-    shortcut: "/cbbl-logo.svg",
-    apple: "/cbbl-logo.svg",
-  },
-};
+import { useState, useEffect } from "react";
 
 function AdminProductsPage() {
+  const [collapsed, setCollapsed] = useState(false); // desktop collapse
+  const [mobileOpen, setMobileOpen] = useState(false); // mobile sidebar
+
+  // Detect screen size
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640); // sm breakpoint
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setCollapsed(!collapsed);
+    }
+  };
+
   return (
     <div className="flex">
-      <Navigation />
-      <ProductsMain />
+      <Navigation
+        collapsed={collapsed}
+        mobileOpen={mobileOpen}
+        toggleMobile={() => setMobileOpen(false)}
+      />
+      <ProductsMain
+        collapsed={collapsed}
+        toggleNav={toggleSidebar}
+      />
     </div>
   );
 }
+
 export default AdminProductsPage;

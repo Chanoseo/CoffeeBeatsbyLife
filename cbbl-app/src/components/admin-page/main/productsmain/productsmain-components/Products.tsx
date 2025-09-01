@@ -1,19 +1,22 @@
 "use client";
 
-import { faPlus, faAngleDown, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ProductsList from "./ProductsList";
 import AddProduct from "./AddProduct";
 import { useState, useEffect } from "react";
 
-function Products() {
+interface ProductsProps {
+  searchInput: string;
+}
+
+function Products({ searchInput }: ProductsProps) {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     []
   );
   const [selectedCategory, setSelectedCategory] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
 
   const handleToggle = () => {
     setShowAddProduct((prev) => !prev);
@@ -33,39 +36,25 @@ function Products() {
   }, []);
 
   return (
-    <section className="dashboard-card">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl">Manage Products</h1>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="border border-gray-300 rounded-md pl-10 p-2 outline-none w-full"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-            <FontAwesomeIcon
-              icon={faMagnifyingGlass}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
-          </div>
-
+    <section className="products-card">
+      <div className="flex flex-col gap-4 mb-4 md:flex-row md:items-center md:justify-between">
+        <h1 className="text-lg lg:text-xl xl:text-2xl">Manage Products</h1>
+        <div className="flex flex-col gap-4 items-end md:flex-row">
           {/* Custom Dropdown */}
-          <div className="relative w-64">
+          <div className="relative w-full">
             <button
               type="button"
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="w-full flex items-center justify-between border border-gray-300 py-2 px-4 rounded outline-none bg-white"
+              className="w-full flex justify-between items-center border border-gray-300 px-4 py-2 rounded outline-none bg-white text-sm lg:text-base"
             >
               {selectedCategory
                 ? categories.find((c) => c.id === selectedCategory)?.name
                 : "Select Category"}
-              <FontAwesomeIcon icon={faAngleDown} className="ml-4" />
+              <FontAwesomeIcon icon={faAngleDown} className="ml-1" />
             </button>
 
             {dropdownOpen && (
-              <ul className="absolute w-full bg-white border border-gray-300 mt-2 rounded z-50">
+              <ul className="absolute w-full bg-white border border-gray-300 mt-2 rounded z-50 text-sm lg:text-base">
                 <li
                   className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                   onClick={() => {
@@ -90,13 +79,13 @@ function Products() {
               </ul>
             )}
           </div>
-
+          {/* Add Product Button */}
           <button
             onClick={handleToggle}
-            className="flex items-center justify-between gap-2 button-style w-40"
+            className="bg-[#3C604C] text-sm text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear w-fit text-nowrap lg:text-base"
           >
             <span>Add Product</span>
-            <FontAwesomeIcon icon={faPlus} />
+            <FontAwesomeIcon icon={faPlus} className="ml-2"/>
           </button>
         </div>
       </div>

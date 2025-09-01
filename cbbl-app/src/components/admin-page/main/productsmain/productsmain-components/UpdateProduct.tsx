@@ -1,6 +1,8 @@
 "use client";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UpdateProductForm, { Product } from "./UpdateProductForm";
+import { faTrash, faX } from "@fortawesome/free-solid-svg-icons";
 
 interface UpdateProductProps {
   onClose: () => void;
@@ -40,20 +42,13 @@ function UpdateProduct({
   };
 
   return (
-    <div className="fixed p-10 left-0 top-0 w-full h-full z-50 bg-black/40 flex justify-center items-center">
-      <div className="w-1/2 bg-white p-6 rounded-lg shadow-xl">
+    <div className="fixed left-0 top-0 w-full h-full z-50 flex justify-end bg-black/10">
+      <div className="w-full md:w-1/3 bg-white p-6 shadow-lg overflow-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl">Update Product</h2>
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleDelete}
-              className="button-style bg-red-500 hover:bg-red-600 text-white"
-            >
-              Delete
-            </button>
-            <button onClick={onClose} className="button-style">
-              Back
-            </button>
+            <FontAwesomeIcon icon={faTrash} onClick={handleDelete} className="text-xl text-red-500 hover:text-red-600 cursor-pointer" />
+            <FontAwesomeIcon icon={faX} onClick={onClose} className="text-xl cursor-pointer" />
           </div>
         </div>
         <UpdateProductForm
