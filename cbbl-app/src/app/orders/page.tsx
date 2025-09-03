@@ -1,5 +1,4 @@
-import OrdersMain from "@/components/admin-page/main/ordersmain/OrdersMain";
-import Navigation from "@/components/admin-page/navigation/Navigation";
+import AdminOrdersPage from "@/components/admin-page/OrdersPage";
 
 export const metadata = {
   title: "Orders",
@@ -11,12 +10,7 @@ export const metadata = {
   },
 };
 
-function AdminOrdersPage() {
-  return (
-      <div className="flex">
-        <Navigation />
-        <OrdersMain />
-      </div>
-  );
+function OrdersPage() {
+  return <AdminOrdersPage />;
 }
-export default AdminOrdersPage;
+export default OrdersPage;
