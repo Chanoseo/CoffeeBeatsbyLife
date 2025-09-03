@@ -1,27 +1,32 @@
 "use client";
 
-import Image from "next/image";
-import { useSession } from "next-auth/react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faColumns } from "@fortawesome/free-solid-svg-icons";
 
-function DashboardHeader() {
-  const { data: session } = useSession();
+interface DashboardHeaderProps {
+  toggleNav: () => void; // add toggleNav
+}
 
-  const fullName = session?.user?.name || "Guest User";
+function DashboardHeader({ toggleNav }: DashboardHeaderProps) {
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
 
   return (
-    <section className="flex justify-between items-center bg-white shadow-sm rounded-xl p-6 flex-1">
-      <h2 className="md:text-2xl text-lg font-semibold">Dashboard</h2>
-      <div className="flex gap-4 items-center">
-        <div className="relative w-10 h-10 rounded-full">
-          <Image
-            src={session?.user?.image || "/cbbl-image.jpg"}
-            alt="User Image"
-            fill
-            sizes="50px"
-            className="object-cover rounded-full"
+    <section className="flex flex-col gap-4 p-6 lg:flex-row justify-between">
+      <div className="flex justify-between items-center gap-2 w-full">
+        <div className="flex items-center gap-2 lg:gap-4 text-xl md:text-2xl">
+          <FontAwesomeIcon
+            icon={faColumns}
+            className="cursor-pointer"
+            onClick={toggleNav}
           />
+          <h2 className="font-semibold">Dashboard</h2>
         </div>
-        <span className="lg:block text-sm hidden">{fullName}</span>
+        <p className="text-xs text-nowrap md:text-sm">{formattedDate}</p>
       </div>
     </section>
   );
