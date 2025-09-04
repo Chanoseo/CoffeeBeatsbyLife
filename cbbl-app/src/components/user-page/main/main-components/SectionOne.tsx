@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Menu from "./Menu";
+import CartModal from "./CartModal"; // ✅ import new component
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
@@ -13,12 +14,29 @@ type Category = {
   name: string;
 };
 
+type CartItem = {
+  id: string;
+  productId: string;
+  size: string;
+  quantity: number;
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    imageUrl: string;
+  };
+};
+
 function SectionOne() {
   const [activeMenu, setActiveMenu] = useState("All Menu");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartCount, setCartCount] = useState(0);
+  const [cartOpen, setCartOpen] = useState(false);
 
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -26,7 +44,6 @@ function SectionOne() {
         if (!res.ok) throw new Error("Failed to fetch categories");
         const data: Category[] = await res.json();
 
-        // ✅ Sort alphabetically (case-insensitive)
         const sorted = data.sort((a, b) =>
           a.name.localeCompare(b.name, "en", { sensitivity: "base" })
         );
@@ -40,6 +57,28 @@ function SectionOne() {
     };
 
     fetchCategories();
+  }, []);
+
+  // ✅ Fetch cart items & count
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const res = await fetch("/api/cart");
+        if (!res.ok) throw new Error("Failed to fetch cart");
+        const data: { items: CartItem[] } = await res.json();
+
+        setCartItems(data.items);
+
+        const totalItems =
+          data.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+
+        setCartCount(totalItems);
+      } catch (err) {
+        console.error("Error fetching cart:", err);
+      }
+    };
+
+    fetchCart();
   }, []);
 
   return (
@@ -60,13 +99,26 @@ function SectionOne() {
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
             />
           </div>
+
+          {/* ✅ Cart Icon */}
           <div className="relative inline-block">
-            <FontAwesomeIcon icon={faCartShopping} className="text-2xl" />
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
-              1
-            </span>
+            <button onClick={() => setCartOpen((prev) => !prev)}>
+              <FontAwesomeIcon icon={faCartShopping} className="text-2xl" />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                  {cartCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* ✅ Cart Modal Component */}
+        <CartModal
+          isOpen={cartOpen}
+          onClose={() => setCartOpen(false)}
+          cartItems={cartItems}
+        />
 
         {/* Navigation */}
         <nav className="bg-[#3C604C]/10 mt-6 p-4 w-full rounded">

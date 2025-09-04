@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 type ProductProps = {
@@ -17,18 +17,58 @@ function AddToCartButton({ product }: ProductProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [size, setSize] = useState<string>("small");
   const [quantity, setQuantity] = useState<number>(1);
+  const [hasPreOrder, setHasPreOrder] = useState<boolean>(false);
 
-  const handleAddToCart = () => {
-    console.log("Product:", product.name);
-    console.log("Size:", size);
-    console.log("Quantity:", quantity);
-    setIsOpen(false); // close modal after action
+  // 🔎 Check if the user already has an active pre-order
+  useEffect(() => {
+    const checkPreOrder = async () => {
+      try {
+        const res = await fetch("/api/orders/check");
+        if (res.ok) {
+          const data = await res.json();
+          setHasPreOrder(data.hasPreOrder);
+        }
+      } catch (err) {
+        console.error("Failed to check pre-order:", err);
+      }
+    };
+    checkPreOrder();
+  }, []);
+
+  const handleAddToCart = async () => {
+    try {
+      const res = await fetch("/api/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          size,
+          quantity,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to add to cart");
+      }
+
+      const data = await res.json();
+      console.log("Cart Response:", data);
+
+      setIsOpen(false); // close modal
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <>
-      <button className="button-style" onClick={() => setIsOpen(true)}>
-        Add to Cart
+      {/* Disable button if user has pre-order */}
+      <button
+        className={`button-style ${hasPreOrder ? "opacity-50 cursor-not-allowed" : ""}`}
+        onClick={() => !hasPreOrder && setIsOpen(true)}
+        disabled={hasPreOrder}
+      >
+        {hasPreOrder ? "Pre-Order Active" : "Add to Cart"}
       </button>
 
       {isOpen && (
@@ -49,10 +89,12 @@ function AddToCartButton({ product }: ProductProps) {
                 alt={product.name}
                 width={150}
                 height={150}
-                className="rounded-md object-cover"
+                className="rounded-md object-cover w-36 h-36"
               />
               <h2 className="text-xl font-semibold mt-4">{product.name}</h2>
-              <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+              <p className="text-sm text-gray-600 mt-1">
+                {product.description}
+              </p>
               <p className="text-lg font-bold mt-2">₱ {product.price}</p>
             </div>
 

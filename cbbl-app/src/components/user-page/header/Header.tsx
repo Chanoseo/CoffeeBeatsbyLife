@@ -42,6 +42,7 @@ function UserPageHeader() {
           alt="Logo"
           fill
           className="cursor-pointer object-cover rounded-full"
+          sizes="40px"
           onClick={toggleModal}
         />
         {isModalOpen && <Modal />}

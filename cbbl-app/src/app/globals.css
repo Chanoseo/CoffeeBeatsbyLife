@@ -93,6 +93,10 @@ body {
   .products-card {
     @apply bg-[#3C604C]/5 p-6;
   }
+  /* Seat Reservation */
+  .seat-reservation {
+    @apply p-4 flex flex-col items-center justify-center rounded shadow-sm;
+  }
   .dashboard-card-header {
     @apply flex items-center justify-between;
   }

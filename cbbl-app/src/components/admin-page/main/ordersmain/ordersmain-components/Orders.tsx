@@ -1,335 +1,309 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState, useEffect, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAngleDown,
-  faSort,
   faSortUp,
   faSortDown,
+  faSort,
 } from "@fortawesome/free-solid-svg-icons";
-
-interface Order {
-  id: string;
-  customer: string;
-  amount: string;
-  table: number;
-  hour: string; // e.g. "7 PM"
-  date: string;
-  status: string;
-}
+import OrdersModal from "./OrdersModal";
 
 interface OrdersProps {
   searchInput: string;
 }
 
-function Orders({ searchInput }: OrdersProps) {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "ORD001",
-      customer: "Customer A",
-      amount: "$100",
-      table: 2,
-      hour: "7 PM",
-      date: "Aug 24 2025",
-      status: "Pending",
-    },
-    {
-      id: "ORD002",
-      customer: "Customer B",
-      amount: "$200",
-      table: 4,
-      hour: "8 PM",
-      date: "Aug 24 2025",
-      status: "Confirmed",
-    },
-    {
-      id: "ORD003",
-      customer: "Customer C",
-      amount: "$150",
-      table: 3,
-      hour: "6 PM",
-      date: "Aug 24 2025",
-      status: "Preparing",
-    },
-    {
-      id: "ORD004",
-      customer: "Customer D",
-      amount: "$120",
-      table: 2,
-      hour: "5 PM",
-      date: "Aug 24 2025",
-      status: "Ready",
-    },
-    {
-      id: "ORD005",
-      customer: "Customer E",
-      amount: "$250",
-      table: 5,
-      hour: "9 PM",
-      date: "Aug 24 2025",
-      status: "Completed",
-    },
-  ]);
+export interface OrderItem {
+  id: string;
+  product: { name: string };
+  quantity: number;
+  price: number;
+}
 
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+export interface FullOrder {
+  id: string; // DB id
+  displayId?: string; // formatted ID for UI
+  user?: { name?: string | null };
+  totalAmount: number;
+  seat?: string | null;
+  time?: string | null;
+  status: string;
+  items?: OrderItem[];
+  paymentProof?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const STATUS_OPTIONS = [
+  "Pending",
+  "Confirmed",
+  "Preparing",
+  "Ready",
+  "Completed",
+];
+
+function Orders({ searchInput }: OrdersProps) {
+  const [orders, setOrders] = useState<FullOrder[]>([]);
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof Order;
+    key: keyof FullOrder;
     direction: "asc" | "desc";
   } | null>(null);
-
-  // 🔽 For dropdown button filter
   const [statusFilter, setStatusFilter] = useState<string>("All");
-  const [filterDropdownOpen, setFilterDropdownOpen] = useState<boolean>(false);
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<FullOrder | null>(null);
 
-  const options: string[] = [
-    "Pending",
-    "Confirmed",
-    "Preparing",
-    "Ready",
-    "Completed",
-  ];
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch("/api/orders");
+        const data: FullOrder[] = await res.json();
 
-  const getRowColor = (status: string): string => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-50";
-      case "Confirmed":
-        return "bg-blue-50";
-      case "Preparing":
-        return "bg-purple-50";
-      case "Ready":
-        return "bg-indigo-50";
-      case "Completed":
-        return "bg-green-50";
-      default:
-        return "bg-white";
-    }
-  };
+        // Add displayId for UI
+        const mappedOrders = data.map((order, index) => ({
+          ...order,
+          displayId: `ORD${(index + 1).toString().padStart(3, "0")}`,
+        }));
 
-  const handleStatusChange = (index: number, newStatus: string) => {
-    const updatedOrders = [...orders];
-    updatedOrders[index].status = newStatus;
-    setOrders(updatedOrders);
-    setOpenIndex(null);
-  };
-
-  const parseHour = (hour: string): number => {
-    const [time, meridian] = hour.split(" ");
-    let h = parseInt(time);
-    if (meridian === "PM" && h !== 12) h += 12;
-    if (meridian === "AM" && h === 12) h = 0;
-    return h;
-  };
-
-  const sortedOrders = [...orders];
-  if (sortConfig) {
-    sortedOrders.sort((a, b) => {
-      let aVal: string | number = a[sortConfig.key];
-      let bVal: string | number = b[sortConfig.key];
-      if (sortConfig.key === "hour") {
-        aVal = parseHour(a.hour);
-        bVal = parseHour(b.hour);
+        setOrders(mappedOrders);
+      } catch (err) {
+        console.error("Failed to fetch orders", err);
+      } finally {
+        setLoading(false);
       }
-      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
+    };
+    fetchOrders();
+  }, []);
+
+  const getRowColor = (status: string) =>
+    ({
+      Pending: "bg-yellow-50",
+      Confirmed: "bg-blue-50",
+      Preparing: "bg-purple-50",
+      Ready: "bg-indigo-50",
+      Completed: "bg-green-50",
+    }[status] || "bg-white");
+
+  const sortedOrders = useMemo(() => {
+    if (!sortConfig) return orders;
+    return [...orders].sort((a, b) => {
+      let aVal: number | string = "";
+      let bVal: number | string = "";
+
+      switch (sortConfig.key) {
+        case "time":
+          aVal = a.time ? new Date(a.time).getTime() : -1;
+          bVal = b.time ? new Date(b.time).getTime() : -1;
+          break;
+        case "createdAt":
+          aVal = new Date(a.createdAt).getTime();
+          bVal = new Date(b.createdAt).getTime();
+          break;
+        case "seat":
+          aVal = a.seat ?? "";
+          bVal = b.seat ?? "";
+          break;
+        case "status":
+          aVal = a.status;
+          bVal = b.status;
+          break;
+        default:
+          if (sortConfig.key === "displayId") {
+            aVal = a.displayId ?? "";
+            bVal = b.displayId ?? "";
+          } else if (sortConfig.key === "user") {
+            aVal = a.user?.name ?? "";
+            bVal = b.user?.name ?? "";
+          } else if (sortConfig.key === "totalAmount") {
+            aVal = a.totalAmount;
+            bVal = b.totalAmount;
+          }
+          break;
+      }
+
+      return sortConfig.direction === "asc"
+        ? aVal < bVal
+          ? -1
+          : aVal > bVal
+          ? 1
+          : 0
+        : aVal > bVal
+        ? -1
+        : aVal < bVal
+        ? 1
+        : 0;
     });
-  }
+  }, [orders, sortConfig]);
 
-  const filteredOrders = sortedOrders.filter((order) => {
+  const filteredOrders = useMemo(() => {
     const query = searchInput.toLowerCase();
-    const matchesSearch =
-      order.id.toLowerCase().includes(query) ||
-      order.customer.toLowerCase().includes(query) ||
-      order.amount.toLowerCase().includes(query) ||
-      order.table.toString().includes(query) ||
-      order.hour.toLowerCase().includes(query) ||
-      order.date.toLowerCase().includes(query) ||
-      order.status.toLowerCase().includes(query);
+    return sortedOrders.filter((order) => {
+      const matchesSearch = [
+        order.displayId ?? "",
+        order.user?.name ?? "",
+        `₱${order.totalAmount.toFixed(2)}`,
+        order.seat ?? "",
+        order.time
+          ? new Date(order.time).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+            })
+          : "",
+        order.time ? new Date(order.time).toLocaleDateString() : "",
+        order.status,
+      ].some((field) => field.toLowerCase().includes(query));
+      const matchesStatus =
+        statusFilter === "All" || order.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [sortedOrders, searchInput, statusFilter]);
 
-    const matchesStatus =
-      statusFilter === "All" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const handleSort = (key: keyof Order) => {
-    let direction: "asc" | "desc" = "asc";
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "asc"
-    ) {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
+  const handleSort = (key: keyof FullOrder) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev?.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
   };
 
-  const getSortIcon = (key: keyof Order) => {
-    if (!sortConfig || sortConfig.key !== key) return faSort;
-    return sortConfig.direction === "asc" ? faSortUp : faSortDown;
-  };
+  const getSortIcon = (key: keyof FullOrder) =>
+    !sortConfig || sortConfig.key !== key
+      ? faSort
+      : sortConfig.direction === "asc"
+      ? faSortUp
+      : faSortDown;
 
   return (
     <section className="products-card">
       <div className="flex justify-between">
         <h1 className="text-2xl mb-4">Manage Orders</h1>
-
-        {/* 🔽 Dropdown Button Filter */}
-        <div className="mb-4">
-          <div className="relative inline-block">
-            <button
-              onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
-              className="flex items-center gap-2 border border-gray-200 rounded-lg px-4 py-2 bg-white shadow cursor-pointer"
-            >
-              {statusFilter === "All"
-                ? "Filter by Status"
-                : `Status: ${statusFilter}`}
-              <FontAwesomeIcon icon={faAngleDown} />
-            </button>
-            {filterDropdownOpen && (
-              <ul className="absolute right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-sm z-10 overflow-hidden">
+        <div className="mb-4 relative inline-block">
+          <button
+            onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+            className="flex items-center gap-2 border border-gray-200 rounded-lg px-4 py-2 bg-white shadow cursor-pointer"
+          >
+            {statusFilter === "All"
+              ? "Filter by Status"
+              : `Status: ${statusFilter}`}
+            <FontAwesomeIcon icon={faAngleDown} />
+          </button>
+          {filterDropdownOpen && (
+            <ul className="absolute right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-sm z-10 overflow-hidden">
+              <li
+                onClick={() => {
+                  setStatusFilter("All");
+                  setFilterDropdownOpen(false);
+                }}
+                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+              >
+                All
+              </li>
+              {STATUS_OPTIONS.map((status) => (
                 <li
+                  key={status}
                   onClick={() => {
-                    setStatusFilter("All");
+                    setStatusFilter(status);
                     setFilterDropdownOpen(false);
                   }}
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                 >
-                  All
+                  {status}
                 </li>
-                {options.map((status) => (
-                  <li
-                    key={status}
-                    onClick={() => {
-                      setStatusFilter(status);
-                      setFilterDropdownOpen(false);
-                    }}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {status}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
-      {/* 🔽 Table */}
-      <div>
-        <table className="w-full text-center border-separate border-spacing-y-2 mt-4 bg-white p-4 rounded-xl shadow-sm">
-          <thead>
+      <table className="w-full text-center border-separate border-spacing-y-2 mt-4 bg-white p-4 rounded-xl shadow-sm">
+        <thead>
+          <tr>
+            <th className="dashboard-customer-th-style">Order ID</th>
+            <th className="dashboard-customer-th-style">Customer Name</th>
+            <th className="dashboard-customer-th-style">Amount</th>
+            <th
+              className="dashboard-customer-th-style cursor-pointer"
+              onClick={() => handleSort("time")}
+            >
+              Reservation Details{" "}
+              <FontAwesomeIcon
+                icon={getSortIcon("time")}
+                className="ml-1 text-sm"
+              />
+            </th>
+            <th
+              className="dashboard-customer-th-style cursor-pointer"
+              onClick={() => handleSort("createdAt")}
+            >
+              Order Date{" "}
+              <FontAwesomeIcon
+                icon={getSortIcon("createdAt")}
+                className="ml-1 text-sm"
+              />
+            </th>
+            <th className="dashboard-customer-th-style">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
             <tr>
-              <th
-                className="dashboard-customer-th-style cursor-pointer"
-                onClick={() => handleSort("id")}
-              >
-                Order ID{" "}
-                <FontAwesomeIcon
-                  icon={getSortIcon("id")}
-                  className="ml-1 text-sm"
-                />
-              </th>
-              <th
-                className="dashboard-customer-th-style cursor-pointer"
-                onClick={() => handleSort("customer")}
-              >
-                Customer Name{" "}
-                <FontAwesomeIcon
-                  icon={getSortIcon("customer")}
-                  className="ml-1 text-sm"
-                />
-              </th>
-              <th
-                className="dashboard-customer-th-style cursor-pointer"
-                onClick={() => handleSort("amount")}
-              >
-                Amount{" "}
-                <FontAwesomeIcon
-                  icon={getSortIcon("amount")}
-                  className="ml-1 text-sm"
-                />
-              </th>
-              <th
-                className="dashboard-customer-th-style cursor-pointer"
-                onClick={() => handleSort("hour")}
-              >
-                Reservation Details{" "}
-                <FontAwesomeIcon
-                  icon={getSortIcon("hour")}
-                  className="ml-1 text-sm"
-                />
-              </th>
-              <th
-                className="dashboard-customer-th-style cursor-pointer"
-                onClick={() => handleSort("date")}
-              >
-                Order Date{" "}
-                <FontAwesomeIcon
-                  icon={getSortIcon("date")}
-                  className="ml-1 text-sm"
-                />
-              </th>
-              <th className="dashboard-customer-th-style">Status</th>
+              <td colSpan={6} className="py-6 text-gray-500">
+                Loading orders...
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order, index) => (
-                <tr key={order.id} className={getRowColor(order.status)}>
+          ) : filteredOrders.length ? (
+            filteredOrders.map((order) => {
+              const timeStr = order.time
+                ? new Date(order.time).toLocaleTimeString([], {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
+                : "-";
+              const dateStr = order.time
+                ? new Date(order.time).toLocaleDateString()
+                : "-";
+              return (
+                <tr
+                  key={order.id}
+                  className={`${getRowColor(order.status)} cursor-pointer`}
+                  onClick={() => setSelectedOrder(order)}
+                >
                   <td className="dashboard-customer-td-style rounded-l-2xl">
-                    {order.id}
+                    {order.displayId}
                   </td>
                   <td className="dashboard-customer-td-style">
-                    <Link href="/customers">{order.customer}</Link>
+                    {order.user?.name || "Unknown"}
                   </td>
                   <td className="dashboard-customer-td-style">
-                    {order.amount}
+                    ₱{order.totalAmount.toFixed(2)}
                   </td>
                   <td className="dashboard-customer-td-style">
-                    Table for {order.table}, {order.hour}
+                    {order.seat || "-"}
+                    {timeStr !== "-" ? `, ${timeStr}` : ""}
                   </td>
-                  <td className="dashboard-customer-td-style">{order.date}</td>
-                  <td className="dashboard-customer-td-style rounded-r-2xl relative overflow-visible">
-                    <div className="w-34 relative inline-block">
-                      <button
-                        className="flex w-full justify-between items-center border border-gray-200 rounded-lg px-4 py-2 bg-white shadow cursor-pointer"
-                        onClick={() =>
-                          setOpenIndex(openIndex === index ? null : index)
-                        }
-                      >
-                        {order.status}
-                        <FontAwesomeIcon icon={faAngleDown} className="ml-2" />
-                      </button>
-                      {openIndex === index && (
-                        <ul className="absolute mt-1 text-left w-full bg-white border border-gray-200 rounded-lg shadow-sm z-10 overflow-visible">
-                          {options.map((option) => (
-                            <li
-                              key={option}
-                              onClick={() => handleStatusChange(index, option)}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                            >
-                              {option}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+                  <td className="dashboard-customer-td-style">{dateStr}</td>
+                  <td className="dashboard-customer-td-style rounded-r-2xl">
+                    {order.status}
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="py-6 text-gray-500">
-                  No orders found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              );
+            })
+          ) : (
+            <tr>
+              <td colSpan={6} className="py-6 text-gray-500">
+                No orders found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
+      {selectedOrder && (
+        <OrdersModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
     </section>
   );
 }
