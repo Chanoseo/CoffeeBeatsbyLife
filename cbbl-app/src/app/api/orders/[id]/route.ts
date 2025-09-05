@@ -5,10 +5,10 @@ import prisma from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -16,7 +16,7 @@ export async function GET(
         items: {
           include: { product: true },
         },
-        seat: true, // ✅ include seat info
+        seat: true,
       },
     });
 
@@ -36,10 +36,10 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
     const body = await req.json();
     const { status } = body;
 
@@ -67,10 +67,10 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
 
     // First delete related OrderItems
     await prisma.orderItem.deleteMany({

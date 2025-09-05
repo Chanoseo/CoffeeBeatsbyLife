@@ -1,39 +1,45 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
-type ProductProps = {
+type CartItem = {
+  id: string;
+  productId: string;
+  size: string;
+  quantity: number;
   product: {
     id: string;
     name: string;
-    description?: string | null;
     price: number;
     imageUrl: string;
   };
 };
 
-function AddToCartButton({ product }: ProductProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [size, setSize] = useState<string>("small");
-  const [quantity, setQuantity] = useState<number>(1);
-  const [hasPreOrder, setHasPreOrder] = useState<boolean>(false);
+type Product = {
+  id: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  imageUrl: string;
+};
 
-  // 🔎 Check if the user already has an active pre-order
-  useEffect(() => {
-    const checkPreOrder = async () => {
-      try {
-        const res = await fetch("/api/orders/check");
-        if (res.ok) {
-          const data = await res.json();
-          setHasPreOrder(data.hasPreOrder);
-        }
-      } catch (err) {
-        console.error("Failed to check pre-order:", err);
-      }
-    };
-    checkPreOrder();
-  }, []);
+type AddToCartButtonProps = {
+  product: Product;
+  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  setCartCount: React.Dispatch<React.SetStateAction<number>>;
+  hasPreOrder: boolean; // ✅ new prop
+};
+
+export default function AddToCartButton({
+  product,
+  setCartItems,
+  setCartCount,
+  hasPreOrder,
+}: AddToCartButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [size, setSize] = useState("small");
+  const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = async () => {
     try {
@@ -47,14 +53,24 @@ function AddToCartButton({ product }: ProductProps) {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to add to cart");
+      if (!res.ok) throw new Error("Failed to add to cart");
+
+      // ✅ Get updated cart items from backend
+      const data: { items: CartItem[] } = await res.json();
+
+      if (data.items) {
+        // ✅ Update cart state with actual items from backend
+        setCartItems(data.items);
+
+        // ✅ Update cart count
+        const totalItems = data.items.reduce(
+          (acc, item) => acc + item.quantity,
+          0
+        );
+        setCartCount(totalItems);
       }
 
-      const data = await res.json();
-      console.log("Cart Response:", data);
-
-      setIsOpen(false); // close modal
+      setIsOpen(false);
     } catch (err) {
       console.error(err);
     }
@@ -62,9 +78,10 @@ function AddToCartButton({ product }: ProductProps) {
 
   return (
     <>
-      {/* Disable button if user has pre-order */}
       <button
-        className={`button-style ${hasPreOrder ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`button-style ${
+          hasPreOrder ? "opacity-50 cursor-not-allowed" : ""
+        }`}
         onClick={() => !hasPreOrder && setIsOpen(true)}
         disabled={hasPreOrder}
       >
@@ -74,7 +91,6 @@ function AddToCartButton({ product }: ProductProps) {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
-            {/* Close button */}
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
               onClick={() => setIsOpen(false)}
@@ -82,7 +98,6 @@ function AddToCartButton({ product }: ProductProps) {
               ✕
             </button>
 
-            {/* Product Details */}
             <div className="flex flex-col items-center text-center">
               <Image
                 src={product.imageUrl || "/default-image.jpg"}
@@ -98,44 +113,24 @@ function AddToCartButton({ product }: ProductProps) {
               <p className="text-lg font-bold mt-2">₱ {product.price}</p>
             </div>
 
-            {/* Options */}
             <div className="mt-6">
               <h3 className="text-md font-medium mb-2">Choose Size</h3>
               <div className="flex gap-4">
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="size"
-                    value="small"
-                    checked={size === "small"}
-                    onChange={(e) => setSize(e.target.value)}
-                  />
-                  Small
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="size"
-                    value="medium"
-                    checked={size === "medium"}
-                    onChange={(e) => setSize(e.target.value)}
-                  />
-                  Medium
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="size"
-                    value="large"
-                    checked={size === "large"}
-                    onChange={(e) => setSize(e.target.value)}
-                  />
-                  Large
-                </label>
+                {["small", "medium", "large"].map((s) => (
+                  <label key={s} className="flex items-center gap-1">
+                    <input
+                      type="radio"
+                      name="size"
+                      value={s}
+                      checked={size === s}
+                      onChange={(e) => setSize(e.target.value)}
+                    />
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </label>
+                ))}
               </div>
             </div>
 
-            {/* Quantity */}
             <div className="mt-4">
               <h3 className="text-md font-medium mb-2">Quantity</h3>
               <input
@@ -147,7 +142,6 @@ function AddToCartButton({ product }: ProductProps) {
               />
             </div>
 
-            {/* Confirm button */}
             <button
               onClick={handleAddToCart}
               className="button-style mt-4 w-full"
@@ -160,5 +154,3 @@ function AddToCartButton({ product }: ProductProps) {
     </>
   );
 }
-
-export default AddToCartButton;

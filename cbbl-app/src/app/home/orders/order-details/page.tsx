@@ -10,6 +10,7 @@ type OrderItem = {
   product: { name: string; price: number; imageUrl: string };
   quantity: number;
   price: number;
+  size?: string; // ✅ add size
 };
 
 type Order = {
@@ -174,7 +175,8 @@ function OrderDetails() {
                       {item.product.name}
                     </p>
                     <p className="text-gray-500 text-sm">
-                      Quantity: {item.quantity}
+                      Quantity: {item.quantity}{" "}
+                      {item.size ? `(${item.size})` : ""}
                     </p>
                   </div>
                 </div>

@@ -19,6 +19,21 @@ export interface OrderItem {
   product: { name: string };
   quantity: number;
   price: number;
+  size?: string; // ✅ add size
+}
+
+export interface FullOrder {
+  id: string; // DB id
+  displayId?: string; // formatted ID for UI
+  user?: { name?: string | null };
+  totalAmount: number;
+  seat?: string | null;
+  time?: string | null;
+  status: string;
+  items?: OrderItem[]; // ✅ items now include size
+  paymentProof?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FullOrder {

@@ -5,7 +5,7 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import SeatReservation from "./SeatReservation";
 import Payment from "./Payment";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // ✅ Import router
 
 type CartItem = {
@@ -25,31 +25,57 @@ interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
+  setCartItems: (items: CartItem[]) => void; // ✅ new
+  setCartCount: (count: number) => void; // ✅ new
 }
 
 export default function CartModal({
   isOpen,
   onClose,
   cartItems,
+  setCartItems: setParentCartItems, // rename to avoid conflict
+  setCartCount,
 }: CartModalProps) {
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [paymentProof, setPaymentProof] = useState<string | null>(null);
+  const [cartItemsState, setCartItems] = useState<CartItem[]>(cartItems); // ✅ local state
   const router = useRouter(); // ✅ Initialize router
+
+  // ✅ Sync cartItemsState whenever cartItems prop changes
+  useEffect(() => {
+    setCartItems(cartItems);
+  }, [cartItems]);
 
   if (!isOpen) return null;
 
-  const total = cartItems.reduce(
+  const total = cartItemsState.reduce(
     (acc, item) => acc + item.product.price * item.quantity,
     0
   );
 
   const handlePreOrder = async () => {
+    // ✅ Validation
+    if (!selectedSeat) {
+      alert("Please select a seat before proceeding.");
+      return;
+    }
+
+    if (!selectedTime) {
+      alert("Please select a time before proceeding.");
+      return;
+    }
+
+    if (!paymentProof) {
+      alert("Please upload a payment screenshot before proceeding.");
+      return;
+    }
+
     const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        cartItems,
+        cartItems: cartItemsState,
         seat: selectedSeat,
         time: selectedTime,
         paymentProof,
@@ -57,12 +83,40 @@ export default function CartModal({
     });
 
     if (res.ok) {
-      const data = await res.json(); // ✅ Get the created order data
+      const data = await res.json();
       onClose();
-      router.push(`/home/orders/order-details?id=${data.id}`); // ✅ Navigate to order-details page
+      router.push(`/home/orders/order-details?id=${data.id}`);
     } else {
       const { error } = await res.json();
       alert("Failed: " + error);
+    }
+  };
+
+  const handleRemoveItem = async (cartItemCustomId: string) => {
+    try {
+      const res = await fetch(`/api/cart/${cartItemCustomId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || "Failed to remove item");
+      }
+
+      // ✅ remove item locally in modal
+      const updatedCartItems = cartItemsState.filter(
+        (item) => item.id !== cartItemCustomId
+      );
+      setCartItems(updatedCartItems);
+
+      // ✅ update parent state
+      setParentCartItems(updatedCartItems);
+      setCartCount(
+        updatedCartItems.reduce((acc, item) => acc + item.quantity, 0)
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove item");
     }
   };
 
@@ -79,12 +133,12 @@ export default function CartModal({
           </button>
         </div>
 
-        {cartItems.length === 0 ? (
+        {cartItemsState.length === 0 ? (
           <p className="text-gray-500 text-center py-6">Your cart is empty</p>
         ) : (
           <>
             <div className="h-fit max-h-1/2 overflow-y-auto flex flex-col gap-4 mb-6">
-              {cartItems.map((item) => (
+              {cartItemsState.map((item) => (
                 <div
                   key={item.id}
                   className="flex justify-between items-center p-3 rounded-lg border border-gray-100 bg-gray-50"
@@ -111,6 +165,12 @@ export default function CartModal({
                     <p className="font-semibold text-gray-800">
                       ₱{(item.product.price * item.quantity).toFixed(2)}
                     </p>
+                    <button
+                      className="text-red-500 text-xs hover:underline mt-1"
+                      onClick={() => handleRemoveItem(item.id)}
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               ))}

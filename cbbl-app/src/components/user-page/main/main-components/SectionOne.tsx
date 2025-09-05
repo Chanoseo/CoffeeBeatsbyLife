@@ -118,6 +118,8 @@ function SectionOne() {
           isOpen={cartOpen}
           onClose={() => setCartOpen(false)}
           cartItems={cartItems}
+          setCartItems={setCartItems} // ✅ pass setter
+          setCartCount={setCartCount} // ✅ pass setter
         />
 
         {/* Navigation */}
@@ -159,6 +161,8 @@ function SectionOne() {
         <Menu
           selectedCategory={activeMenu === "All Menu" ? null : activeMenu}
           searchQuery={searchQuery}
+          setCartItems={setCartItems}
+          setCartCount={setCartCount}
         />
       </div>
     </section>

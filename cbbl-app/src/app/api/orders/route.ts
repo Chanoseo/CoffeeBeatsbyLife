@@ -16,6 +16,7 @@ cloudinary.config({
 type CartItem = {
   productId: string;
   quantity: number;
+  size?: string; // ✅ add size
   product: {
     price: number;
   };
@@ -70,6 +71,7 @@ export async function POST(req: Request) {
             productId: item.productId,
             quantity: item.quantity,
             price: item.product.price,
+            size: item.size, // ✅ save size
           })),
         },
       },

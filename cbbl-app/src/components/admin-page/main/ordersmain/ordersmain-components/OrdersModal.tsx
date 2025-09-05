@@ -143,7 +143,8 @@ function OrdersModal({ order, onClose }: OrdersModalProps) {
             <ul className="list-disc list-inside space-y-1 text-gray-700">
               {order.items.map((item) => (
                 <li key={item.id}>
-                  {item.product.name} x {item.quantity} - ₱
+                  {item.product.name} x {item.quantity}
+                  {item.size ? ` (${item.size})` : ""} - ₱
                   {(item.price * item.quantity).toFixed(2)}
                 </li>
               ))}

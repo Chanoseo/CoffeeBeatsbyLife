@@ -59,9 +59,18 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ message: "Added to cart successfully" });
+    return NextResponse.json({
+      message: "Added to cart successfully",
+      items: await prisma.cartItem.findMany({
+        where: { cartId: cart.id },
+        include: { product: true },
+      }),
+    });
   } catch (error) {
     console.error("Add to Cart Error:", error);
-    return NextResponse.json({ error: "Failed to add to cart" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to add to cart" },
+      { status: 500 }
+    );
   }
 }
