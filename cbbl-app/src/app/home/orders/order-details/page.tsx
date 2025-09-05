@@ -14,7 +14,7 @@ type OrderItem = {
 
 type Order = {
   id: string;
-  seat: string | null;
+  seat: { id: string; name: string } | null; // ✅ seat object
   time: string | null;
   totalAmount: number;
   status: string;
@@ -134,7 +134,7 @@ function OrderDetails() {
             <div>
               <p className="text-gray-600 font-medium mb-1">Seat:</p>
               <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">
-                {order.seat ?? "Not selected"}
+                {order.seat?.name ?? "Not selected"}
               </span>
             </div>
             <div>

@@ -101,18 +101,32 @@ model Product {
   cartItems  CartItem[]
 }
 
+model Seat {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique // e.g. "Seat 1"
+  status    String   @default("Available") // Available, Reserved, Occupied
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[] // relation to Order
+}
+
 model Order {
-  id           String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String      @db.ObjectId
-  user         User        @relation(fields: [userId], references: [id])
-  items        OrderItem[]
-  status       String      @default("Pending")
-  totalAmount  Float
-  seat         String? // chosen seat
-  time         DateTime? // reservation time
-  paymentProof String? // image URL (uploaded screenshot)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String      @db.ObjectId
+  user        User        @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  status      String      @default("Pending")
+  totalAmount Float
+
+  // ✅ Link to Seat
+  seatId String? @db.ObjectId
+  seat   Seat?   @relation(fields: [seatId], references: [id])
+
+  time         DateTime?
+  paymentProof String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model OrderItem {

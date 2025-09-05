@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     const order = await prisma.order.create({
       data: {
         userId,
-        seat: seat ?? null,
+        seatId: seat ?? null, // store seatId correctly
         time: time ? new Date(time) : null,
         paymentProof: uploadedProof,
         totalAmount,
@@ -73,21 +73,25 @@ export async function POST(req: Request) {
           })),
         },
       },
-      include: { items: true },
+      include: {
+        items: true,
+        seat: true, // include seat info if needed
+      },
     });
 
-    // ✅ Remove the user's cart and all its items safely
+    // ✅ Update the seat status to "Reserved" if a seat was selected
+    if (seat) {
+      await prisma.seat.update({
+        where: { id: seat },
+        data: { status: "Reserved" },
+      });
+    }
+
+    // Remove the user's cart and all its items safely
     const userCart = await prisma.cart.findFirst({ where: { userId } });
     if (userCart) {
-      // Delete all CartItems first
-      await prisma.cartItem.deleteMany({
-        where: { cartId: userCart.id },
-      });
-
-      // Now delete the Cart
-      await prisma.cart.delete({
-        where: { id: userCart.id },
-      });
+      await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
+      await prisma.cart.delete({ where: { id: userCart.id } });
     }
 
     return NextResponse.json(order, { status: 201 });
@@ -104,15 +108,20 @@ export async function GET() {
   try {
     const orders = await prisma.order.findMany({
       include: {
-        user: true, // include user info
-        items: {
-          include: { product: true }, // include product info
-        },
+        user: true,
+        items: { include: { product: true } },
+        seat: true, // seat object: {id, name, status}
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(orders, { status: 200 });
+    // Map seat object to seat name
+    const mappedOrders = orders.map((order) => ({
+      ...order,
+      seat: order.seat?.name ?? null, // ✅ convert seat object to string
+    }));
+
+    return NextResponse.json(mappedOrders, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch orders:", error);
     return NextResponse.json(

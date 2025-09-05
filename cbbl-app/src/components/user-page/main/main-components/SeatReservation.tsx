@@ -1,9 +1,18 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+interface Seat {
+  id: string;
+  name: string;
+  status: string; // "Available" | "Reserved"
+}
+
 interface Props {
-  selectedSeat: string | null;
-  setSelectedSeat: (seat: string) => void;
+  selectedSeat: string | null; // stores seat ID for backend
+  setSelectedSeat: (seatId: string) => void;
   selectedTime: string | null;
   setSelectedTime: (time: string | null) => void;
 }
@@ -14,16 +23,30 @@ function SeatReservation({
   selectedTime,
   setSelectedTime,
 }: Props) {
-  const seats = [
-    "Window Table 1",
-    "Window Table 2",
-    "Booth Area",
-    "Counter Seat 5",
-    "Table for 2 (A)",
-    "Meow",
-  ];
+  const [seats, setSeats] = useState<Seat[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const reservedSeats = ["Booth Area", "Table for 2 (A)"];
+  // ✅ Fetch seats from API
+  useEffect(() => {
+    const fetchSeats = async () => {
+      try {
+        const res = await fetch("/api/seats");
+        const data = await res.json();
+
+        if (data.success) {
+          setSeats(data.seats);
+        } else {
+          console.error("Failed to fetch seats");
+        }
+      } catch (err) {
+        console.error("Error fetching seats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSeats();
+  }, []);
 
   const timeOptions = [
     "10:00 AM",
@@ -44,13 +67,15 @@ function SeatReservation({
 
   const now = new Date();
 
+  if (loading) return <p className="text-center">Loading seats...</p>;
+
   return (
-    <div className="mt-6 max-w-4xl mx-auto p-6 bg-gray-50 rounded-xl">
+    <div className="mt-6 w-full p-6 bg-gray-50 rounded-xl">
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Select Your Preferable Seat
       </h1>
 
-      {/* Seat Status */}
+      {/* Seat Status Legend */}
       <div className="flex justify-center gap-6 mb-6">
         <div className="flex items-center gap-2">
           <span className="w-4 h-4 rounded-full bg-white border border-gray-400"></span>
@@ -69,12 +94,12 @@ function SeatReservation({
       {/* Seat Selection */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {seats.map((seat) => {
-          const isReserved = reservedSeats.includes(seat);
-          const isSelected = selectedSeat === seat;
+          const isReserved = seat.status === "Reserved";
+          const isSelected = selectedSeat === seat.id;
 
           return (
             <div
-              key={seat}
+              key={seat.id}
               className={`flex flex-col items-center p-4 rounded-xl border
                 ${
                   isReserved
@@ -88,10 +113,14 @@ function SeatReservation({
                     : ""
                 }
               `}
-              onClick={() => !isReserved && setSelectedSeat(seat)}
+              onClick={() => {
+                if (!isReserved) {
+                  setSelectedSeat(seat.id); // ✅ store ID for backend
+                }
+              }}
             >
               <FontAwesomeIcon icon={faUser} size="2x" />
-              <p className="mt-2 text-sm text-center">{seat}</p>
+              <p className="mt-2 text-sm text-center">{seat.name}</p>
             </div>
           );
         })}
@@ -133,7 +162,7 @@ function SeatReservation({
             );
 
             const isoTime = timeDate.toISOString();
-            const isPast = timeDate < now; // ✅ disable if in the past
+            const isPast = timeDate < now;
 
             return (
               <option key={time} value={isoTime} disabled={isPast}>

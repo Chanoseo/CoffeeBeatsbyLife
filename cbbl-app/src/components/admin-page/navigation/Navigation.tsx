@@ -7,6 +7,7 @@ import {
   faArrowRightFromBracket,
   faBagShopping,
   faBars,
+  faChair,
   faClipboardList,
   faEnvelope,
   faGauge,
@@ -38,6 +39,7 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
     { href: "/orders", label: "Orders", icon: faClipboardList },
     { href: "/messages", label: "Messages", icon: faEnvelope },
     { href: "/customers", label: "Customers", icon: faUsers },
+    { href: "/seats", label: "Seats", icon: faChair },
   ];
 
   return (

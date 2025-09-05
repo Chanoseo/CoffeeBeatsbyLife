@@ -3,7 +3,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const { id } = params;
 
@@ -11,10 +14,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       where: { id },
       include: {
         items: {
-          include: {
-            product: true,
-          },
+          include: { product: true },
         },
+        seat: true, // ✅ include seat info
       },
     });
 
@@ -32,14 +34,20 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const { id } = params;
     const body = await req.json();
     const { status } = body;
 
     if (!status) {
-      return NextResponse.json({ error: "Status is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Status is required" },
+        { status: 400 }
+      );
     }
 
     const updatedOrder = await prisma.order.update({
