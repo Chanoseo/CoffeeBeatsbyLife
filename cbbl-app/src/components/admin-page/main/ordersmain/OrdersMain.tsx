@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Orders from "./ordersmain-components/Orders";
 import OrdersHeader from "./ordersmain-components/OrdersHeader";
+import PastOrders from "./ordersmain-components/PastOrders";
 
 interface OrdersMainProps {
   collapsed: boolean;
@@ -20,6 +21,7 @@ function OrdersMain({ toggleNav }: OrdersMainProps) {
         toggleNav={toggleNav} // pass toggle
       />
       <Orders searchInput={searchInput} />
+      <PastOrders searchInput={searchInput} />
     </main>
   );
 }
