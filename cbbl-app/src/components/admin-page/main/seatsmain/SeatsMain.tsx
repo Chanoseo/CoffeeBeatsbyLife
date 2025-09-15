@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import SeatsHeader from "./seatsmain-components/SeatsHeader";
 import Seats from "./seatsmain-components/Seats";
+import ReservationInfo from "./seatsmain-components/ReservationInfo";
 
 interface ProductsMainProps {
   collapsed: boolean;
@@ -9,13 +11,13 @@ interface ProductsMainProps {
 }
 
 function SeatsMain({ toggleNav }: ProductsMainProps) {
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   return (
     <main className="w-full h-screen overflow-auto text-brown relative">
-      <SeatsHeader
-        toggleNav={toggleNav} // pass toggle
-      />
-      <Seats />
+      <SeatsHeader toggleNav={toggleNav} />
+      <Seats selectedTime={selectedTime} setSelectedTime={setSelectedTime} />
+      <ReservationInfo selectedTime={selectedTime} />
     </main>
   );
 }

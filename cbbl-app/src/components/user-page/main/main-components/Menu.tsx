@@ -14,6 +14,7 @@ export type CartItem = {
     name: string;
     price: number;
     imageUrl: string;
+    type: "FOOD" | "DRINK";
   };
 };
 
@@ -25,6 +26,7 @@ type Product = {
   imageUrl: string;
   isNew: boolean;
   isBestSeller: boolean;
+  type: "FOOD" | "DRINK";
 };
 
 type MenuProps = {

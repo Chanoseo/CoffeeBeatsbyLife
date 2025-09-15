@@ -1,3 +1,5 @@
+// api>products>[id]>route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary";
@@ -31,6 +33,7 @@ export async function PUT(
     const categoryId = formData.get("categoryId") as string;
     const isNew = formData.get("isNew") === "true";
     const isBestSeller = formData.get("isBestSeller") === "true";
+    const type = formData.get("type") as "FOOD" | "DRINK";
 
     // Fetch existing product
     const existingProduct = await prisma.product.findUnique({
@@ -81,6 +84,7 @@ export async function PUT(
         category: { connect: { id: categoryId } },
         isNew,
         isBestSeller,
+        type,
         imageUrl,
       },
       include: { category: true },

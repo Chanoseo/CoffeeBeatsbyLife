@@ -6,7 +6,7 @@ import Image from "next/image";
 import SeatReservation from "./SeatReservation";
 import Payment from "./Payment";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ Import router
+import { useRouter } from "next/navigation";
 
 type CartItem = {
   id: string;
@@ -18,6 +18,7 @@ type CartItem = {
     name: string;
     price: number;
     imageUrl: string;
+    type: "FOOD" | "DRINK";
   };
 };
 
@@ -25,8 +26,8 @@ interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  setCartItems: (items: CartItem[]) => void; // ✅ new
-  setCartCount: (count: number) => void; // ✅ new
+  setCartItems: (items: CartItem[]) => void;
+  setCartCount: (count: number) => void;
 }
 
 export default function CartModal({
@@ -39,8 +40,9 @@ export default function CartModal({
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [paymentProof, setPaymentProof] = useState<string | null>(null);
-  const [cartItemsState, setCartItems] = useState<CartItem[]>(cartItems); // ✅ local state
-  const router = useRouter(); // ✅ Initialize router
+  const [cartItemsState, setCartItems] = useState<CartItem[]>(cartItems);
+  const [guestCount, setGuestCount] = useState(1);
+  const router = useRouter();
 
   // ✅ Sync cartItemsState whenever cartItems prop changes
   useEffect(() => {
@@ -79,6 +81,7 @@ export default function CartModal({
         seat: selectedSeat,
         time: selectedTime,
         paymentProof,
+        guestCount,
       }),
     });
 
@@ -156,7 +159,9 @@ export default function CartModal({
                         {item.product.name}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Size: {item.size} | Qty: {item.quantity}
+                        {item.product.type === "DRINK"
+                          ? `Size: ${item.size} | Qty: ${item.quantity}`
+                          : `Qty: ${item.quantity}`}
                       </p>
                     </div>
                   </div>
@@ -182,6 +187,8 @@ export default function CartModal({
                 setSelectedSeat={setSelectedSeat}
                 selectedTime={selectedTime}
                 setSelectedTime={setSelectedTime}
+                guestCount={guestCount}
+                setGuestCount={setGuestCount}
               />
               <Payment setPaymentProof={setPaymentProof} />
             </div>

@@ -18,6 +18,10 @@ function AddProductForm() {
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // ✅ new state for Product Type
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<"FOOD" | "DRINK" | "">("");
+
   // ✅ Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
@@ -98,6 +102,7 @@ function AddProductForm() {
       formData.append("image", imageFile);
     }
     formData.set("categoryId", selectedCategory);
+    formData.set("type", selectedType);
 
     try {
       const res = await fetch("/api/products", {
@@ -271,6 +276,38 @@ function AddProductForm() {
           </button>
         </div>
       </div>
+
+      {/* Type Dropdown (Food or Drink) */}
+      <div className="flex flex-col gap-2">
+        <label>Type</label>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+            className="products-input-style w-full flex items-center justify-between"
+          >
+            {selectedType || "Select Type"}
+            <FontAwesomeIcon icon={faAngleDown} />
+          </button>
+          {typeDropdownOpen && (
+            <ul className="absolute w-full top-full bg-white border rounded mt-2 max-h-40 overflow-auto z-10 shadow">
+              {["FOOD", "DRINK"].map((t) => (
+                <li
+                  key={t}
+                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                  onClick={() => {
+                    setSelectedType(t as "FOOD" | "DRINK");
+                    setTypeDropdownOpen(false);
+                  }}
+                >
+                  {t}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
       {/* New/Best Seller */}
       <div className="flex gap-6">
         <label className="flex items-center gap-2">

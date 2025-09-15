@@ -11,6 +11,7 @@ interface UpdateSeatsProps {
   initialData: {
     name: string;
     status: string;
+    capacity: number;
   };
 }
 
@@ -71,7 +72,6 @@ function UpdateSeats({ onClose, seatId, initialData }: UpdateSeatsProps) {
         {/* Toast for delete error */}
         {deleteError && <p className="message-error">{deleteError}</p>}
 
-        {/* Only include the form; messages handled inside the form */}
         <UpdateSeatForm
           seatId={seatId}
           initialData={initialData}

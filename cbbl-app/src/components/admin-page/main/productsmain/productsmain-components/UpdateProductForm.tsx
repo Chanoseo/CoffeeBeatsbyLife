@@ -17,6 +17,7 @@ export type Product = {
     id: string;
     name: string;
   };
+  type: "FOOD" | "DRINK";
 };
 
 type UpdateProductFormProps = {
@@ -41,9 +42,11 @@ function UpdateProductForm({ productId, initialData }: UpdateProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [isNew, setIsNew] = useState(initialData.isNew);
   const [isBestSeller, setIsBestSeller] = useState(initialData.isBestSeller);
+  const [type, setType] = useState<"FOOD" | "DRINK">(initialData.type);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -110,6 +113,7 @@ function UpdateProductForm({ productId, initialData }: UpdateProductFormProps) {
     formData.append("categoryId", selectedCategory);
     formData.append("isNew", isNew.toString());
     formData.append("isBestSeller", isBestSeller.toString());
+    formData.append("type", type);
     if (imageFile) formData.append("image", imageFile);
 
     try {
@@ -289,6 +293,39 @@ function UpdateProductForm({ productId, initialData }: UpdateProductFormProps) {
           </button>
         </div>
       </div>
+
+      {/* ✅ Product Type Dropdown */}
+      <div className="flex flex-col gap-2">
+        <label>Type</label>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+            className="products-input-style w-full flex items-center justify-between"
+          >
+            {type || "Select Type"}
+            <FontAwesomeIcon icon={faAngleDown} />
+          </button>
+
+          {typeDropdownOpen && (
+            <ul className="absolute w-full top-full bg-white border rounded mt-2 max-h-40 overflow-auto z-10 shadow">
+              {["FOOD", "DRINK"].map((t) => (
+                <li
+                  key={t}
+                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                  onClick={() => {
+                    setType(t as "FOOD" | "DRINK");
+                    setTypeDropdownOpen(false);
+                  }}
+                >
+                  {t}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
       {/* New/Best Seller */}
       <div className="flex gap-6">
         <label className="flex items-center gap-2">

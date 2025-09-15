@@ -14,8 +14,8 @@ function AddSeatForm() {
     setMessage("");
 
     const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
     const seatName = (form.elements.namedItem("seat") as HTMLInputElement).value.trim();
+    const capacity = (form.elements.namedItem("capacity") as HTMLInputElement).value;
 
     if (!seatName) {
       setError("Please enter a seat name.");
@@ -23,7 +23,24 @@ function AddSeatForm() {
       return;
     }
 
+    if (!capacity || Number(capacity) < 1) {
+      setError("Please enter at least 1 capacity.");
+      setLoading(false);
+      return;
+    }
+
     try {
+      // ✅ Check if seat already exists
+      const checkRes = await fetch(`/api/seats/check?name=${encodeURIComponent(seatName)}`);
+      const checkData = await checkRes.json();
+      if (checkData.exists) {
+        setError("Seat name already exists.");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ If not exists, proceed with adding
+      const formData = new FormData(form);
       const res = await fetch("/api/seats", {
         method: "POST",
         body: formData,
@@ -33,8 +50,6 @@ function AddSeatForm() {
       if (data.success) {
         setMessage("Seat added successfully!");
         form.reset();
-
-        // ✅ Optional: reload after 2 seconds
         setTimeout(() => window.location.reload(), 2000);
       } else {
         setError("Failed to add seat.");
@@ -60,6 +75,19 @@ function AddSeatForm() {
           name="seat"
           type="text"
           placeholder="Enter seat name"
+          className="products-input-style"
+          required
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="capacity">Capacity</label>
+        <input
+          id="capacity"
+          name="capacity"
+          type="number"
+          min="1"
+          placeholder="Enter seat capacity"
           className="products-input-style"
           required
         />

@@ -1,3 +1,5 @@
+// api>products>route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary";
@@ -28,6 +30,7 @@ export async function POST(req: Request) {
     const categoryId = formData.get("categoryId") as string;
     const isNew = formData.get("isNew") === "on";
     const isBestSeller = formData.get("isBestSeller") === "on";
+    const type = formData.get("type") as "FOOD" | "DRINK"; // ✅ get type
 
     const file = formData.get("image") as File | null;
     let imageUrl = DEFAULT_IMAGE; // use Cloudinary default
@@ -63,6 +66,7 @@ export async function POST(req: Request) {
         price,
         isNew,
         isBestSeller,
+        type, // ✅ save Food or Drink
         category: { connect: { id: categoryId } },
         imageUrl, // always valid image
       },

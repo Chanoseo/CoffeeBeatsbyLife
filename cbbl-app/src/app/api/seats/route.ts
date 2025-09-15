@@ -1,11 +1,39 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// GET /api/seats → Fetch all seats
+export async function GET() {
+  try {
+    const seats = await prisma.seat.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        orders: {
+          select: {
+            id: true,
+            startTime: true,
+            endTime: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ success: true, seats });
+  } catch (error) {
+    console.error("Error fetching seats:", error);
+    return NextResponse.json(
+      { success: false, message: "Failed to fetch seats" },
+      { status: 500 }
+    );
+  }
+}
+
 // POST /api/seats → Add a new seat
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const seatName = formData.get("seat") as string;
+    const capacity = parseInt(formData.get("capacity") as string, 10);
 
     if (!seatName || seatName.trim() === "") {
       return NextResponse.json(
@@ -14,35 +42,26 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!capacity || capacity < 1) {
+      return NextResponse.json(
+        { success: false, message: "Capacity must be at least 1" },
+        { status: 400 }
+      );
+    }
+
     const seat = await prisma.seat.create({
       data: {
         name: seatName.trim(),
-        status: "Available", // default
+        status: "Available",
+        capacity,
       },
     });
 
     return NextResponse.json({ success: true, seat });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Error creating seat:", error);
     return NextResponse.json(
       { success: false, message: "Failed to add seat" },
-      { status: 500 }
-    );
-  }
-}
-
-// GET /api/seats → Fetch all seats
-export async function GET() {
-  try {
-    const seats = await prisma.seat.findMany({
-      orderBy: { name: "asc" },
-    });
-
-    return NextResponse.json({ success: true, seats });
-  } catch (error: unknown) {
-    console.error("Error fetching seats:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to fetch seats" },
       { status: 500 }
     );
   }

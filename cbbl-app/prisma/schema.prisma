@@ -94,6 +94,7 @@ model Product {
   isNew        Boolean  @default(false)
   isBestSeller Boolean  @default(false)
   totalOrders  Int      @default(0)
+  type         String   @default("FOOD")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -104,7 +105,7 @@ model Product {
 model Seat {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique // e.g. "Seat 1"
-  status    String   @default("Available") // Available, Reserved, Occupied
+  capacity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -122,6 +123,10 @@ model Order {
   // ✅ Link to Seat
   seatId String? @db.ObjectId
   seat   Seat?   @relation(fields: [seatId], references: [id])
+
+  guest     Int      @default(1)
+  startTime DateTime // 🆕 When reservation starts
+  endTime   DateTime // 🆕 When reservation ends
 
   time         DateTime?
   paymentProof String?
@@ -155,6 +160,6 @@ model CartItem {
   cart      Cart    @relation(fields: [cartId], references: [id])
   productId String  @db.ObjectId
   product   Product @relation(fields: [productId], references: [id])
-  size      String
+  size      String?
   quantity  Int     @default(1)
 }

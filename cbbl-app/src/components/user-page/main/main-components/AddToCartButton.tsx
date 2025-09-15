@@ -13,6 +13,7 @@ type CartItem = {
     name: string;
     price: number;
     imageUrl: string;
+    type: "FOOD" | "DRINK";
   };
 };
 
@@ -22,6 +23,7 @@ type Product = {
   description?: string | null;
   price: number;
   imageUrl: string;
+  type: "FOOD" | "DRINK";
 };
 
 type AddToCartButtonProps = {
@@ -43,14 +45,27 @@ export default function AddToCartButton({
 
   const handleAddToCart = async () => {
     try {
+      // ✅ Define type-safe request body
+      type CartRequestBody =
+        | { productId: string; quantity: number } // FOOD
+        | { productId: string; quantity: number; size: string }; // DRINK
+
+      let body: CartRequestBody = {
+        productId: product.id,
+        quantity,
+      };
+
+      if (product.type === "DRINK") {
+        body = {
+          ...body,
+          size,
+        };
+      }
+
       const res = await fetch("/api/cart/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: product.id,
-          size,
-          quantity,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) throw new Error("Failed to add to cart");
@@ -59,10 +74,8 @@ export default function AddToCartButton({
       const data: { items: CartItem[] } = await res.json();
 
       if (data.items) {
-        // ✅ Update cart state with actual items from backend
         setCartItems(data.items);
 
-        // ✅ Update cart count
         const totalItems = data.items.reduce(
           (acc, item) => acc + item.quantity,
           0
@@ -113,23 +126,25 @@ export default function AddToCartButton({
               <p className="text-lg font-bold mt-2">₱ {product.price}</p>
             </div>
 
-            <div className="mt-6">
-              <h3 className="text-md font-medium mb-2">Choose Size</h3>
-              <div className="flex gap-4">
-                {["small", "medium", "large"].map((s) => (
-                  <label key={s} className="flex items-center gap-1">
-                    <input
-                      type="radio"
-                      name="size"
-                      value={s}
-                      checked={size === s}
-                      onChange={(e) => setSize(e.target.value)}
-                    />
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </label>
-                ))}
+            {product.type === "DRINK" && (
+              <div className="mt-6">
+                <h3 className="text-md font-medium mb-2">Choose Size</h3>
+                <div className="flex gap-4">
+                  {["small", "medium", "large"].map((s) => (
+                    <label key={s} className="flex items-center gap-1">
+                      <input
+                        type="radio"
+                        name="size"
+                        value={s}
+                        checked={size === s}
+                        onChange={(e) => setSize(e.target.value)}
+                      />
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-4">
               <h3 className="text-md font-medium mb-2">Quantity</h3>

@@ -9,7 +9,7 @@ export async function PUT(
   try {
     const id = params.id; // ✅ no await needed
     const body = await req.json();
-    const { name, status } = body;
+    const { name, status, capacity } = body;
 
     if (!name?.trim() || !status?.trim()) {
       return NextResponse.json(
@@ -23,6 +23,7 @@ export async function PUT(
       data: {
         name: name.trim(),
         status: status.trim(),
+        capacity: capacity ?? null,
       },
     });
 

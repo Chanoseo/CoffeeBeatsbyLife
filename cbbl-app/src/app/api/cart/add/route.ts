@@ -1,4 +1,4 @@
-// api>cart>add>route.ts
+// api/cart/add/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { productId, size, quantity } = body;
 
-    // 🔑 Correct session call
+    // 🔑 Session check
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -23,6 +23,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // ✅ Find product
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
     // ✅ Find or create cart
     let cart = await prisma.cart.findFirst({
       where: { userId: user.id },
@@ -34,12 +42,12 @@ export async function POST(req: Request) {
       });
     }
 
-    // ✅ Add or update item
+    // ✅ Check if item already exists
     const existingItem = await prisma.cartItem.findFirst({
       where: {
         cartId: cart.id,
         productId,
-        size,
+        ...(product.type === "DRINK" ? { size } : {}), // match size only for drinks
       },
     });
 
@@ -49,14 +57,17 @@ export async function POST(req: Request) {
         data: { quantity: { increment: quantity } },
       });
     } else {
-      await prisma.cartItem.create({
-        data: {
-          cartId: cart.id,
-          productId,
-          size,
-          quantity,
-        },
-      });
+      // build data dynamically so `size` is not included for FOOD
+      const itemData: Parameters<typeof prisma.cartItem.create>[0]["data"] = {
+        cartId: cart.id,
+        productId,
+        quantity,
+      };
+      if (product.type === "DRINK") {
+        itemData.size = size;
+      }
+
+      await prisma.cartItem.create({ data: itemData });
     }
 
     return NextResponse.json({

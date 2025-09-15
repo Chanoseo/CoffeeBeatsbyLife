@@ -3,10 +3,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(
-  req: Request,
-  context: { params: { id: string } }
-) {
+export async function GET(req: Request, context: { params: { id: string } }) {
   try {
     const { id } = context.params;
 
@@ -34,32 +31,32 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: Request,
-  context: { params: { id: string } }
-) {
+export async function PUT(req: Request, context: { params: { id: string } }) {
   try {
     const { id } = context.params;
     const body = await req.json();
-    const { status } = body;
+    const { status, endTime } = body; // ✅ accept endTime too
 
-    if (!status) {
+    if (!status && !endTime) {
       return NextResponse.json(
-        { error: "Status is required" },
+        { error: "Status or endTime is required" },
         { status: 400 }
       );
     }
 
     const updatedOrder = await prisma.order.update({
       where: { id },
-      data: { status },
+      data: {
+        ...(status && { status }), // update status if provided
+        ...(endTime && { endTime: new Date(endTime) }), // update endTime if provided
+      },
     });
 
     return NextResponse.json(updatedOrder, { status: 200 });
   } catch (error) {
-    console.error("Update order status error:", error);
+    console.error("Update order error:", error);
     return NextResponse.json(
-      { error: "Failed to update status" },
+      { error: "Failed to update order" },
       { status: 500 }
     );
   }

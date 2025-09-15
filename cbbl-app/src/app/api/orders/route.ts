@@ -32,11 +32,12 @@ export async function POST(req: Request) {
     const userId = session.user.id;
 
     const body = await req.json();
-    const { cartItems, seat, time, paymentProof } = body as {
+    const { cartItems, seat, time, paymentProof, guestCount } = body as {
       cartItems: CartItem[];
       seat?: string | null;
       time?: string | null;
       paymentProof?: string | null;
+      guestCount?: number;
     };
 
     if (!cartItems || cartItems.length === 0) {
@@ -66,6 +67,11 @@ export async function POST(req: Request) {
         time: time ? new Date(time) : null,
         paymentProof: uploadedProof,
         totalAmount,
+        guest: guestCount ?? 1,
+        startTime: time ? new Date(time) : new Date(), // ✅ required
+        endTime: time
+          ? new Date(new Date(time).getTime() + 2 * 60 * 60 * 1000)
+          : new Date(), // ✅ example: +2 hrs
         items: {
           create: cartItems.map((item) => ({
             productId: item.productId,

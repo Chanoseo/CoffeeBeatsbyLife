@@ -7,6 +7,7 @@ type UpdateSeatFormProps = {
   initialData: {
     name: string;
     status: string;
+    capacity?: number | null;
   };
   onSuccess: () => void;
 };
@@ -17,7 +18,7 @@ function UpdateSeatForm({
   onSuccess,
 }: UpdateSeatFormProps) {
   const [name, setName] = useState(initialData.name);
-  const [status, setStatus] = useState(initialData.status);
+  const [capacity, setCapacity] = useState(initialData.capacity ?? 0);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -28,7 +29,7 @@ function UpdateSeatForm({
     setMessage("");
     setError("");
 
-    if (!name.trim() || !status.trim()) {
+    if (!name.trim()) {
       setError("Please fill in all fields.");
       setLoading(false);
       return;
@@ -38,7 +39,11 @@ function UpdateSeatForm({
       const res = await fetch(`/api/seats/${seatId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, status }),
+        body: JSON.stringify({
+          name,
+          status: initialData.status, // ✅ keep original status
+          capacity,
+        }),
       });
 
       const data = await res.json();
@@ -78,19 +83,22 @@ function UpdateSeatForm({
         />
       </div>
 
-      {/* Seat Status Dropdown */}
+      {/* Seat Status (Heading instead of dropdown) */}
       <div className="flex flex-col gap-2">
         <label>Status</label>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
+        <h3 className="font-semibold">{initialData.status}</h3>
+      </div>
+
+      {/* Capacity */}
+      <div className="flex flex-col gap-2">
+        <label>Capacity</label>
+        <input
+          type="number"
+          value={capacity}
+          onChange={(e) => setCapacity(Number(e.target.value))}
           className="products-input-style"
-          required
-        >
-          <option value="">Select Status</option>
-          <option value="Available">Available</option>
-          <option value="Reserved">Reserved</option>
-        </select>
+          min={1}
+        />
       </div>
 
       {/* Submit Button */}
