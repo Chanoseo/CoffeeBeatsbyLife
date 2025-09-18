@@ -59,7 +59,32 @@ export async function POST(req: Request) {
       0
     );
 
-    // Create order
+    // Define start & end times
+    const startTime = time ? new Date(time) : new Date();
+    const endTime = time
+      ? new Date(new Date(time).getTime() + 2 * 60 * 60 * 1000) // +2 hrs
+      : new Date();
+
+    // ✅ Check if seat is already reserved in the given timeframe
+    if (seat) {
+      const overlapping = await prisma.order.findFirst({
+        where: {
+          seatId: seat, // strictly check this seat
+          status: { in: ["Pending", "Confirmed"] },
+          startTime: { lte: endTime },
+          endTime: { gte: startTime },
+        },
+      });
+
+      if (overlapping) {
+        return NextResponse.json(
+          { error: `Seat already reserved during this time` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // ✅ Create order
     const order = await prisma.order.create({
       data: {
         userId,
@@ -68,10 +93,8 @@ export async function POST(req: Request) {
         paymentProof: uploadedProof,
         totalAmount,
         guest: guestCount ?? 1,
-        startTime: time ? new Date(time) : new Date(), // ✅ required
-        endTime: time
-          ? new Date(new Date(time).getTime() + 2 * 60 * 60 * 1000)
-          : new Date(), // ✅ example: +2 hrs
+        startTime,
+        endTime,
         items: {
           create: cartItems.map((item) => ({
             productId: item.productId,
@@ -87,15 +110,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // ✅ Update the seat status to "Reserved" if a seat was selected
-    if (seat) {
-      await prisma.seat.update({
-        where: { id: seat },
-        data: { status: "Reserved" },
-      });
-    }
-
-    // Remove the user's cart and all its items safely
+    // ✅ Clean up cart
     const userCart = await prisma.cart.findFirst({ where: { userId } });
     if (userCart) {
       await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
