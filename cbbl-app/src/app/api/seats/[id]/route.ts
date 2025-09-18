@@ -22,7 +22,6 @@ export async function PUT(
       where: { id },
       data: {
         name: name.trim(),
-        status: status.trim(),
         capacity: capacity ?? null,
       },
     });
@@ -50,13 +49,6 @@ export async function DELETE(
       return NextResponse.json(
         { success: false, message: "Seat not found" },
         { status: 404 }
-      );
-    }
-
-    if (seat.status === "Reserved") {
-      return NextResponse.json(
-        { success: false, message: "Cannot delete a reserved seat" },
-        { status: 400 }
       );
     }
 

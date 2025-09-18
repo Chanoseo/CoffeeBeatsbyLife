@@ -52,7 +52,6 @@ export async function POST(req: Request) {
     const seat = await prisma.seat.create({
       data: {
         name: seatName.trim(),
-        status: "Available",
         capacity,
       },
     });
