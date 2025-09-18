@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 // PUT /api/seats/:id → Update a seat
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> } // 👈 fix: params is a Promise
 ) {
   try {
-    const id = params.id; // ✅ no await needed
+    const { id } = await context.params; // 👈 await it
     const body = await req.json();
     const { name, status, capacity } = body;
 
@@ -38,10 +38,10 @@ export async function PUT(
 // DELETE /api/seats/:id → Delete a seat
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> } // 👈 same fix
 ) {
   try {
-    const id = params.id; // ✅ no await needed
+    const { id } = await context.params; // 👈 await it
 
     const seat = await prisma.seat.findUnique({ where: { id } });
 

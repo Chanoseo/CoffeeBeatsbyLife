@@ -13,11 +13,12 @@ export type Product = {
   imageUrl: string;
   isNew: boolean;
   isBestSeller: boolean;
+  totalOrders: number;
+  type: string; // ✅ restrict instead of string
   category?: {
     id: string;
     name: string;
   };
-  type: "FOOD" | "DRINK";
 };
 
 type UpdateProductFormProps = {
@@ -42,7 +43,7 @@ function UpdateProductForm({ productId, initialData }: UpdateProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [isNew, setIsNew] = useState(initialData.isNew);
   const [isBestSeller, setIsBestSeller] = useState(initialData.isBestSeller);
-  const [type, setType] = useState<"FOOD" | "DRINK">(initialData.type);
+  const [type, setType] = useState("FOOD");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);

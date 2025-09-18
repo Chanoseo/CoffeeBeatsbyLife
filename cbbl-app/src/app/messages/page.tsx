@@ -1,5 +1,5 @@
 import MessagesMain from "@/components/admin-page/main/messagesmain/MessagesMain";
-import Navigation from "@/components/admin-page/navigation/Navigation";
+// import Navigation from "@/components/admin-page/navigation/Navigation";
 
 export const metadata = {
   title: "Messages",
@@ -14,7 +14,7 @@ export const metadata = {
 function AdminMessagesPage() {
   return (
     <div className="flex">
-      <Navigation />
+      {/* <Navigation /> */}
       <MessagesMain />
     </div>
   );

@@ -6,10 +6,10 @@ import { authOptions } from "@/lib/auth";
 
 export async function DELETE(
   req: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: cartItemId } = context.params;
+    const { id: cartItemId } = await context.params; // ✅ fix: await params
 
     if (!cartItemId) {
       return NextResponse.json({ error: "Missing cartItemId" }, { status: 400 });

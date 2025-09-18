@@ -1,11 +1,14 @@
-// api>orders>[id]>route.ts
-
+// api/orders/[id]/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(req: Request, context: { params: { id: string } }) {
+// ✅ GET /api/orders/:id
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params; // ✅ await first
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -31,11 +34,15 @@ export async function GET(req: Request, context: { params: { id: string } }) {
   }
 }
 
-export async function PUT(req: Request, context: { params: { id: string } }) {
+// ✅ PUT /api/orders/:id
+export async function PUT(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params; // ✅ await first
     const body = await req.json();
-    const { status, endTime } = body; // ✅ accept endTime too
+    const { status, endTime } = body;
 
     if (!status && !endTime) {
       return NextResponse.json(
@@ -47,8 +54,8 @@ export async function PUT(req: Request, context: { params: { id: string } }) {
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
-        ...(status && { status }), // update status if provided
-        ...(endTime && { endTime: new Date(endTime) }), // update endTime if provided
+        ...(status && { status }),
+        ...(endTime && { endTime: new Date(endTime) }),
       },
     });
 
@@ -62,19 +69,18 @@ export async function PUT(req: Request, context: { params: { id: string } }) {
   }
 }
 
+// ✅ DELETE /api/orders/:id
 export async function DELETE(
   req: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params; // ✅ await first
 
-    // First delete related OrderItems
     await prisma.orderItem.deleteMany({
       where: { orderId: id },
     });
 
-    // Then delete the Order
     await prisma.order.delete({
       where: { id },
     });

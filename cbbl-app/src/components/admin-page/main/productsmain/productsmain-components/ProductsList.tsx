@@ -12,7 +12,8 @@ type Product = {
   imageUrl: string;
   isNew: boolean;
   isBestSeller: boolean;
-  totalOrder: number;
+  totalOrders: number; // ✅ fixed (plural)
+  type: string; // ✅ added from schema
   category?: {
     id: string;
     name: string;
@@ -69,12 +70,22 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
     fetchProducts();
   }, [selectedCategory, searchInput]); // re-fetch or filter when category changes
 
-  if (loading) return <p className="p-4 text-gray-600 text-sm md:text-base">Loading products...</p>;
-  if (error) return <p className="p-4 text-red-500 text-sm md:text-base">Error: {error}</p>;
+  if (loading)
+    return (
+      <p className="p-4 text-gray-600 text-sm md:text-base">
+        Loading products...
+      </p>
+    );
+  if (error)
+    return (
+      <p className="p-4 text-red-500 text-sm md:text-base">Error: {error}</p>
+    );
 
   if (products.length === 0) {
     return (
-      <p className="p-4 text-gray-600 text-center text-sm md:text-base">No products available.</p>
+      <p className="p-4 text-gray-600 text-center text-sm md:text-base">
+        No products available.
+      </p>
     );
   }
 
@@ -118,12 +129,16 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
                 <p className="text-xs mt-1">
                   {product.category ? product.category.name : "Uncategorized"}
                 </p>
-                <p className="text-xs mt-1 line-clamp-2">{product.description}</p>
+                <p className="text-xs mt-1 line-clamp-2">
+                  {product.description}
+                </p>
                 <p className="md:text-xl mt-2 underline text-md">
                   ₱ {product.price}
                 </p>
               </div>
-              <p className="text-sm truncate md:text-base">Total Order: {product.totalOrder ?? 0}</p>
+              <p className="text-sm truncate md:text-base">
+                Total Orders: {product.totalOrders ?? 0}
+              </p>
             </div>
           </div>
         ))}

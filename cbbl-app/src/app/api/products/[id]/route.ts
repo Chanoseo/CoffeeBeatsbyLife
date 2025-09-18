@@ -1,5 +1,4 @@
-// api>products>[id]>route.ts
-
+// api/products/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary";
@@ -21,9 +20,9 @@ const DEFAULT_IMAGE =
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const productId = params.id;
+  const { id: productId } = await context.params; // ✅ await first
 
   try {
     const formData = await req.formData();
@@ -35,7 +34,6 @@ export async function PUT(
     const isBestSeller = formData.get("isBestSeller") === "true";
     const type = formData.get("type") as "FOOD" | "DRINK";
 
-    // Fetch existing product
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -47,7 +45,6 @@ export async function PUT(
       );
     }
 
-    // Start with the current image
     let imageUrl = existingProduct.imageUrl || DEFAULT_IMAGE;
 
     const file = formData.get("image") as File | null;
@@ -72,7 +69,7 @@ export async function PUT(
         }
       );
 
-      imageUrl = uploadResult.secure_url; // update only if a new file is uploaded
+      imageUrl = uploadResult.secure_url;
     }
 
     const product = await prisma.product.update({
@@ -102,12 +99,11 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const productId = params.id;
+  const { id: productId } = await context.params; // ✅ await first
 
   try {
-    // Find the product first
     const product = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -119,10 +115,8 @@ export async function DELETE(
       );
     }
 
-    // Optional: Delete the image from Cloudinary if not default
     if (product.imageUrl && product.imageUrl !== DEFAULT_IMAGE) {
       try {
-        // Extract public_id from the Cloudinary URL
         const urlParts = product.imageUrl.split("/");
         const fileNameWithExt = urlParts[urlParts.length - 1];
         const publicId = `products/${fileNameWithExt.split(".")[0]}`;
@@ -130,11 +124,9 @@ export async function DELETE(
         await cloudinary.uploader.destroy(publicId);
       } catch (cloudErr) {
         console.error("Cloudinary image delete error:", cloudErr);
-        // Not critical, continue to delete the product
       }
     }
 
-    // Delete the product from the database
     await prisma.product.delete({
       where: { id: productId },
     });
