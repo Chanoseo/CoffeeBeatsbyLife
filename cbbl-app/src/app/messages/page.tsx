@@ -1,5 +1,4 @@
-import MessagesMain from "@/components/admin-page/main/messagesmain/MessagesMain";
-// import Navigation from "@/components/admin-page/navigation/Navigation";
+import AdminMessagesPage from "@/components/admin-page/AdminMessagesPage";
 
 export const metadata = {
   title: "Messages",
@@ -11,12 +10,9 @@ export const metadata = {
   },
 };
 
-function AdminMessagesPage() {
+function MessagesPage() {
   return (
-    <div className="flex">
-      {/* <Navigation /> */}
-      <MessagesMain />
-    </div>
+    <AdminMessagesPage />
   );
 }
-export default AdminMessagesPage;
+export default MessagesPage;

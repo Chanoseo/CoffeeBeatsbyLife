@@ -1,10 +1,15 @@
 import Messages from "./messagesmain-components/Messages";
 import MessagesHeader from "./messagesmain-components/MessagesHeader";
 
-function MessagesMain() {
+interface MessagesMainProps {
+  collapsed: boolean;
+  toggleNav: () => void;
+}
+
+function MessagesMain({ toggleNav }: MessagesMainProps) {
   return (
-    <main className="bg-[#3C604C]/10 w-full h-screen overflow-auto py-15 px-20 text-brown">
-      <MessagesHeader />
+    <main className="w-full h-screen overflow-auto text-brown">
+      <MessagesHeader toggleNav={toggleNav}/>
       <Messages />
     </main>
   );

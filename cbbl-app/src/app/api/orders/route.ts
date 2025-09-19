@@ -65,22 +65,31 @@ export async function POST(req: Request) {
       ? new Date(new Date(time).getTime() + 2 * 60 * 60 * 1000) // +2 hrs
       : new Date();
 
-    // ✅ Check if seat is already reserved in the given timeframe
+    // ✅ Check if seat is already reserved in the given timeframe (allow selecting at end)
     if (seat) {
       const overlapping = await prisma.order.findFirst({
         where: {
-          seatId: seat, // strictly check this seat
+          seatId: seat,
           status: { in: ["Pending", "Confirmed"] },
-          startTime: { lte: endTime },
-          endTime: { gte: startTime },
+          // existing start < new end AND existing end > new start
+          startTime: { lt: endTime },
+          endTime: { gt: startTime },
         },
       });
 
       if (overlapping) {
-        return NextResponse.json(
-          { error: `Seat already reserved during this time` },
-          { status: 400 }
-        );
+        const existingStart = new Date(overlapping.startTime).getTime();
+        const existingEnd = new Date(overlapping.endTime).getTime();
+        const newStart = startTime.getTime();
+        const newEnd = endTime.getTime();
+
+        // Allow selecting exactly at the end of existing booking
+        if (!(newStart >= existingEnd || newEnd <= existingStart)) {
+          return NextResponse.json(
+            { error: "Seat already reserved during this time" },
+            { status: 400 }
+          );
+        }
       }
     }
 

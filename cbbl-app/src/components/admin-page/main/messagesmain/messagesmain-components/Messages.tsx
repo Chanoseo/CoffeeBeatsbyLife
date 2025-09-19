@@ -94,7 +94,7 @@ function Messages() {
   };
 
   return (
-    <section className="dashboard-card">
+    <section className="products-card">
       <h1 className="text-2xl mb-4">Received Messages</h1>
       <div className="flex flex-col gap-4">
         {messages.length === 0 ? (

@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   devIndicators: false,
   images: {
-    domains: ["res.cloudinary.com"], // allow Cloudinary images
+    domains: ["res.cloudinary.com", "lh3.googleusercontent.com"],
   },
 };
 
