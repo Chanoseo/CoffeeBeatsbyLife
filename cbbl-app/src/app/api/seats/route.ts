@@ -15,6 +15,14 @@ export async function GET() {
             status: true,
           },
         },
+        walkIns: {
+          select: {
+            id: true,
+            guest: true,
+            startTime: true,
+            endTime: true,
+          },
+        },
       },
     });
 

@@ -7,7 +7,7 @@ export async function middleware(req: NextRequest) {
   const path = url.pathname;
 
   // Routes that are protected
-  const adminRoutes = ["/dashboard", "/products", "/orders", "/messages"];
+  const adminRoutes = ["/dashboard", "/products", "/orders", "/messages", "/seats"];
   const userRoutes = ["/home"];
 
   // Skip routes that are not protected
@@ -59,5 +59,7 @@ export const config = {
     "/orders/:path*",
     "/messages",
     "/messages/:path*",
+    "/seats",
+    "/seats/:path*",
   ],
 };

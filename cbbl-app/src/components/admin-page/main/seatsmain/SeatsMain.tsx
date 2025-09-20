@@ -4,6 +4,7 @@ import { useState } from "react";
 import SeatsHeader from "./seatsmain-components/SeatsHeader";
 import Seats from "./seatsmain-components/Seats";
 import ReservationInfo from "./seatsmain-components/ReservationInfo";
+import WalkIn from "./seatsmain-components/WalkIn";
 
 interface ProductsMainProps {
   collapsed: boolean;
@@ -18,6 +19,7 @@ function SeatsMain({ toggleNav }: ProductsMainProps) {
       <SeatsHeader toggleNav={toggleNav} />
       <Seats selectedTime={selectedTime} setSelectedTime={setSelectedTime} />
       <ReservationInfo selectedTime={selectedTime} />
+      <WalkIn selectedTime={selectedTime} />
     </main>
   );
 }

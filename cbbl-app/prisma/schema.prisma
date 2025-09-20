@@ -109,7 +109,21 @@ model Seat {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orders Order[] // relation to Order
+  orders  Order[] // relation to Order
+  walkIns WalkIn[]
+}
+
+model WalkIn {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  seatId String @db.ObjectId
+  seat   Seat   @relation(fields: [seatId], references: [id], onDelete: Cascade)
+
+  guest     Int      @default(1)
+  startTime DateTime
+  endTime   DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Order {

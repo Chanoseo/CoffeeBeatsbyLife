@@ -11,12 +11,19 @@ interface Order {
   endTime: string;
 }
 
+interface WalkIn {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
 interface Seat {
   id: string;
   name: string;
   status: string; // still in schema, but we won’t rely on it for display
   capacity: number;
   orders?: Order[];
+  walkIns?: WalkIn[];
 }
 
 interface Props {
@@ -55,18 +62,31 @@ function SeatsList({ selectedTime }: Props) {
     setIsUpdateOpen(true);
   };
 
-  // ✅ Check if seat is reserved at selectedTime
-  const isSeatReserved = (seat: Seat) => {
-    if (!selectedTime || !seat.orders) return false;
+  // ✅ Check seat status: order, walk-in, or available
+  const getSeatStatus = (seat: Seat) => {
+    if (!selectedTime) return "available";
 
     const selected = new Date(selectedTime);
 
-    return seat.orders.some((order) => {
+    // Check orders
+    const reservedByOrder = seat.orders?.some((order) => {
       const orderStart = new Date(order.startTime);
       const orderEnd = new Date(order.endTime);
-
       return selected >= orderStart && selected < orderEnd;
     });
+
+    if (reservedByOrder) return "order";
+
+    // Check walk-ins
+    const reservedByWalkIn = seat.walkIns?.some((walkIn) => {
+      const walkInStart = new Date(walkIn.startTime);
+      const walkInEnd = new Date(walkIn.endTime);
+      return selected >= walkInStart && selected < walkInEnd;
+    });
+
+    if (reservedByWalkIn) return "walkin";
+
+    return "available";
   };
 
   if (loading) return <p>Loading seats...</p>;
@@ -78,14 +98,19 @@ function SeatsList({ selectedTime }: Props) {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {seats.map((seat) => {
-            const reserved = isSeatReserved(seat);
+            const status = getSeatStatus(seat);
 
             // ✅ Compute display status
-            const displayStatus = reserved ? "Reserved" : "Available";
+            let displayStatus = "Available";
+            let seatColorClass = "text-green-500";
 
-            // ✅ Seat colors based on status
-            const seatColorClass =
-              displayStatus === "Reserved" ? "text-red-500" : "text-green-500";
+            if (status === "order") {
+              displayStatus = "Reserved";
+              seatColorClass = "text-red-500";
+            } else if (status === "walkin") {
+              displayStatus = "Occupied";
+              seatColorClass = "text-blue-500";
+            }
 
             return (
               <div
@@ -114,7 +139,12 @@ function SeatsList({ selectedTime }: Props) {
           seatId={selectedSeat.id}
           initialData={{
             name: selectedSeat.name,
-            status: isSeatReserved(selectedSeat) ? "Reserved" : "Available",
+            status:
+              getSeatStatus(selectedSeat) === "order"
+                ? "Reserved"
+                : getSeatStatus(selectedSeat) === "walkin"
+                ? "Occupied"
+                : "Available",
             capacity: selectedSeat.capacity,
           }}
           onClose={() => setIsUpdateOpen(false)}
