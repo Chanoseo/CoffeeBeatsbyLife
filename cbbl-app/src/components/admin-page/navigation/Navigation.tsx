@@ -11,6 +11,7 @@ import {
   faClipboardList,
   faEnvelope,
   faGauge,
+  faUser,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
@@ -40,6 +41,7 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
     { href: "/messages", label: "Messages", icon: faEnvelope },
     { href: "/customers", label: "Customers", icon: faUsers },
     { href: "/seats", label: "Seats", icon: faChair },
+    { href: "/user", label: "User", icon: faUser },
   ];
 
   return (
