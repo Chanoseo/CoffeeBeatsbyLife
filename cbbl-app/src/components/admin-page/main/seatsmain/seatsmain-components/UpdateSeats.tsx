@@ -13,9 +13,15 @@ interface UpdateSeatsProps {
     status: string;
     capacity: number;
   };
+  onRefresh: () => void; // ✅ callback to refresh seats in real-time
 }
 
-function UpdateSeats({ onClose, seatId, initialData }: UpdateSeatsProps) {
+function UpdateSeats({
+  onClose,
+  seatId,
+  initialData,
+  onRefresh,
+}: UpdateSeatsProps) {
   const [loading, setLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -26,10 +32,7 @@ function UpdateSeats({ onClose, seatId, initialData }: UpdateSeatsProps) {
     setDeleteError(null);
 
     try {
-      const res = await fetch(`/api/seats/${seatId}`, {
-        method: "DELETE",
-      });
-
+      const res = await fetch(`/api/seats/${seatId}`, { method: "DELETE" });
       const data = await res.json();
 
       if (!data.success) {
@@ -37,9 +40,9 @@ function UpdateSeats({ onClose, seatId, initialData }: UpdateSeatsProps) {
         return;
       }
 
-      alert("Seat deleted successfully!"); // can replace with success toast if desired
+      // ✅ Real-time refresh
+      onRefresh();
       onClose();
-      window.location.reload();
     } catch (err) {
       console.error("Delete error:", err);
       setDeleteError(err instanceof Error ? err.message : "An error occurred");
@@ -69,16 +72,12 @@ function UpdateSeats({ onClose, seatId, initialData }: UpdateSeatsProps) {
           </div>
         </div>
 
-        {/* Toast for delete error */}
         {deleteError && <p className="message-error">{deleteError}</p>}
 
         <UpdateSeatForm
           seatId={seatId}
           initialData={initialData}
-          onSuccess={() => {
-            onClose();
-            window.location.reload(); // optional: refresh after update
-          }}
+          onSuccess={onRefresh}
         />
       </div>
     </div>

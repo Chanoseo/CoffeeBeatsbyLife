@@ -18,8 +18,15 @@ function Products({ searchInput }: ProductsProps) {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // 🔄 trigger refresh for ProductsList
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const handleToggle = () => {
     setShowAddProduct((prev) => !prev);
+  };
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1); // re-render ProductsList
   };
 
   useEffect(() => {
@@ -85,13 +92,18 @@ function Products({ searchInput }: ProductsProps) {
             className="bg-[#3C604C] text-sm text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear w-fit text-nowrap lg:text-base"
           >
             <span>Add Product</span>
-            <FontAwesomeIcon icon={faPlus} className="ml-2"/>
+            <FontAwesomeIcon icon={faPlus} className="ml-2" />
           </button>
         </div>
       </div>
 
-      {showAddProduct && <AddProduct onClose={handleToggle} />}
+      {/* ✅ Pass onRefresh */}
+      {showAddProduct && (
+        <AddProduct onClose={handleToggle} onRefresh={handleRefresh} />
+      )}
+
       <ProductsList
+        key={refreshKey} // forces re-render when refreshKey changes
         selectedCategory={selectedCategory}
         searchInput={searchInput}
       />

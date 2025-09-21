@@ -11,12 +11,20 @@ interface Order {
   endTime: string;
 }
 
+interface WalkIn {
+  id: string;
+  startTime: string;
+  endTime: string;
+  guest: number;
+}
+
 interface Seat {
   id: string;
   name: string;
   status: string;
   capacity: number;
   orders: Order[];
+  walkIns: WalkIn[]; // ✅ add this
 }
 
 interface Props {
@@ -132,44 +140,74 @@ function SeatReservation({
           seats.map((seat) => {
             const isSelected = selectedSeat === seat.id;
 
-            // ✅ Check time conflicts
-            let hasConflict = false;
+            let hasOrderConflict = false; // red → fully inside reserved time
+            let hasWalkInConflict = false; // blue → fully inside walk-in
+            let isUnavailable = false; // gray → partially overlaps future reservation/walk-in
+
             if (selectedTime) {
               const selectedStart = new Date(selectedTime);
               const selectedEnd = new Date(
                 selectedStart.getTime() + 2 * 60 * 60 * 1000
-              );
+              ); // 2-hour slot
 
-              hasConflict = seat.orders.some((order) => {
+              // RED: selectedStart inside reservation
+              hasOrderConflict = seat.orders.some((order) => {
                 const orderStart = new Date(order.startTime);
                 const orderEnd = new Date(order.endTime);
-
-                // Overlap check
-                return selectedStart < orderEnd && orderStart < selectedEnd;
+                return selectedStart >= orderStart && selectedStart < orderEnd;
               });
+
+              // BLUE: selectedStart inside walk-in
+              hasWalkInConflict = seat.walkIns?.some((walkIn) => {
+                const walkInStart = new Date(walkIn.startTime);
+                const walkInEnd = new Date(walkIn.endTime);
+                return (
+                  selectedStart >= walkInStart && selectedStart < walkInEnd
+                );
+              });
+
+              // GRAY: partially overlaps any reservation/walk-in but not fully inside
+              if (!hasOrderConflict && !hasWalkInConflict) {
+                const allBookings = [...seat.orders, ...(seat.walkIns ?? [])];
+                isUnavailable = allBookings.some((booking) => {
+                  const start = new Date(booking.startTime);
+                  // partial overlap: selectedStart before booking start but selectedEnd overlaps booking start
+                  return selectedStart < start && selectedEnd > start;
+                });
+              }
             }
 
-            // ✅ Only mismatch if guests exceed capacity
+            // Disable seat if fully conflicted or partially conflicted
             const capacityMismatch = guestCount !== seat.capacity;
-            const isDisabled = hasConflict || capacityMismatch;
+            const isDisabled =
+              hasOrderConflict ||
+              hasWalkInConflict ||
+              capacityMismatch ||
+              isUnavailable;
+
+            // Seat color
+            let seatColorClass = "";
+            if (isSelected) {
+              seatColorClass = "bg-green-500 text-white";
+            } else if (hasOrderConflict) {
+              seatColorClass = "bg-red-100 text-red-600 cursor-not-allowed"; // fully reserved
+            } else if (hasWalkInConflict) {
+              seatColorClass = "bg-blue-100 text-blue-600 cursor-not-allowed"; // fully occupied
+            } else if (capacityMismatch) {
+              seatColorClass =
+                "bg-gray-200 text-gray-500 cursor-not-allowed opacity-70"; // ❌ capacity mismatch
+            } else if (isUnavailable) {
+              seatColorClass =
+                "bg-gray-200 text-gray-500 cursor-not-allowed opacity-70"; // partial conflict
+            } else {
+              seatColorClass =
+                "bg-white text-gray-800 hover:bg-green-50 cursor-pointer";
+            }
 
             return (
               <div
                 key={seat.id}
-                className={`flex flex-col items-center p-4 rounded-xl border
-                  ${
-                    isDisabled
-                      ? "bg-gray-200 text-gray-500 cursor-not-allowed opacity-70"
-                      : ""
-                  }
-                  ${hasConflict ? "bg-red-100 text-red-600" : ""}
-                  ${isSelected ? "bg-green-500 text-white" : ""}
-                  ${
-                    !isDisabled && !isSelected
-                      ? "bg-white text-gray-800 hover:bg-green-50 cursor-pointer"
-                      : ""
-                  }
-                `}
+                className={`flex flex-col items-center p-4 rounded-xl border ${seatColorClass}`}
                 onClick={() => {
                   if (!isDisabled) setSelectedSeat(seat.id);
                 }}
@@ -261,8 +299,15 @@ function SeatReservation({
             name="guest"
             id="guest"
             min="1"
-            value={guestCount}
-            onChange={(e) => setGuestCount(Number(e.target.value))}
+            value={guestCount || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "") {
+                setGuestCount(0); // ✅ keep it empty visually
+              } else {
+                setGuestCount(Number(value));
+              }
+            }}
             className="border border-gray-300 rounded-lg p-3 outline-none bg-white text-gray-800"
           />
         </div>

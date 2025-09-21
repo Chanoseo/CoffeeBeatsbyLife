@@ -39,14 +39,25 @@ function OrderDetails() {
 
   useEffect(() => {
     if (!orderId) return;
+
     const fetchOrder = async () => {
-      const res = await fetch(`/api/orders/${orderId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setOrder(data);
+      try {
+        const res = await fetch(`/api/orders/${orderId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setOrder(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch order:", err);
       }
     };
-    fetchOrder();
+
+    fetchOrder(); // initial fetch
+
+    // Poll every 3 seconds for real-time updates
+    const interval = setInterval(fetchOrder, 3000);
+
+    return () => clearInterval(interval); // cleanup on unmount
   }, [orderId]);
 
   if (!order)
@@ -101,15 +112,13 @@ function OrderDetails() {
             );
             const isCompleted = currentIndex > index;
 
-            // Style logic
-            let stepStyle = "border-gray-300 text-gray-400 bg-white"; // upcoming
+            let stepStyle = "border-gray-300 text-gray-400 bg-white";
             if (isCompleted) {
-              stepStyle = "bg-green-100 text-green-700 border-green-200"; // completed → green
+              stepStyle = "bg-green-100 text-green-700 border-green-200";
             } else if (isActive) {
-              stepStyle = statusStyles[step.status]; // active → use statusStyles
+              stepStyle = statusStyles[step.status];
             }
 
-            // Label text color
             const textColor = isCompleted
               ? "text-green-700"
               : isActive
@@ -118,7 +127,6 @@ function OrderDetails() {
 
             return (
               <div key={step.status} className="flex items-center gap-6">
-                {/* Step Icon */}
                 <div className="flex flex-col items-center">
                   <div
                     className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition ${stepStyle}`}
@@ -131,8 +139,6 @@ function OrderDetails() {
                     {step.label}
                   </p>
                 </div>
-
-                {/* Always show dots between steps */}
                 {index < steps.length - 1 && (
                   <div className="flex items-center gap-1 text-gray-400">
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>

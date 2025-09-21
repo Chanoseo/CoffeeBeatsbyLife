@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import UpdateProduct from "./UpdateProduct";
 
 type Product = {
@@ -12,15 +12,16 @@ type Product = {
   imageUrl: string;
   isNew: boolean;
   isBestSeller: boolean;
-  totalOrders: number; // ✅ fixed (plural)
-  type: string; // ✅ added from schema
+  totalOrders: number;
+  type: string;
   category?: {
     id: string;
     name: string;
   };
 };
+
 type ProductsListProps = {
-  selectedCategory?: string; // make it optional
+  selectedCategory?: string;
   searchInput: string;
 };
 
@@ -36,39 +37,40 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
     setShowUpdateProduct(true);
   };
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch("/api/products");
-        if (!res.ok) throw new Error("Failed to fetch products");
+  // ✅ useCallback so it’s stable and can be reused
+  const fetchProducts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/products");
+      if (!res.ok) throw new Error("Failed to fetch products");
 
-        let data: Product[] = await res.json();
+      let data: Product[] = await res.json();
 
-        // Filter by selected category if provided
-        if (selectedCategory) {
-          data = data.filter(
-            (product) => product.category?.id === selectedCategory
-          );
-        }
-
-        // Filter by search input
-        if (searchInput) {
-          data = data.filter((product) =>
-            product.name.toLowerCase().includes(searchInput.toLowerCase())
-          );
-        }
-
-        setProducts(data);
-      } catch (err: unknown) {
-        if (err instanceof Error) setError(err.message);
-        else setError("An unexpected error occurred");
-      } finally {
-        setLoading(false);
+      if (selectedCategory) {
+        data = data.filter(
+          (product) => product.category?.id === selectedCategory
+        );
       }
-    };
 
+      if (searchInput) {
+        data = data.filter((product) =>
+          product.name.toLowerCase().includes(searchInput.toLowerCase())
+        );
+      }
+
+      setProducts(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCategory, searchInput]);
+
+  useEffect(() => {
     fetchProducts();
-  }, [selectedCategory, searchInput]); // re-fetch or filter when category changes
+    const interval = setInterval(fetchProducts, 5000); // refresh every 5s
+    return () => clearInterval(interval);
+  }, [fetchProducts]);
 
   if (loading)
     return (
@@ -76,6 +78,7 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
         Loading products...
       </p>
     );
+
   if (error)
     return (
       <p className="p-4 text-red-500 text-sm md:text-base">Error: {error}</p>
@@ -114,7 +117,7 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
                 src={product.imageUrl || "/default-image.jpg"}
                 alt={product.name}
                 fill
-                style={{ objectFit: "cover" }} // scales image to cover container
+                style={{ objectFit: "cover" }}
                 className="transition-transform duration-300 ease-in-out group-hover:scale-110"
                 sizes="(max-width: 768px) 100vw, 200px"
                 priority
@@ -149,6 +152,7 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
           productId={selectedProduct.id}
           initialData={selectedProduct}
           onClose={() => setShowUpdateProduct(false)}
+          onRefresh={fetchProducts} // ✅ still works
         />
       )}
     </div>

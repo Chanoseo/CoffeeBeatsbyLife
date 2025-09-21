@@ -30,29 +30,56 @@ type WalkIn = {
   seat?: Seat | null;
 };
 
+type OrderType = {
+  id: string;
+  seatId: string | null;
+  startTime: string;
+  endTime: string;
+};
+
 type WalkInProps = { selectedTime: string | null };
 
 export default function WalkIn({ selectedTime }: WalkInProps) {
   const [walkIns, setWalkIns] = useState<WalkIn[]>([]);
+  const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedTimes, setSelectedTimes] = useState<Record<string, string>>(
     {}
   );
 
+  // Replace the fetchData inside useEffect with this
   useEffect(() => {
-    const fetchWalkIns = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/walkins`);
-        if (!res.ok) throw new Error("Failed to fetch walk-ins");
-        const data = await res.json();
+        // Fetch walk-ins
+        const walkInsRes = await fetch(`/api/walkins`);
+        if (!walkInsRes.ok) throw new Error("Failed to fetch walk-ins");
+        const walkInsData = await walkInsRes.json();
 
-        const walkInsArray: WalkIn[] = Array.isArray(data)
-          ? data
-          : data.walkIns || [];
+        // Normalize walk-ins
+        const walkInsArray: WalkIn[] = Array.isArray(walkInsData)
+          ? walkInsData
+          : walkInsData?.walkIns && Array.isArray(walkInsData.walkIns)
+          ? walkInsData.walkIns
+          : [];
         setWalkIns(walkInsArray);
 
+        // Fetch orders
+        const ordersRes = await fetch(`/api/orders`);
+        if (!ordersRes.ok) throw new Error("Failed to fetch orders");
+        const ordersData = await ordersRes.json();
+
+        // Normalize orders
+        const ordersArray: OrderType[] = Array.isArray(ordersData)
+          ? ordersData
+          : ordersData?.orders && Array.isArray(ordersData.orders)
+          ? ordersData.orders
+          : [];
+        setOrders(ordersArray);
+
+        // Initialize selected times
         const times: Record<string, string> = {};
         walkInsArray.forEach((w) => {
           times[w.id] = w.endTime;
@@ -60,21 +87,35 @@ export default function WalkIn({ selectedTime }: WalkInProps) {
         setSelectedTimes(times);
       } catch (err) {
         console.error(err);
-        setError("Failed to fetch walk-ins");
+        setError("Failed to fetch data");
       } finally {
         setLoading(false);
       }
     };
-    fetchWalkIns();
+
+    fetchData();
   }, []);
 
   const handleTimeChange = (id: string, isoTime: string) => {
     setSelectedTimes((prev) => ({ ...prev, [id]: isoTime }));
   };
 
-  const handleUpdate = async (id: string) => {
+  const handleUpdate = async (id: string, seatId: string | undefined) => {
     const newEndTime = selectedTimes[id];
     if (!newEndTime) return;
+
+    const startTime = walkIns.find((w) => w.id === id)?.startTime;
+    if (!startTime) return;
+
+    const newEndDate = new Date(newEndTime);
+    const startDate = new Date(startTime);
+
+    // Check for conflicts
+    const conflict = isTimeReserved(seatId ?? null, newEndDate, startDate, id);
+    if (conflict) {
+      alert("This time conflicts with another reservation!");
+      return;
+    }
 
     try {
       const res = await fetch(`/api/walkins/${id}`, {
@@ -113,20 +154,33 @@ export default function WalkIn({ selectedTime }: WalkInProps) {
       });
 
   const isTimeReserved = (
-    seatName: string | null,
-    checkEndTime: Date,
-    currentStart: Date,
+    seatId: string | null,
+    newEndTime: Date,
+    startTime: Date,
     currentId: string
   ) => {
-    return walkIns.some((w) => {
-      if (!w.seat || w.id === currentId) return false;
-      if (w.seat.name !== seatName) return false;
+    if (!seatId) return false;
 
-      const otherStart = new Date(w.startTime);
-      const otherEnd = new Date(w.endTime);
+    // Check walk-ins
+    const walkInConflict = walkIns.some((w) => {
+      if (w.id === currentId) return false;
+      if (w.seat?.id !== seatId) return false;
 
-      return currentStart < otherEnd && checkEndTime > otherStart;
+      const wStart = new Date(w.startTime);
+      const wEnd = new Date(w.endTime);
+      return startTime < wEnd && newEndTime > wStart;
     });
+
+    // Check orders
+    const orderConflict = orders.some((o) => {
+      if (!o.seatId || o.seatId !== seatId) return false;
+
+      const oStart = new Date(o.startTime);
+      const oEnd = new Date(o.endTime);
+      return startTime < oEnd && newEndTime > oStart;
+    });
+
+    return walkInConflict || orderConflict;
   };
 
   let message: string | null = null;
@@ -207,7 +261,7 @@ export default function WalkIn({ selectedTime }: WalkInProps) {
                       const isoTime = timeDate.toISOString();
                       const isPast = timeDate < now;
                       const reserved = isTimeReserved(
-                        w.seat?.name ?? null,
+                        w.seat?.id ?? null,
                         timeDate,
                         startTime,
                         w.id
@@ -236,7 +290,7 @@ export default function WalkIn({ selectedTime }: WalkInProps) {
 
               <button
                 className="w-full button-style"
-                onClick={() => handleUpdate(w.id)}
+                onClick={() => handleUpdate(w.id, w.seat?.id)}
               >
                 Update
               </button>

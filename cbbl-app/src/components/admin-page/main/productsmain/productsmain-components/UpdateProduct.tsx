@@ -6,12 +6,14 @@ import { faTrash, faX } from "@fortawesome/free-solid-svg-icons";
 
 interface UpdateProductProps {
   onClose: () => void;
+  onRefresh: () => void; // ✅ add refresh callback
   productId: string;
   initialData: Product;
 }
 
 function UpdateProduct({
   onClose,
+  onRefresh,
   productId,
   initialData,
 }: UpdateProductProps) {
@@ -28,10 +30,8 @@ function UpdateProduct({
 
       if (data.success) {
         alert("Product deleted successfully!");
-        // ✅ Close modal
-        onClose();
-        // ✅ Reload the page
-        window.location.reload();
+        onRefresh(); // ✅ Refresh product list real-time
+        onClose(); // ✅ Close modal
       } else {
         alert(data.message || "Failed to delete product.");
       }
@@ -47,14 +47,24 @@ function UpdateProduct({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl">Update Product</h2>
           <div className="flex items-center gap-4">
-            <FontAwesomeIcon icon={faTrash} onClick={handleDelete} className="text-xl text-red-500 hover:text-red-600 cursor-pointer" />
-            <FontAwesomeIcon icon={faX} onClick={onClose} className="text-xl cursor-pointer" />
+            <FontAwesomeIcon
+              icon={faTrash}
+              onClick={handleDelete}
+              className="text-xl text-red-500 hover:text-red-600 cursor-pointer"
+            />
+            <FontAwesomeIcon
+              icon={faX}
+              onClick={onClose}
+              className="text-xl cursor-pointer"
+            />
           </div>
         </div>
         <UpdateProductForm
           productId={productId}
           initialData={initialData}
-          onSuccess={onClose}
+          onSuccess={() => {
+            onRefresh(); // ✅ Refresh after update
+          }}
         />
       </div>
     </div>

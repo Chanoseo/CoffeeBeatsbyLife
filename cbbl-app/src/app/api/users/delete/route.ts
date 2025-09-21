@@ -9,7 +9,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // Delete user
+    // Delete user (related accounts will be deleted automatically because of onDelete: Cascade)
     await prisma.user.delete({
       where: { email },
     });

@@ -20,7 +20,7 @@ interface WalkIn {
 interface Seat {
   id: string;
   name: string;
-  status: string; // still in schema, but we won’t rely on it for display
+  status: string;
   capacity: number;
   orders?: Order[];
   walkIns?: WalkIn[];
@@ -28,47 +28,49 @@ interface Seat {
 
 interface Props {
   selectedTime: string | null;
+  refreshSignal?: number; // added to trigger refresh from parent
 }
 
-function SeatsList({ selectedTime }: Props) {
+function SeatsList({ selectedTime, refreshSignal }: Props) {
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchSeats = async () => {
-      try {
-        const res = await fetch("/api/seats");
-        const data = await res.json();
-
-        if (data.success) {
-          setSeats(data.seats);
-        } else {
-          console.error("Failed to fetch seats");
-        }
-      } catch (err) {
-        console.error("Error fetching seats:", err);
-      } finally {
-        setLoading(false);
+  const fetchSeats = async () => {
+    try {
+      const res = await fetch("/api/seats");
+      const data = await res.json();
+      if (data.success) {
+        setSeats(data.seats);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching seats:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchSeats();
+  useEffect(() => {
+    fetchSeats(); // initial fetch
+    const interval = setInterval(fetchSeats, 5000); // fetch every 5 sec for real-time
+    return () => clearInterval(interval);
   }, []);
+
+  // refresh when parent signals a new seat added
+  useEffect(() => {
+    if (refreshSignal !== undefined) fetchSeats();
+  }, [refreshSignal]);
 
   const handleSeatClick = (seat: Seat) => {
     setSelectedSeat(seat);
     setIsUpdateOpen(true);
   };
 
-  // ✅ Check seat status: order, walk-in, or available
   const getSeatStatus = (seat: Seat) => {
     if (!selectedTime) return "available";
-
     const selected = new Date(selectedTime);
 
-    // Check orders
     const reservedByOrder = seat.orders?.some((order) => {
       const orderStart = new Date(order.startTime);
       const orderEnd = new Date(order.endTime);
@@ -77,7 +79,6 @@ function SeatsList({ selectedTime }: Props) {
 
     if (reservedByOrder) return "order";
 
-    // Check walk-ins
     const reservedByWalkIn = seat.walkIns?.some((walkIn) => {
       const walkInStart = new Date(walkIn.startTime);
       const walkInEnd = new Date(walkIn.endTime);
@@ -99,8 +100,6 @@ function SeatsList({ selectedTime }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {seats.map((seat) => {
             const status = getSeatStatus(seat);
-
-            // ✅ Compute display status
             let displayStatus = "Available";
             let seatColorClass = "text-green-500";
 
@@ -148,6 +147,9 @@ function SeatsList({ selectedTime }: Props) {
             capacity: selectedSeat.capacity,
           }}
           onClose={() => setIsUpdateOpen(false)}
+          onRefresh={() => {
+            fetchSeats(); // refresh seats immediately
+          }}
         />
       )}
     </div>

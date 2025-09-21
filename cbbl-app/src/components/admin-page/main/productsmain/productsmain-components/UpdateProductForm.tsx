@@ -27,7 +27,11 @@ type UpdateProductFormProps = {
   onSuccess: () => void;
 };
 
-function UpdateProductForm({ productId, initialData }: UpdateProductFormProps) {
+function UpdateProductForm({
+  productId,
+  initialData,
+  onSuccess,
+}: UpdateProductFormProps) {
   const [name, setName] = useState(initialData.name);
   const [description, setDescription] = useState(initialData.description || "");
   const [price, setPrice] = useState(initialData.price);
@@ -94,7 +98,6 @@ function UpdateProductForm({ productId, initialData }: UpdateProductFormProps) {
     setMessage("");
     setError("");
 
-    // ✅ Validation: check required fields
     if (
       !name.trim() ||
       !description.trim() ||
@@ -127,10 +130,13 @@ function UpdateProductForm({ productId, initialData }: UpdateProductFormProps) {
       if (!data.success)
         throw new Error(data.message || "Failed to update product");
 
+      // Show success message
       setMessage("Product updated successfully!");
 
-      // ✅ Reload the page after 3 seconds
-      setTimeout(() => window.location.reload(), 3000);
+      // ✅ Notify parent to update product list (real-time)
+      onSuccess();
+
+      // Do NOT close modal here, let user click X to close
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

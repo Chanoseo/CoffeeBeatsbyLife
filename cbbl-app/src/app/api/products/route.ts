@@ -18,7 +18,8 @@ type CloudinaryUploadResult = {
 };
 
 // Default image from Cloudinary
-const DEFAULT_IMAGE = "https://res.cloudinary.com/dzqv6m3wa/image/upload/v1756286166/products/lentil_bolognese.jpg";
+const DEFAULT_IMAGE =
+  "https://res.cloudinary.com/dzqv6m3wa/image/upload/v1756286166/products/lentil_bolognese.jpg";
 
 export async function POST(req: Request) {
   try {
@@ -86,29 +87,40 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const categoryName = url.searchParams.get("category"); // e.g., /api/products?category=Coffee
+    const categoryName = url.searchParams.get("category");
 
     let products;
     if (categoryName) {
-      // Fetch products only in selected category
       products = await prisma.product.findMany({
-        where: {
-          category: { name: categoryName },
+        where: { category: { name: categoryName } },
+        include: {
+          category: true,
+          _count: { select: { orderItems: true } }, // ✅ count orders
         },
-        include: { category: true },
         orderBy: { createdAt: "desc" },
       });
     } else {
-      // Fetch all products
       products = await prisma.product.findMany({
-        include: { category: true },
+        include: {
+          category: true,
+          _count: { select: { orderItems: true } }, // ✅ count orders
+        },
         orderBy: { createdAt: "desc" },
       });
     }
 
-    return NextResponse.json(products);
+    // ✅ map _count into totalOrders
+    const data = products.map((p) => ({
+      ...p,
+      totalOrders: p._count.orderItems,
+    }));
+
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error fetching products:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch products" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch products" },
+      { status: 500 }
+    );
   }
 }

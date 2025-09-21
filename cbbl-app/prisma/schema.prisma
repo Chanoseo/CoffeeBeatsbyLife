@@ -93,7 +93,6 @@ model Product {
   category     Category @relation(fields: [categoryId], references: [id])
   isNew        Boolean  @default(false)
   isBestSeller Boolean  @default(false)
-  totalOrders  Int      @default(0)
   type         String   @default("FOOD")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

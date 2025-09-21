@@ -1,8 +1,11 @@
 "use client";
-
 import { useState } from "react";
 
-function AddSeatForm() {
+interface AddSeatFormProps {
+  onSeatAdded?: () => void; // callback to refresh seat list
+}
+
+function AddSeatForm({ onSeatAdded }: AddSeatFormProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -14,8 +17,11 @@ function AddSeatForm() {
     setMessage("");
 
     const form = e.target as HTMLFormElement;
-    const seatName = (form.elements.namedItem("seat") as HTMLInputElement).value.trim();
-    const capacity = (form.elements.namedItem("capacity") as HTMLInputElement).value;
+    const seatName = (
+      form.elements.namedItem("seat") as HTMLInputElement
+    ).value.trim();
+    const capacity = (form.elements.namedItem("capacity") as HTMLInputElement)
+      .value;
 
     if (!seatName) {
       setError("Please enter a seat name.");
@@ -30,8 +36,9 @@ function AddSeatForm() {
     }
 
     try {
-      // ✅ Check if seat already exists
-      const checkRes = await fetch(`/api/seats/check?name=${encodeURIComponent(seatName)}`);
+      const checkRes = await fetch(
+        `/api/seats/check?name=${encodeURIComponent(seatName)}`
+      );
       const checkData = await checkRes.json();
       if (checkData.exists) {
         setError("Seat name already exists.");
@@ -39,7 +46,6 @@ function AddSeatForm() {
         return;
       }
 
-      // ✅ If not exists, proceed with adding
       const formData = new FormData(form);
       const res = await fetch("/api/seats", {
         method: "POST",
@@ -50,7 +56,7 @@ function AddSeatForm() {
       if (data.success) {
         setMessage("Seat added successfully!");
         form.reset();
-        setTimeout(() => window.location.reload(), 2000);
+        if (onSeatAdded) onSeatAdded(); // ✅ trigger refresh
       } else {
         setError("Failed to add seat.");
       }
@@ -67,7 +73,6 @@ function AddSeatForm() {
       {error && <p className="message-error">{error}</p>}
       {message && <p className="message-success">{message}</p>}
 
-      {/* Seat Name Input */}
       <div className="flex flex-col gap-2">
         <label htmlFor="seat">Seat</label>
         <input
@@ -93,7 +98,6 @@ function AddSeatForm() {
         />
       </div>
 
-      {/* Submit Button */}
       <button type="submit" className="button-style" disabled={loading}>
         {loading ? "Adding..." : "Add Seat"}
       </button>

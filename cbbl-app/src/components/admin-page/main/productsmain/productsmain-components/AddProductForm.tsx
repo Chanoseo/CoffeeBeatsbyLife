@@ -5,7 +5,11 @@ import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faX } from "@fortawesome/free-solid-svg-icons";
 
-function AddProductForm() {
+interface AddProductFormProps {
+  onRefresh: () => void; // ✅ callback to refresh product list
+}
+
+function AddProductForm({ onRefresh }: AddProductFormProps) {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     []
   );
@@ -116,11 +120,12 @@ function AddProductForm() {
         form.reset();
         setImageFile(null);
         setSelectedCategory("");
+        setSelectedType("");
 
-        // ✅ Reload the page after 3 seconds
-        setTimeout(() => window.location.reload(), 3000);
+        // ✅ Trigger parent refresh instead of reload
+        onRefresh();
       } else {
-        setError("Failed to add product.");
+        setError(data.message || "Failed to add product.");
       }
     } catch (error) {
       console.error(error);
