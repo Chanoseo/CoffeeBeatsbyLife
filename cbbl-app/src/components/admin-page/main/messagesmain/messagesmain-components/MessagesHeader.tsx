@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import { useSession } from "next-auth/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faColumns } from "@fortawesome/free-solid-svg-icons";
 
