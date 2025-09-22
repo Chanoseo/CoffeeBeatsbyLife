@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Menu from "./Menu";
-import CartModal from "./CartModal"; // ✅ import new component
+import CartModal from "./CartModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
+import BusyStatus from "./BusyStatus";
 
 type Category = {
   id: string;
@@ -28,6 +29,8 @@ type CartItem = {
   };
 };
 
+type StoreStatusType = "open" | "closed" | "busy";
+
 function SectionOne() {
   const [activeMenu, setActiveMenu] = useState("All Menu");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -36,6 +39,7 @@ function SectionOne() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [cartOpen, setCartOpen] = useState(false);
+  const [storeStatus, setStoreStatus] = useState<StoreStatusType | null>(null);
 
   // Fetch categories
   useEffect(() => {
@@ -60,7 +64,7 @@ function SectionOne() {
     fetchCategories();
   }, []);
 
-  // ✅ Fetch cart items & count
+  // Fetch cart items & count
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -82,8 +86,37 @@ function SectionOne() {
     fetchCart();
   }, []);
 
+  // Fetch store status (for busy notifications)
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch("/api/notifications");
+        if (!res.ok) throw new Error("Failed to fetch store status");
+        const data = await res.json();
+
+        if (
+          data.storeStatus === "open" ||
+          data.storeStatus === "closed" ||
+          data.storeStatus === "busy"
+        ) {
+          setStoreStatus(data.storeStatus);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section className="pt-25 pb-10">
+      {/* Show BusyStatus only if the store is busy */}
+      {storeStatus === "busy" && <BusyStatus />}
+
       <div className="flex flex-col justify-center">
         <div className="flex gap-4 items-center justify-end">
           {/* Search Menu */}
@@ -101,7 +134,7 @@ function SectionOne() {
             />
           </div>
 
-          {/* ✅ Cart Icon */}
+          {/* Cart Icon */}
           <div className="relative inline-block">
             <button onClick={() => setCartOpen((prev) => !prev)}>
               <FontAwesomeIcon icon={faCartShopping} className="text-2xl" />
@@ -114,13 +147,13 @@ function SectionOne() {
           </div>
         </div>
 
-        {/* ✅ Cart Modal Component */}
+        {/* Cart Modal */}
         <CartModal
           isOpen={cartOpen}
           onClose={() => setCartOpen(false)}
           cartItems={cartItems}
-          setCartItems={setCartItems} // ✅ pass setter
-          setCartCount={setCartCount} // ✅ pass setter
+          setCartItems={setCartItems}
+          setCartCount={setCartCount}
         />
 
         {/* Navigation */}

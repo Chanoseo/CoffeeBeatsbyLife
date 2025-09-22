@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import AddUserContent from "./AddUserContent"; // Make sure this path is correct
+import AddUserContent from "./AddUserContent";
 import Users from "./Users";
 
-function AddUser() {
+interface AddUserProps {
+  searchInput: string; // accept searchInput as prop
+}
+
+function AddUser({ searchInput }: AddUserProps) {
   const [showAddUser, setShowAddUser] = useState(false);
 
   const handleToggle = () => {
@@ -27,7 +31,9 @@ function AddUser() {
 
       {/* Show AddUserContent when showAddUser is true */}
       {showAddUser && <AddUserContent onClose={handleToggle} />}
-      <Users />
+
+      {/* ✅ Pass searchInput to Users */}
+      <Users searchInput={searchInput} />
     </section>
   );
 }

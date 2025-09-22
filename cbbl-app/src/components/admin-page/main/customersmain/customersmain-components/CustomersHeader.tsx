@@ -6,17 +6,17 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-interface AddUserHeaderProps {
+interface CustomersHeaderProps {
   searchInput: string;
   setSearchInput: (value: string) => void;
-  toggleNav: () => void;
+  toggleNav: () => void; // add toggleNav
 }
 
-function AddUserHeader({
+function CustomersHeader({
   searchInput,
   setSearchInput,
   toggleNav,
-}: AddUserHeaderProps) {
+}: CustomersHeaderProps) {
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
     weekday: "long",
@@ -33,7 +33,7 @@ function AddUserHeader({
             className="cursor-pointer"
             onClick={toggleNav}
           />
-          <h2 className="font-semibold">Users</h2>
+          <h2 className="font-semibold">Customers</h2>
         </div>
         <p className="text-xs text-nowrap md:text-sm">{formattedDate}</p>
       </div>
@@ -41,7 +41,7 @@ function AddUserHeader({
         <div className="relative w-full">
           <input
             type="text"
-            placeholder="Search users..."
+            placeholder="Search customers..."
             className="text-sm border border-gray-300 rounded-md pl-10 p-2 outline-none w-full md:text-base"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -56,4 +56,4 @@ function AddUserHeader({
   );
 }
 
-export default AddUserHeader;
+export default CustomersHeader;

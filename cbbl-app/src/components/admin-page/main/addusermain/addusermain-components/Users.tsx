@@ -10,10 +10,10 @@ interface User {
   role: string;
 }
 
-export default function Users() {
+export default function Users({ searchInput }: { searchInput: string }) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null); // ✅ added state
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   useEffect(() => {
     fetch("/api/users/all")
@@ -31,14 +31,27 @@ export default function Users() {
   if (loading)
     return <p className="text-center text-gray-500 mt-10">Loading users...</p>;
 
+  // ✅ normalize search input
+  const query = searchInput?.toLowerCase().trim() || "";
+
+  // ✅ filter safely (avoid null issues)
+  const filteredUsers = users.filter((user) => {
+    const name = user.name?.toLowerCase() || "";
+    const email = user.email?.toLowerCase() || "";
+    return name.includes(query) || email.includes(query);
+  });
+
+  if (!filteredUsers.length)
+    return <p className="text-center text-gray-500 mt-10">No users found.</p>;
+
   return (
     <section className="p-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {users.map((user) => (
+        {filteredUsers.map((user) => (
           <div
             key={user.email}
             className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex flex-col items-center gap-3 cursor-pointer"
-            onClick={() => setSelectedUser(user)} // ✅ handle click
+            onClick={() => setSelectedUser(user)}
           >
             {user.image ? (
               <Image
