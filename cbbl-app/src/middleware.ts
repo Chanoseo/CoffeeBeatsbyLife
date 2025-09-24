@@ -13,10 +13,12 @@ export async function middleware(req: NextRequest) {
     "/orders",
     "/messages",
     "/seats",
-    "/user", // ✅ added user under admin
+    "/user",
+    "/cms",
+    "/customers",
   ];
-  const userRoutes = ["/home"];
-  const walkinRoutes = ["/walk-ins"]; // ✅ walk-in routes
+  const userRoutes = ["/home", "/profile"];
+  const walkinRoutes = ["/walk-ins"];
 
   // Skip routes that are not protected
   if (
@@ -54,7 +56,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     if (role === "walkin") {
-      return NextResponse.redirect(new URL("/walk-ins", req.url)); // ✅ walkin → walk-ins
+      return NextResponse.redirect(new URL("/walk-ins", req.url));
     }
     return NextResponse.next();
   }
@@ -74,7 +76,9 @@ export const config = {
   matcher: [
     "/home",
     "/home/:path*",
-    "/walk-ins", // ✅ walk-in
+    "/profile",
+    "/profile/:path*",
+    "/walk-ins",
     "/walk-ins/:path*",
     "/dashboard",
     "/dashboard/:path*",
@@ -86,7 +90,11 @@ export const config = {
     "/messages/:path*",
     "/seats",
     "/seats/:path*",
-    "/user", // ✅ added user
-    "/user/:path*", // ✅ added user
+    "/user",
+    "/user/:path*",
+    "/cms",
+    "/cms/:path*",
+    "/customers",
+    "/customers/:path*",
   ],
 };

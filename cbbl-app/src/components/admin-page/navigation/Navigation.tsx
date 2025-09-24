@@ -10,6 +10,7 @@ import {
   faChair,
   faClipboardList,
   faEnvelope,
+  faFileAlt,
   faGauge,
   faUser,
   faUsers,
@@ -42,6 +43,7 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
     { href: "/customers", label: "Customers", icon: faUsers },
     { href: "/seats", label: "Seats", icon: faChair },
     { href: "/user", label: "User", icon: faUser },
+    { href: "/cms", label: "CMS", icon: faFileAlt },
   ];
 
   return (
@@ -64,7 +66,7 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
 
       {/* Logo */}
       <div
-        className={`flex items-center gap-2 mb-15 py-2 px-4 ${
+        className={`flex items-center gap-2 mb-7 py-2 px-4 ${
           collapsed ? "justify-center" : "justify-start"
         }`}
       >

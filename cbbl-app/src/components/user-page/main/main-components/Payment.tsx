@@ -1,25 +1,50 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Props {
   setPaymentProof: (fileBase64: string | null) => void; // expects Base64
 }
 
+interface PaymentData {
+  qrCodeImage?: string;
+  paymentNumber?: string;
+}
+
 function Payment({ setPaymentProof }: Props) {
   const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [paymentData, setPaymentData] = useState<PaymentData>({
+    qrCodeImage: "/gcash-qrcode.png",
+    paymentNumber: "+63 947 261 2046",
+  });
+
+  useEffect(() => {
+    async function fetchPaymentData() {
+      try {
+        const res = await fetch("/api/cms");
+        const data = await res.json();
+
+        setPaymentData((prev) => ({
+          qrCodeImage: data.qrCodeImage || prev.qrCodeImage,
+          paymentNumber: data.paymentNumber || prev.paymentNumber,
+        }));
+      } catch (err) {
+        console.error("Failed to fetch payment data:", err);
+      }
+    }
+    fetchPaymentData();
+  }, []); // ✅ no warning, safe to leave empty
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setScreenshot(file);
 
-      // ✅ convert to Base64 for API
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setPaymentProof(base64String); // pass Base64 up
+        setPaymentProof(base64String);
       };
       reader.readAsDataURL(file);
     }
@@ -33,7 +58,7 @@ function Payment({ setPaymentProof }: Props) {
         <div className="flex flex-col items-center gap-4">
           <div className="border p-2 rounded-lg shadow-sm bg-white">
             <Image
-              src="/gcash-qrcode.png"
+              src={paymentData.qrCodeImage!}
               alt="GCash QR Code"
               width={200}
               height={200}
@@ -43,7 +68,7 @@ function Payment({ setPaymentProof }: Props) {
 
           <p className="text-center text-lg">
             Scan or Pay via GCash <br />
-            <span className="font-bold">+63 947 261 2046</span>
+            <span className="font-bold">{paymentData.paymentNumber}</span>
           </p>
 
           <p className="text-center text-sm">

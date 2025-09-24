@@ -183,3 +183,34 @@ model CartItem {
   size      String?
   quantity  Int     @default(1)
 }
+
+model CMS {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  landingSecOneTitle         String?
+  landingSecOneDesc          String?
+  landingSecOneButtonText    String?
+  landingSecOneImage         String?
+  landingSecOneImagePublicId String?
+
+  landingSecTwoTitle         String?
+  landingSecTwoDesc          String?
+  landingSecTwoContent       String?
+  landingSecTwoImage         String?
+  landingSecTwoImagePublicId String?
+
+  landingSecThreeTitle     String?
+  landingSecThreeDesc      String?
+  landingSecThreeButtonOne String?
+  landingSecThreeButtonTwo String?
+
+  landingSecFourTitle    String?
+  landingSecFourDesc     String?
+  landingSecFourLocation String?
+  landingSecFourPhoneNum String?
+  landingSecFourEmail    String?
+
+  qrCodeImage         String?
+  qrCodeImagePublicId String?
+  paymentNumber       String?
+}

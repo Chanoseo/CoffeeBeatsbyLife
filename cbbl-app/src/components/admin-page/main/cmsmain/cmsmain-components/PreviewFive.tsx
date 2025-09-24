@@ -1,43 +1,18 @@
-"use client";
-
 import {
   faFacebook,
   faInstagram,
   faTiktok,
 } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
 
-type FooterData = {
-  landingSecFourPhoneNum?: string;
-  landingSecFourEmail?: string;
+type Props = {
+  data: {
+    phone: string;
+    email: string;
+  };
 };
 
-function Footer() {
-  const [cmsData, setCmsData] = useState<FooterData>({
-    landingSecFourPhoneNum: "+63 917 167 0831",
-    landingSecFourEmail: "coffeebeatsbylife@gmail.com",
-  });
-
-  useEffect(() => {
-    async function fetchCMS() {
-      try {
-        const res = await fetch("/api/cms");
-        const data = await res.json();
-        setCmsData((prev) => ({
-          landingSecFourPhoneNum:
-            data.landingSecFourPhoneNum || prev.landingSecFourPhoneNum,
-          landingSecFourEmail:
-            data.landingSecFourEmail || prev.landingSecFourEmail,
-        }));
-      } catch (err) {
-        console.error("Failed to fetch CMS for Footer:", err);
-      }
-    }
-
-    fetchCMS();
-  }, []); // ✅ No need to add cmsData here because we use functional update
-
+function PreviewFive({ data }: Props) {
   return (
     <footer className="bg-[#3C604C] text-white py-10">
       <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -50,7 +25,6 @@ function Footer() {
             online.
           </p>
         </div>
-
         <div>
           <h3 className="md:text-xl text-lg font-bold mb-2">Quick Links</h3>
           <ul className="space-y-1">
@@ -76,11 +50,12 @@ function Footer() {
             </li>
           </ul>
         </div>
-
         <div>
           <h3 className="md:text-xl text-lg font-bold mb-2">Contact Us</h3>
-          <p className="text-sm">Email: {cmsData.landingSecFourEmail}</p>
-          <p className="text-sm">Phone: {cmsData.landingSecFourPhoneNum}</p>
+          <p className="text-sm">
+            Email: {data.email || "coffeebeatsbylife@gmail.com"}
+          </p>
+          <p className="text-sm">Phone: {data.phone || "+63 917 167 0831"}</p>
           <div className="flex gap-3 mt-2">
             <a
               href="https://www.facebook.com/coffeebeatsbylife"
@@ -106,7 +81,6 @@ function Footer() {
           </div>
         </div>
       </div>
-
       <div className="mt-8 text-center text-sm text-gray-200">
         &copy; {new Date().getFullYear()} Coffee Beats By Life. All rights
         reserved.
@@ -114,5 +88,4 @@ function Footer() {
     </footer>
   );
 }
-
-export default Footer;
+export default PreviewFive;
