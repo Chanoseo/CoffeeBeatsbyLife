@@ -37,7 +37,7 @@ export default function Profile() {
   if (!user) return <div className="text-center py-20">No profile found.</div>;
 
   return (
-    <div className="w-full bg-[#f9fafb] rounded p-8">
+    <section className="w-full bg-[#f9fafb] rounded p-8">
       {/* Profile Header */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <div className="w-24 h-24 relative">
@@ -80,6 +80,6 @@ export default function Profile() {
           }}
         />
       )}
-    </div>
+    </section>
   );
 }

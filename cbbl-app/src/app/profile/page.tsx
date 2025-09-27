@@ -1,6 +1,4 @@
-import UserPageFooter from "@/components/user-page/footer/Footer";
-import UserPageHeader from "@/components/user-page/header/Header";
-import Profile from "@/components/user-page/profile-page/Profile";
+import UserProfilePage from "@/components/user-page/profile-page/UserProfilePage";
 
 export const metadata = {
   title: "Profile",
@@ -12,19 +10,6 @@ export const metadata = {
   },
 };
 
-export default function UserProfilePage() {
-  return (
-    <div className="flex flex-col min-h-screen">
-      {/* Header */}
-      <UserPageHeader />
-
-      {/* Main content */}
-      <main className="flex-grow py-10 px-40">
-        <Profile />
-      </main>
-
-      {/* Footer */}
-      <UserPageFooter />
-    </div>
-  );
+export default function ProfilePage() {
+  return <UserProfilePage />;
 }

@@ -44,10 +44,11 @@ model User {
   role          String    @default("user") // ✅ not nullable
   passwordHash  String?
 
-  accounts Account[]
-  sessions Session[]
-  orders   Order[]
-  carts    Cart[]
+  accounts  Account[]
+  sessions  Session[]
+  orders    Order[]
+  carts     Cart[]
+  favorites Favorite[]
 }
 
 model VerificationToken {
@@ -106,6 +107,7 @@ model Product {
 
   orderItems OrderItem[]
   cartItems  CartItem[]
+  favorites  Favorite[]
 }
 
 model Seat {
@@ -182,6 +184,18 @@ model CartItem {
   product   Product @relation(fields: [productId], references: [id])
   size      String?
   quantity  Int     @default(1)
+}
+
+model Favorite {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  productId String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId]) // ✅ prevents duplicate favorites
 }
 
 model CMS {

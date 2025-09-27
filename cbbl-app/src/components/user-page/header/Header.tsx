@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/dist/client/link";
+import Link from "next/link";
 import Image from "next/image";
 import Modal from "./header-components/Modal";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 function UserPageHeader() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: session } = useSession();
 
   const toggleModal = () => {
     setIsModalOpen((prev) => !prev);
@@ -38,8 +40,8 @@ function UserPageHeader() {
       </div>
       <div className="relative w-10 h-10 rounded-full">
         <Image
-          src="/cbbl-image.jpg"
-          alt="Logo"
+          src={session?.user?.image || "/profile-default.png"}
+          alt={session?.user?.name || "User"}
           fill
           className="cursor-pointer object-cover rounded-full"
           sizes="40px"
@@ -50,4 +52,5 @@ function UserPageHeader() {
     </header>
   );
 }
+
 export default UserPageHeader;
