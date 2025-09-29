@@ -26,7 +26,7 @@ function UserPageHeader() {
               </Link>
             </li>
             <li>
-              <Link href="/seat" className="line-hover">
+              <Link href="/home/seat" className="line-hover">
                 Seat
               </Link>
             </li>
