@@ -12,8 +12,10 @@ interface UpdateSeatsProps {
     name: string;
     status: string;
     capacity: number;
+    imageUrl?: string; // 👈 add this
+    description?: string; // 👈 add this
   };
-  onRefresh: () => void; // ✅ callback to refresh seats in real-time
+  onRefresh: () => void;
 }
 
 function UpdateSeats({

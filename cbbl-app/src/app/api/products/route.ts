@@ -33,6 +33,15 @@ export async function POST(req: Request) {
     const isBestSeller = formData.get("isBestSeller") === "on";
     const type = formData.get("type") as "FOOD" | "DRINK"; // ✅ get type
 
+    // ✅ Get drink sizes if type is DRINK
+    let mediumPrice: number | null = null;
+    let largePrice: number | null = null;
+
+    if (type === "DRINK") {
+      mediumPrice = parseFloat(formData.get("mediumPrice") as string) || 0;
+      largePrice = parseFloat(formData.get("largePrice") as string) || 0;
+    }
+
     const file = formData.get("image") as File | null;
     let imageUrl = DEFAULT_IMAGE; // use Cloudinary default
 
@@ -70,6 +79,8 @@ export async function POST(req: Request) {
         type, // ✅ save Food or Drink
         category: { connect: { id: categoryId } },
         imageUrl, // always valid image
+        mediumPrice: type === "DRINK" ? mediumPrice : null,
+        largePrice: type === "DRINK" ? largePrice : null,
       },
       include: { category: true },
     });

@@ -41,9 +41,6 @@ export default async function PastOrders() {
                 <div>
                   <h2 className="text-lg font-semibold">Order</h2>
                   <p className="text-sm">
-                    Status: {order.status}
-                  </p>
-                  <p className="text-sm">
                     Total: ₱{" "}
                     {order.items
                       .reduce(
@@ -54,31 +51,45 @@ export default async function PastOrders() {
                   </p>
                 </div>
                 <p className="text-xs">
-                  {new Date(order.createdAt).toLocaleString()}
+                  {new Date(order.createdAt).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
                 </p>
               </div>
 
               {/* Order Items */}
               <div className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-4">
                 {order.items.map((item) => (
-                  <div key={item.id} className="flex flex-col gap-2">
-                    <Image
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      width={200}
-                      height={200}
-                      className="w-full h-28 object-cover rounded"
-                    />
-                    <div className="flex flex-col">
-                      <h3 className="text-sm font-semibold">
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-2 bg-white rounded-xl border border-gray-200 overflow-hidden"
+                  >
+                    {/* Product Image */}
+                    <div className="relative w-full h-28">
+                      <Image
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        fill
+                        className="object-cover rounded-t-xl"
+                      />
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="flex flex-col p-3 gap-1">
+                      <h3 className="text-sm font-semibold text-gray-800">
                         {item.product.name}
                       </h3>
-                      <p className="text-xs line-clamp-2">
+                      <p className="text-xs text-gray-500 line-clamp-2">
                         {item.product.description}
                       </p>
-                      <p className="text-sm mt-1">
+                      <p className="text-sm font-medium text-gray-700 mt-1">
                         ₱ {item.price.toFixed(2)} x {item.quantity}
-                        <span className="ml-1">({item.size})</span>
+                        {item.size ? ` (${item.size})` : ""}
                       </p>
                     </div>
                   </div>
@@ -86,7 +97,7 @@ export default async function PastOrders() {
               </div>
 
               {/* Reorder Button */}
-              <div className="mt-2 flex justify-end">
+              <div className="flex justify-end">
                 <ReorderButton orderId={order.id} />
               </div>
             </div>

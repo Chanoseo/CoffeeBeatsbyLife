@@ -21,6 +21,9 @@ function AddProductForm({ onRefresh }: AddProductFormProps) {
   const [error, setError] = useState("");
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  // New state for drink sizes
+  const [mediumPrice, setMediumPrice] = useState<number | "">("");
+  const [largePrice, setLargePrice] = useState<number | "">("");
 
   // ✅ new state for Product Type
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
@@ -107,6 +110,12 @@ function AddProductForm({ onRefresh }: AddProductFormProps) {
     }
     formData.set("categoryId", selectedCategory);
     formData.set("type", selectedType);
+
+    // Append size prices if type is DRINK
+    if (selectedType === "DRINK") {
+      formData.set("mediumPrice", mediumPrice ? String(mediumPrice) : "0");
+      formData.set("largePrice", largePrice ? String(largePrice) : "0");
+    }
 
     try {
       const res = await fetch("/api/products", {
@@ -312,6 +321,42 @@ function AddProductForm({ onRefresh }: AddProductFormProps) {
           )}
         </div>
       </div>
+
+      {selectedType === "DRINK" && (
+        <div className="flex flex-col gap-3">
+          <label className="font-medium text-gray-700">Drink Sizes</label>
+          <div className="flex gap-4">
+            <div className="flex-1 flex flex-col">
+              <span className="text-sm text-gray-500 mb-1">Medium</span>
+              <input
+                type="number"
+                value={mediumPrice}
+                onChange={(e) =>
+                  setMediumPrice(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+                placeholder="₱ 0.00"
+                className="products-input-style border rounded-md px-3 py-2 focus:outline-none"
+              />
+            </div>
+            <div className="flex-1 flex flex-col">
+              <span className="text-sm text-gray-500 mb-1">Large</span>
+              <input
+                type="number"
+                value={largePrice}
+                onChange={(e) =>
+                  setLargePrice(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+                placeholder="₱ 0.00"
+                className="products-input-style border rounded-md px-3 py-2 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New/Best Seller */}
       <div className="flex gap-6">

@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { faAngleDown, faUser } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAngleDown,
+  faExpand,
+  faUser,
+  faX,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Image from "next/image";
 
 interface Order {
   id: string;
@@ -23,6 +29,8 @@ interface Seat {
   name: string;
   status: string;
   capacity: number;
+  imageUrl?: string; // ✅ Add this
+  description?: string; // ✅ Add this
   orders: Order[];
   walkIns: WalkIn[]; // ✅ add this
 }
@@ -46,6 +54,8 @@ function SeatReservation({
 }: Props) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewSeat, setPreviewSeat] = useState<Seat | null>(null);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   // ✅ Fetch seats
   useEffect(() => {
@@ -134,6 +144,75 @@ function SeatReservation({
         </div>
       </div>
 
+      {previewSeat && (
+        <div className="w-full border border-gray-200 rounded-xl bg-white p-4 flex flex-col gap-3 items-center mb-4">
+          {/* Header */}
+          <h1 className="text-lg font-semibold text-gray-800">
+            {previewSeat.name}
+          </h1>
+
+          {/* Image Container */}
+          <div className="relative w-full h-56">
+            <Image
+              src={previewSeat.imageUrl || "/cbbl-image.jpg"}
+              alt={previewSeat.name || "seat"}
+              width={400}
+              height={400}
+              className="w-full h-full object-cover rounded-xl"
+            />
+
+            {/* Resize Icon */}
+            <button className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center bg-white/50 text-gray-700 rounded-full hover:bg-white hover:text-[#3C604C] transition-colors">
+              <FontAwesomeIcon
+                icon={faExpand}
+                className="text-sm"
+                onClick={() =>
+                  setExpandedImage(previewSeat.imageUrl || "/cbbl-image.jpg")
+                }
+              />
+            </button>
+          </div>
+
+          {/* Expanded Image Section */}
+          {expandedImage && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              {/* Close button */}
+              <button
+                className="fixed top-4 right-4 w-10 h-10 flex items-center justify-center 
+                           bg-white/80 text-gray-700 rounded-full hover:bg-white hover:text-red-600 
+                           transition-colors shadow-md"
+                type="button"
+                onClick={() => setExpandedImage(null)}
+              >
+                <FontAwesomeIcon icon={faX} className="text-lg" />
+              </button>
+
+              {/* Image container */}
+              <div className="max-w-3xl max-h-[85vh] w-auto h-auto p-4 flex items-center justify-center">
+                <Image
+                  src={expandedImage}
+                  alt="Expanded seat preview"
+                  width={800}
+                  height={800}
+                  className="max-w-full max-h-[80vh] object-contain shadow-lg"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Seat Info */}
+          <div className="flex flex-col gap-1 w-full text-center">
+            <p className="text-gray-600 text-sm">
+              {previewSeat.description ||
+                "Comfortable seating with premium view"}
+            </p>
+            <span className="inline-block bg-[#3C604C]/10 text-[#3C604C] px-3 py-1 rounded-full text-sm font-medium">
+              Capacity: {previewSeat.capacity || 4} People
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Seat Selection (all seats, disable if guest count doesn't match) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {seats.length > 0 ? (
@@ -209,7 +288,10 @@ function SeatReservation({
                 key={seat.id}
                 className={`flex flex-col items-center p-4 rounded-xl border ${seatColorClass}`}
                 onClick={() => {
-                  if (!isDisabled) setSelectedSeat(seat.id);
+                  if (!isDisabled) {
+                    setSelectedSeat(seat.id);
+                    setPreviewSeat(seat); // ✅ update preview
+                  }
                 }}
               >
                 <FontAwesomeIcon icon={faUser} size="2x" />

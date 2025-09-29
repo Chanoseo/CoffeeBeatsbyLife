@@ -13,12 +13,15 @@ type CartItem = {
   productId: string;
   size: string;
   quantity: number;
+  price: number;
   product: {
     id: string;
     name: string;
     price: number;
     imageUrl: string;
     type: "FOOD" | "DRINK";
+    mediumPrice?: number; // optional
+    largePrice?: number; // optional
   };
 };
 
@@ -51,10 +54,31 @@ export default function CartModal({
 
   if (!isOpen) return null;
 
-  const total = cartItemsState.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
-    0
-  );
+  const total = cartItemsState.reduce((acc, item) => {
+    let itemPrice = item.product.price;
+
+    // Adjust for drink size
+    if (item.product.type === "DRINK" && item.size) {
+      if (item.size === "medium" && item.product.mediumPrice != null) {
+        itemPrice += item.product.mediumPrice;
+      } else if (item.size === "large" && item.product.largePrice != null) {
+        itemPrice += item.product.largePrice;
+      }
+    }
+
+    return acc + itemPrice * item.quantity;
+  }, 0);
+
+  // ✅ Add seat cost based on selectedTime and 2-hour duration
+  let seatCost = 0;
+  if (selectedTime) {
+    const start = new Date(selectedTime);
+    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // 2 hours
+    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+    seatCost = hours * 10; // ₱10 per hour
+  }
+
+  const grandTotal = total + seatCost;
 
   const handlePreOrder = async () => {
     // ✅ Validation
@@ -168,7 +192,24 @@ export default function CartModal({
 
                   <div className="flex flex-col items-end gap-1">
                     <p className="font-semibold text-gray-800">
-                      ₱{(item.product.price * item.quantity).toFixed(2)}
+                      ₱
+                      {(() => {
+                        let itemPrice = item.product.price;
+                        if (item.product.type === "DRINK" && item.size) {
+                          if (
+                            item.size === "medium" &&
+                            item.product.mediumPrice != null
+                          ) {
+                            itemPrice += item.product.mediumPrice;
+                          } else if (
+                            item.size === "large" &&
+                            item.product.largePrice != null
+                          ) {
+                            itemPrice += item.product.largePrice;
+                          }
+                        }
+                        return (itemPrice * item.quantity).toFixed(2);
+                      })()}
                     </p>
                     <button
                       className="text-red-500 text-xs hover:underline mt-1"
@@ -193,12 +234,44 @@ export default function CartModal({
               <Payment setPaymentProof={setPaymentProof} />
             </div>
 
-            <div className="border-t-2 border-[#3C604C] mt-6 pt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div className="border-t-2 border-b-2 border-[#3C604C] w-full mt-6 py-4">
+              <div className="w-full p-4 rounded-lg border border-gray-200 space-y-2 font-semibold text-gray-800">
+                <p className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>₱ {total.toFixed(2)}</span>
+                </p>
+                <p className="flex justify-between items-start">
+                  <span className="flex flex-col">
+                    <span className="font-medium text-gray-800">Seat</span>
+                    {selectedTime && (
+                      <span className="text-sm text-gray-500 mt-0.5">
+                        {new Date(selectedTime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        -{" "}
+                        {new Date(
+                          new Date(selectedTime).getTime() + 2 * 60 * 60 * 1000
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-semibold text-gray-800">
+                    ₱ {seatCost.toFixed(2)}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-6">
               <p className="font-semibold text-lg text-gray-800">
-                Total: ₱{total.toFixed(2)}
+                <span>Total: ₱{grandTotal.toFixed(2)}</span>
               </p>
               <button
-                className="w-full sm:w-auto bg-[#3C604C] text-white px-6 py-2 rounded-lg hover:bg-[#2d4638] transition-colors"
+                className="button-style mt-4 sm:mt-0"
                 onClick={handlePreOrder}
               >
                 Pre-Order

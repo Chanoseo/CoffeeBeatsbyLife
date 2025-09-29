@@ -10,6 +10,7 @@ import {
   faCheckCircle,
   faUtensils,
   faBoxOpen,
+  faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -98,6 +99,22 @@ function OrderDetails() {
     { status: "Completed", label: "Completed", icon: faCheckCircle },
   ];
 
+  const downloadReceipt = async () => {
+    if (!order) return;
+
+    const res = await fetch(`/api/orders/${order.id}/receipt`);
+    if (!res.ok) return alert("Failed to download receipt");
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `receipt-${order.id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
   return (
     <>
       <UserPageHeader />
@@ -168,38 +185,56 @@ function OrderDetails() {
         <section className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Order Details</h1>
-            <span
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border ${
-                statusStyles[order.status]
-              }`}
-            >
-              {order.status}
-            </span>
+            <div className="flex items-center gap-4">
+              {order.status !== "Pending" && (
+                <button
+                  onClick={downloadReceipt}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
+                >
+                  <FontAwesomeIcon icon={faDownload} />
+                  Download Receipt
+                </button>
+              )}
+
+              {/* Status Badge */}
+              <span
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+                  statusStyles[order.status]
+                }`}
+              >
+                {order.status}
+              </span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm text-gray-500">Total Amount</p>
-              <p className="text-lg font-semibold text-gray-800">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Total Amount</span>
+              <span className="text-lg font-semibold text-gray-800">
                 ₱{order.totalAmount.toFixed(2)}
-              </p>
+              </span>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Seat</p>
-              <p className="text-gray-800 font-medium">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Seat</span>
+              <span className="text-gray-800 font-medium">
                 {order.seat?.name ?? "Not selected"}
-              </p>
+              </span>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Guest</p>
-              <p className="text-gray-800 font-medium">{order.guest}</p>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Seat Cost</span>
+              <span className="text-gray-800 font-medium">₱ 20</span>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Reservation Time</p>
-              <p className="text-gray-800 font-medium">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Guest</span>
+              <span className="text-gray-800 font-medium">{order.guest}</span>
+            </div>
+
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Reservation Date</span>
+              <span className="text-gray-800 font-medium">
                 {order.time
                   ? new Date(order.time).toLocaleDateString(undefined, {
                       year: "numeric",
@@ -207,27 +242,27 @@ function OrderDetails() {
                       day: "numeric",
                     })
                   : "Not selected"}
-              </p>
+              </span>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Start Time</p>
-              <p className="text-gray-800 font-medium">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Start Time</span>
+              <span className="text-gray-800 font-medium">
                 {new Date(order.startTime).toLocaleTimeString(undefined, {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
-              </p>
+              </span>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-500">End Time</p>
-              <p className="text-gray-800 font-medium">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">End Time</span>
+              <span className="text-gray-800 font-medium">
                 {new Date(order.endTime).toLocaleTimeString(undefined, {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
-              </p>
+              </span>
             </div>
           </div>
         </section>
@@ -241,7 +276,7 @@ function OrderDetails() {
             {order.items.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 border rounded-xl hover:shadow-md transition"
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100">

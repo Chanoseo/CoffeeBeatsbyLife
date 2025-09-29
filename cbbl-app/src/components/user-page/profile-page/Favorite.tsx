@@ -3,18 +3,22 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import AddToCartButton from "../main/main-components/AddToCartButton";
+import FavoriteButton from "../main/main-components/FavoriteButton";
 
 export type CartItem = {
   id: string;
   productId: string;
   size: string;
   quantity: number;
+  price: number;
   product: {
     id: string;
     name: string;
     price: number;
     imageUrl: string;
     type: "FOOD" | "DRINK";
+    mediumPrice?: number; // optional
+    largePrice?: number; // optional
   };
 };
 
@@ -87,16 +91,16 @@ function Favorite({ setCartItems, setCartCount }: FavoriteProps) {
               key={product.id}
               className="relative bg-white rounded-xl shadow-sm shadow-black/20 w-52 h-auto flex flex-col overflow-hidden"
             >
-              {/* Badges */}
-              <div className="flex gap-2 absolute top-2 right-2 z-10">
-                {product.isNew && (
-                  <span className="bg-[#E8E4C9] py-1 px-4 rounded">New</span>
-                )}
-                {product.isBestSeller && (
-                  <span className="bg-[#E8E4C9] py-1 px-4 rounded">
-                    Best Seller
-                  </span>
-                )}
+              <div className="absolute top-3 right-3 z-10">
+                <FavoriteButton
+                  productId={product.id}
+                  onToggle={(id, isFav) => {
+                    if (!isFav) {
+                      // Remove unfavorited product from the list immediately
+                      setFavorites((prev) => prev.filter((p) => p.id !== id));
+                    }
+                  }}
+                />
               </div>
 
               {/* Product Image */}
@@ -111,24 +115,34 @@ function Favorite({ setCartItems, setCartCount }: FavoriteProps) {
               {/* Content */}
               <div className="p-3 h-full flex flex-col gap-3 text-left">
                 <div className="flex-1">
-                  <h1 className="text-lg font-semibold">{product.name}</h1>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-lg font-bold text-gray-900">
+                      {product.name}
+                    </h1>
+
+                    {product.isNew && (
+                      <span className="bg-green-100 text-green-700 text-xs font-medium py-1 px-3 rounded-full">
+                        New
+                      </span>
+                    )}
+
+                    {product.isBestSeller && (
+                      <span className="bg-yellow-100 text-yellow-700 text-xs font-medium py-1 px-3 rounded-full">
+                        Best Seller
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs mt-1 line-clamp-2">
                     {product.description}
                   </p>
                   <p className="mt-2 underline text-xl">₱ {product.price}</p>
                 </div>
 
-                {/* Add to Cart */}
                 <AddToCartButton
                   product={product}
                   setCartItems={setCartItems}
                   setCartCount={setCartCount}
                   hasPreOrder={hasPreOrder}
-                  onFavoriteToggle={(id, favorited) => {
-                    if (!favorited) {
-                      setFavorites((prev) => prev.filter((p) => p.id !== id));
-                    }
-                  }}
                 />
               </div>
             </div>

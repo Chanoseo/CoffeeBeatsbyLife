@@ -20,12 +20,15 @@ type CartItem = {
   productId: string;
   size: string;
   quantity: number;
+  price: number;
   product: {
     id: string;
     name: string;
     price: number;
     imageUrl: string;
     type: "FOOD" | "DRINK";
+    mediumPrice?: number; // optional
+    largePrice?: number; // optional
   };
 };
 

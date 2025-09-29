@@ -34,6 +34,17 @@ export async function PUT(
     const isBestSeller = formData.get("isBestSeller") === "true";
     const type = formData.get("type") as "FOOD" | "DRINK";
 
+    // ✅ Drink sizes
+    const mediumPriceRaw = formData.get("mediumPrice");
+    const largePriceRaw = formData.get("largePrice");
+
+    const mediumPrice = mediumPriceRaw
+      ? parseFloat(mediumPriceRaw as string)
+      : null;
+    const largePrice = largePriceRaw
+      ? parseFloat(largePriceRaw as string)
+      : null;
+
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -78,11 +89,13 @@ export async function PUT(
         name,
         description,
         price,
-        category: { connect: { id: categoryId } },
+        type,
         isNew,
         isBestSeller,
-        type,
         imageUrl,
+        mediumPrice,
+        largePrice,
+        category: { connect: { id: categoryId } },
       },
       include: { category: true },
     });

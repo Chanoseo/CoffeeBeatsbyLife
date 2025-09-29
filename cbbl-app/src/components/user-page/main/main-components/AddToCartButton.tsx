@@ -1,21 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart, faX } from "@fortawesome/free-solid-svg-icons";
+import { faX } from "@fortawesome/free-solid-svg-icons";
 
-type CartItem = {
+export type CartItem = {
   id: string;
   productId: string;
   size: string;
   quantity: number;
+  price: number;
   product: {
     id: string;
     name: string;
     price: number;
     imageUrl: string;
     type: "FOOD" | "DRINK";
+    mediumPrice?: number; // optional
+    largePrice?: number; // optional
   };
 };
 
@@ -23,7 +26,9 @@ type Product = {
   id: string;
   name: string;
   description?: string | null;
-  price: number;
+  price: number; // small price
+  mediumPrice?: number | null;
+  largePrice?: number | null;
   imageUrl: string;
   type: "FOOD" | "DRINK";
 };
@@ -33,7 +38,6 @@ type AddToCartButtonProps = {
   setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   setCartCount: React.Dispatch<React.SetStateAction<number>>;
   hasPreOrder: boolean;
-  onFavoriteToggle?: (productId: string, isFavorite: boolean) => void;
 };
 
 export default function AddToCartButton({
@@ -41,28 +45,24 @@ export default function AddToCartButton({
   setCartItems,
   setCartCount,
   hasPreOrder,
-  onFavoriteToggle,
 }: AddToCartButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [size, setSize] = useState("small");
   const [quantity, setQuantity] = useState<string>("1");
-  const [isFavorite, setIsFavorite] = useState(false);
 
-  useEffect(() => {
-    const fetchFavoriteStatus = async () => {
-      try {
-        const res = await fetch(`/api/favorites?productId=${product.id}`);
-        const data = await res.json();
-        if (data.favorited !== undefined) {
-          setIsFavorite(data.favorited);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  // ✅ Compute price based on selected size (add medium/large price to base price)
+  const displayPrice = (() => {
+    let price = product.price; // start with small/base price
 
-    fetchFavoriteStatus();
-  }, [product.id]);
+    if (product.type === "DRINK") {
+      if (size === "medium" && product.mediumPrice != null)
+        price += product.mediumPrice;
+      if (size === "large" && product.largePrice != null)
+        price += product.largePrice;
+    }
+
+    return price;
+  })();
 
   const handleAddToCart = async () => {
     try {
@@ -107,28 +107,6 @@ export default function AddToCartButton({
     }
   };
 
-  const toggleFavorite = async () => {
-    try {
-      const res = await fetch("/api/favorites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setIsFavorite(data.favorited);
-
-        // ✅ Tell parent (Favorite) immediately
-        if (onFavoriteToggle) {
-          onFavoriteToggle(product.id, data.favorited);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   return (
     <>
       <div className="flex items-center gap-3">
@@ -141,14 +119,6 @@ export default function AddToCartButton({
         >
           {hasPreOrder ? "Pre-Order Active" : "Add to Cart"}
         </button>
-
-        <FontAwesomeIcon
-          icon={faHeart}
-          onClick={toggleFavorite}
-          className={`text-2xl cursor-pointer transition-colors duration-200 ${
-            isFavorite ? "text-red-500" : "text-gray-400 hover:text-red-500"
-          }`}
-        />
       </div>
 
       {isOpen && (
@@ -177,7 +147,7 @@ export default function AddToCartButton({
                 {product.description}
               </p>
               <p className="text-lg font-bold mt-2 text-[#3C604C]">
-                ₱ {product.price}
+                ₱ {displayPrice.toFixed(2)}
               </p>
             </div>
 
@@ -212,20 +182,30 @@ export default function AddToCartButton({
 
             {/* Quantity */}
             <div className="mt-6">
-              <h3 className="text-md font-medium mb-2">Quantity</h3>
-              <input
-                type="number"
-                min={1}
-                value={quantity}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  // Allow empty string for smooth typing
-                  if (val === "" || /^[0-9]+$/.test(val)) {
-                    setQuantity(val);
+              <h3 className="text-md font-medium mb-2 text-gray-700">
+                Quantity
+              </h3>
+              <div className="flex items-center gap-2 w-full border border-gray-200 rounded-xl overflow-hidden">
+                <button
+                  onClick={() =>
+                    setQuantity((prev) => String(Math.max(1, Number(prev) - 1)))
                   }
-                }}
-                className="w-full border rounded-xl p-2 text-center focus:outline-none"
-              />
+                  className="w-10 h-10 bg-gray-100 text-[#3C604C] flex items-center justify-center font-bold text-lg hover:bg-[#3C604C] hover:text-white transition-colors"
+                >
+                  -
+                </button>
+                <span className="flex-1 text-center text-lg font-semibold text-gray-900">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() =>
+                    setQuantity((prev) => String(Number(prev) + 1))
+                  }
+                  className="w-10 h-10 bg-gray-100 text-[#3C604C] flex items-center justify-center font-bold text-lg hover:bg-[#3C604C] hover:text-white transition-colors"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             {/* Confirm Button */}

@@ -38,7 +38,7 @@ export default async function ActiveOrders() {
             <Link
               key={order.id}
               href={`/home/orders/order-details?id=${order.id}`}
-              className="bg-white rounded-xl overflow-hidden p-4 shadow-sm flex flex-col gap-4 transition-colors hover:bg-[#3C604C] hover:text-white" // ✅ hover background color
+              className="bg-white rounded-xl overflow-hidden p-4 shadow-sm flex flex-col gap-4 hover:bg-gray-50"
             >
               {/* Order Header */}
               <div className="flex justify-between items-center border-b pb-2 mb-2">
@@ -58,27 +58,43 @@ export default async function ActiveOrders() {
                   </p>
                 </div>
                 <p className="text-xs">
-                  {new Date(order.createdAt).toLocaleString()}
+                  {new Date(order.createdAt).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
                 </p>
               </div>
 
               {/* Order Items */}
               <div className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-4">
                 {order.items.map((item) => (
-                  <div key={item.id} className="flex flex-col gap-2">
-                    <Image
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      width={200}
-                      height={200}
-                      className="w-full h-28 object-cover rounded"
-                    />
-                    <div className="flex flex-col">
-                      <h3 className="text-sm font-semibold">
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-2 bg-white rounded-xl border border-gray-200 overflow-hidden"
+                  >
+                    {/* Product Image */}
+                    <div className="relative w-full h-28">
+                      <Image
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        fill
+                        className="object-cover rounded-t-xl"
+                      />
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="flex flex-col p-3 gap-1">
+                      <h3 className="text-sm font-semibold text-gray-800">
                         {item.product.name}
                       </h3>
-                      <p className="text-xs line-clamp-2">{item.product.description}</p>
-                      <p className="text-sm mt-1">
+                      <p className="text-xs text-gray-500 line-clamp-2">
+                        {item.product.description}
+                      </p>
+                      <p className="text-sm font-medium text-gray-700 mt-1">
                         ₱ {item.price.toFixed(2)} x {item.quantity}
                         {item.size ? ` (${item.size})` : ""}
                       </p>

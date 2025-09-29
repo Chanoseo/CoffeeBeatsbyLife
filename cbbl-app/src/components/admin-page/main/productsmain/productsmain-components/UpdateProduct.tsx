@@ -3,6 +3,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UpdateProductForm, { Product } from "./UpdateProductForm";
 import { faTrash, faX } from "@fortawesome/free-solid-svg-icons";
+import { useState } from "react";
 
 interface UpdateProductProps {
   onClose: () => void;
@@ -17,9 +18,15 @@ function UpdateProduct({
   productId,
   initialData,
 }: UpdateProductProps) {
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   // Function to call the DELETE API
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this product?")) return;
+
+    setError("");
+    setSuccess("");
 
     try {
       const res = await fetch(`/api/products/${productId}`, {
@@ -29,15 +36,15 @@ function UpdateProduct({
       const data = await res.json();
 
       if (data.success) {
-        alert("Product deleted successfully!");
-        onRefresh(); // ✅ Refresh product list real-time
-        onClose(); // ✅ Close modal
+        setSuccess("Product deleted successfully!");
+        onRefresh(); // Refresh product list
+        onClose(); // Close modal
       } else {
-        alert(data.message || "Failed to delete product.");
+        setError(data.message || "Failed to delete product.");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred while deleting the product.");
+      setError("An error occurred while deleting the product.");
     }
   };
 
@@ -59,11 +66,16 @@ function UpdateProduct({
             />
           </div>
         </div>
+
+        {/* Inline messages */}
+        {error && <p className="message-error mb-2">{error}</p>}
+        {success && <p className="message-success mb-2">{success}</p>}
+
         <UpdateProductForm
           productId={productId}
           initialData={initialData}
           onSuccess={() => {
-            onRefresh(); // ✅ Refresh after update
+            onRefresh(); // Refresh after form update
           }}
         />
       </div>

@@ -96,6 +96,8 @@ model Product {
   name         String
   description  String?
   price        Float
+  mediumPrice  Float?
+  largePrice   Float?
   imageUrl     String
   categoryId   String   @db.ObjectId
   category     Category @relation(fields: [categoryId], references: [id])
@@ -111,13 +113,15 @@ model Product {
 }
 
 model Seat {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String   @unique // e.g. "Seat 1"
-  capacity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  capacity    Int      @default(1)
+  imageUrl    String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  orders  Order[] // relation to Order
+  orders  Order[]
   walkIns WalkIn[]
 }
 

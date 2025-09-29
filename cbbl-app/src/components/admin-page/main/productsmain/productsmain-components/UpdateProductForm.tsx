@@ -10,11 +10,14 @@ export type Product = {
   name: string;
   description?: string | null;
   price: number;
+  smallPrice?: number | null;
+  mediumPrice?: number | null;
+  largePrice?: number | null;
   imageUrl: string;
   isNew: boolean;
   isBestSeller: boolean;
   totalOrders: number;
-  type: string; // ✅ restrict instead of string
+  type: string; // "FOOD" | "DRINK"
   category?: {
     id: string;
     name: string;
@@ -47,11 +50,19 @@ function UpdateProductForm({
   const [loading, setLoading] = useState(false);
   const [isNew, setIsNew] = useState(initialData.isNew);
   const [isBestSeller, setIsBestSeller] = useState(initialData.isBestSeller);
-  const [type, setType] = useState("FOOD");
+  const [type, setType] = useState<"FOOD" | "DRINK">(
+    initialData.type as "FOOD" | "DRINK"
+  );
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [mediumPrice, setMediumPrice] = useState<number | null>(
+    initialData.mediumPrice || null
+  );
+  const [largePrice, setLargePrice] = useState<number | null>(
+    initialData.largePrice || null
+  );
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -118,6 +129,19 @@ function UpdateProductForm({
     formData.append("isNew", isNew.toString());
     formData.append("isBestSeller", isBestSeller.toString());
     formData.append("type", type);
+
+    // ✅ Append size prices if product is a drink
+    if (type === "DRINK") {
+      formData.append(
+        "mediumPrice",
+        mediumPrice !== null ? mediumPrice.toString() : ""
+      );
+      formData.append(
+        "largePrice",
+        largePrice !== null ? largePrice.toString() : ""
+      );
+    }
+
     if (imageFile) formData.append("image", imageFile);
 
     try {
@@ -332,6 +356,42 @@ function UpdateProductForm({
           )}
         </div>
       </div>
+
+      {type === "DRINK" && (
+        <div className="flex flex-col gap-3">
+          <label className="font-medium text-gray-700">Drink Sizes</label>
+          <div className="flex gap-4">
+            <div className="flex-1 flex flex-col">
+              <span className="text-sm text-gray-500 mb-1">Medium</span>
+              <input
+                type="number"
+                placeholder="₱ 0.00"
+                className="products-input-style border rounded-md px-3 py-2 focus:outline-none"
+                value={mediumPrice === null ? "" : mediumPrice}
+                onChange={(e) =>
+                  setMediumPrice(
+                    e.target.value === "" ? null : Number(e.target.value)
+                  )
+                }
+              />
+            </div>
+            <div className="flex-1 flex flex-col">
+              <span className="text-sm text-gray-500 mb-1">Large</span>
+              <input
+                type="number"
+                placeholder="₱ 0.00"
+                className="products-input-style border rounded-md px-3 py-2 focus:outline-none"
+                value={largePrice === null ? "" : largePrice}
+                onChange={(e) =>
+                  setLargePrice(
+                    e.target.value === "" ? null : Number(e.target.value)
+                  )
+                }
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New/Best Seller */}
       <div className="flex gap-6">

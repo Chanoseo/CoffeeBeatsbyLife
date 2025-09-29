@@ -22,6 +22,8 @@ interface Seat {
   name: string;
   status: string;
   capacity: number;
+  imageUrl?: string; // 👈 add this
+  description?: string; // 👈 add this
   orders?: Order[];
   walkIns?: WalkIn[];
 }
@@ -145,11 +147,11 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
                 ? "Occupied"
                 : "Available",
             capacity: selectedSeat.capacity,
+            imageUrl: selectedSeat.imageUrl ?? "",
+            description: selectedSeat.description ?? "",
           }}
           onClose={() => setIsUpdateOpen(false)}
-          onRefresh={() => {
-            fetchSeats(); // refresh seats immediately
-          }}
+          onRefresh={() => fetchSeats()}
         />
       )}
     </div>

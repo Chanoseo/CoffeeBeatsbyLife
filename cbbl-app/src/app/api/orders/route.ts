@@ -16,9 +16,11 @@ cloudinary.config({
 type CartItem = {
   productId: string;
   quantity: number;
-  size?: string; // ✅ add size
+  size?: string;
   product: {
     price: number;
+    mediumPrice?: number; // optional
+    largePrice?: number; // optional
   };
 };
 
@@ -54,10 +56,28 @@ export async function POST(req: Request) {
     }
 
     // Calculate total
-    const totalAmount = cartItems.reduce(
-      (acc, item) => acc + item.product.price * item.quantity,
-      0
-    );
+    let seatCost = 0;
+    if (time) {
+      const start = new Date(time);
+      const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+      const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+      seatCost = hours * 10; // ₱10 per hour
+    }
+
+    const totalAmount =
+      cartItems.reduce((acc, item) => {
+        let itemPrice = item.product.price;
+
+        if (item.size) {
+          if (item.size === "medium" && item.product.mediumPrice != null) {
+            itemPrice += item.product.mediumPrice;
+          } else if (item.size === "large" && item.product.largePrice != null) {
+            itemPrice += item.product.largePrice;
+          }
+        }
+
+        return acc + itemPrice * item.quantity;
+      }, 0) + seatCost; // ✅ add seat cost here
 
     // Define start & end times
     const startTime = time ? new Date(time) : new Date();
@@ -105,12 +125,24 @@ export async function POST(req: Request) {
         startTime,
         endTime,
         items: {
-          create: cartItems.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.product.price,
-            size: item.size, // ✅ save size
-          })),
+          create: cartItems.map((item) => {
+            let finalPrice = item.product.price;
+            if (item.size === "medium" && item.product.mediumPrice != null) {
+              finalPrice += item.product.mediumPrice;
+            } else if (
+              item.size === "large" &&
+              item.product.largePrice != null
+            ) {
+              finalPrice += item.product.largePrice;
+            }
+
+            return {
+              productId: item.productId,
+              quantity: item.quantity,
+              price: finalPrice, // store final price including size
+              size: item.size,
+            };
+          }),
         },
       },
       include: {
