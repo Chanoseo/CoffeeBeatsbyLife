@@ -17,6 +17,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ChangeProfile from "../main/change-profile/ChangeProfile";
+import { useState } from "react";
 
 interface NavigationProps {
   collapsed: boolean;
@@ -24,9 +26,15 @@ interface NavigationProps {
   toggleMobile?: () => void;
 }
 
+// 👇 add role typing
+type Role = "admin" | "staff" | "user" | "walkin";
+
 function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const role: Role = (session?.user?.role as Role) ?? "user"; // ✅ avoid any
 
   const fullName = session?.user?.name || "Guest User";
   const nameParts = fullName.split(" ");
@@ -35,7 +43,8 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
       ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}`
       : fullName;
 
-  const links = [
+  // 🔑 role-based links
+  const allLinks = [
     { href: "/dashboard", label: "Dashboard", icon: faGauge },
     { href: "/products", label: "Products", icon: faBagShopping },
     { href: "/orders", label: "Orders", icon: faClipboardList },
@@ -46,97 +55,138 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
     { href: "/cms", label: "CMS", icon: faFileAlt },
   ];
 
+  const staffLinks = [
+    { href: "/orders", label: "Orders", icon: faClipboardList },
+    { href: "/seats", label: "Seats", icon: faChair },
+    { href: "/customers", label: "Customers", icon: faUsers },
+  ];
+
+  // ✅ select based on role
+  const links =
+    role === "admin" ? allLinks : role === "staff" ? staffLinks : [];
+
   return (
-    <aside
-      className={`
+    <>
+      <aside
+        className={`
         h-screen flex flex-col text-white bg-[#3C604C] z-50
         transition-all duration-300 ease-in-out
-        ${collapsed ? "w-fit items-center" : "md:w-74"} px-4 py-10 overflow-hidden
+        ${
+          collapsed ? "w-fit items-center" : "md:w-74"
+        } px-4 py-10 overflow-hidden
         fixed top-0 left-0 sm:relative
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"} 
         sm:translate-x-0 sm:flex w-fit
       `}
-    >
-      {/* Mobile close button */}
-      <div className="sm:hidden flex justify-end mb-4">
-        {toggleMobile && (
-          <FontAwesomeIcon icon={faBars} onClick={toggleMobile} className="text-white text-2xl"/>
-        )}
-      </div>
-
-      {/* Logo */}
-      <div
-        className={`flex items-center gap-2 mb-7 py-2 px-4 ${
-          collapsed ? "justify-center" : "justify-start"
-        }`}
       >
-        <div className="relative w-[40px] h-[40px] flex-shrink-0">
-          <Image
-            src="/cbbl-logo.svg"
-            alt="Logo"
-            fill
-            className="object-contain brightness-0 invert"
-          />
-        </div>
-        {!collapsed && <h1 className="text-2xl font-semibold">CBBL</h1>}
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1">
-        <ul className="flex flex-col gap-4">
-          {links.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={`admin-navbar ${
-                    isActive ? "bg-white text-[#3C604C]" : ""
-                  }`}
-                >
-                  <FontAwesomeIcon icon={link.icon} />
-                  {!collapsed && <span>{link.label}</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* Logout */}
-      <button
-        className="admin-navbar"
-        onClick={() => signOut()}
-      >
-        <FontAwesomeIcon icon={faArrowRightFromBracket} />
-        {!collapsed && <span>Sign Out</span>}
-      </button>
-
-      {/* Avatar */}
-      <div
-        className={`flex items-center mt-8 px-4 ${
-          collapsed ? "justify-center" : "justify-start"
-        }`}
-      >
-        <div className="relative w-[40px] h-[40px] flex-shrink-0 rounded-full">
-          <Image
-            src={session?.user?.image || "/cbbl-image.jpg"}
-            alt="User Image"
-            fill
-            sizes="40px"
-            className="object-cover rounded-full"
-          />
+        {/* Mobile close button */}
+        <div className="sm:hidden flex justify-end mb-4">
+          {toggleMobile && (
+            <FontAwesomeIcon
+              icon={faBars}
+              onClick={toggleMobile}
+              className="text-white text-2xl"
+            />
+          )}
         </div>
 
-        {/* Only show name when not collapsed */}
-        {!collapsed && (
-          <div className="flex flex-col ml-2">
-            <span className="text-nowrap text-xs lg:text-sm">{displayName}</span>
-            <span className="text-nowrap text-xs lg:text-sm">Administrator</span>
+        {/* Logo */}
+        <div
+          className={`flex items-center gap-2 mb-7 py-2 px-4 ${
+            collapsed ? "justify-center" : "justify-start"
+          }`}
+        >
+          <div className="relative w-[40px] h-[40px] flex-shrink-0">
+            <Image
+              src="/cbbl-logo.svg"
+              alt="Logo"
+              fill
+              className="object-contain brightness-0 invert"
+            />
           </div>
-        )}
-      </div>
-    </aside>
+          {!collapsed && <h1 className="text-2xl font-semibold">CBBL</h1>}
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1">
+          <ul className="flex flex-col gap-4">
+            {links.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={`admin-navbar ${
+                      isActive ? "bg-white text-[#3C604C]" : ""
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={link.icon} />
+                    {!collapsed && <span>{link.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Logout */}
+        <button className="admin-navbar" onClick={() => signOut()}>
+          <FontAwesomeIcon icon={faArrowRightFromBracket} />
+          {!collapsed && <span>Sign Out</span>}
+        </button>
+
+        {/* Avatar */}
+        <div
+          className={`flex items-center mt-8 px-4 ${
+            collapsed ? "justify-center" : "justify-start"
+          }`}
+          onClick={() => setIsProfileOpen(true)}
+        >
+          {session?.user?.image ? (
+            <div className="relative w-[40px] h-[40px] flex-shrink-0 rounded-full">
+              <Image
+                src={session.user.image}
+                alt="User Image"
+                fill
+                sizes="40px"
+                className="object-cover rounded-full"
+              />
+            </div>
+          ) : (
+            <div
+              onClick={toggleMobile}
+              className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#3C604C] text-lg font-bold cursor-pointer"
+            >
+              {session?.user?.name?.charAt(0).toUpperCase() ?? "U"}
+            </div>
+          )}
+
+          {/* Only show name when not collapsed */}
+          {!collapsed && (
+            <div className="flex flex-col ml-2">
+              <span className="text-nowrap text-xs lg:text-sm">
+                {displayName}
+              </span>
+              <span className="text-nowrap text-xs lg:text-sm capitalize">
+                {role}
+              </span>
+            </div>
+          )}
+        </div>
+      </aside>
+      {/* Change Profile Modal */}
+      {isProfileOpen && session?.user && (
+        <ChangeProfile
+          user={{
+            name: session.user.name ?? "",
+            email: session.user.email ?? "",
+            role: role,
+            image: session.user.image ?? null,
+          }}
+          onClose={() => setIsProfileOpen(false)}
+        />
+      )}
+    </>
   );
 }
 

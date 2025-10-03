@@ -82,7 +82,7 @@ export default function CustomersList({ searchInput }: CustomersListProps) {
                   className="w-20 h-20 rounded-full object-cover border-2 border-[#3C604C]"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold text-xl border-2 border-[#3C604C]">
+                <div className="w-20 h-20 rounded-full bg-[#3C604C]/10 flex items-center justify-center text-[#3C604C] font-bold text-xl border-2 border-[#3C604C]">
                   {customer.name ? customer.name[0] : "U"}
                 </div>
               )}

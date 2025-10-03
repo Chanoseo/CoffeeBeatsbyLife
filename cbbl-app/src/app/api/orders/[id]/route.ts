@@ -190,8 +190,19 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params; // ✅ await first
+    const { id } = await context.params;
 
+    // Get order + user before deleting
+    const existingOrder = await prisma.order.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+
+    if (!existingOrder) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Delete items first, then the order
     await prisma.orderItem.deleteMany({
       where: { orderId: id },
     });
@@ -199,6 +210,99 @@ export async function DELETE(
     await prisma.order.delete({
       where: { id },
     });
+
+    // ✅ Send cancellation email
+    if (existingOrder.user?.email) {
+      try {
+        const mailOptions = {
+          from: `"Coffee Beats By Life" <${process.env.SMTP_USER}>`,
+          to: existingOrder.user.email,
+          subject: `Order #${existingOrder.id} Cancelled`,
+          text: `Dear ${
+            existingOrder.user.name || "Valued Customer"
+          },\n\nWe regret to inform you that your order (Order ID: ${
+            existingOrder.id
+          }) has been cancelled.\n\nIf you have any questions, please contact us directly.\n\nSincerely,\nCoffee Beats By Life Team`,
+          html: `
+            <div style="font-family: 'Arial', sans-serif; background-color: rgba(60, 96, 76, 0.08); padding: 30px;">
+              <div style="
+                max-width: 650px;
+                margin: 0 auto;
+                background-color: #ffffff;
+                border-radius: 16px;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+                border: 1px solid #e0e0e0;
+                overflow: hidden;
+              ">
+                <!-- Header -->
+                <div style="
+                  background-color: #b71c1c;
+                  text-align: center;
+                  padding: 30px 20px;
+                ">
+                  <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; line-height: 1.2;">
+                    Order Cancelled
+                  </h1>
+                </div>
+
+                <!-- Body -->
+                <div style="padding: 35px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
+                  <p style="color: #555555;">Dear ${
+                    existingOrder.user.name || "Valued Customer"
+                  },</p>
+
+                  <p style="color: #555555;">
+                    We regret to inform you that your order 
+                    <strong>#${existingOrder.id}</strong> has been cancelled.
+                  </p>
+
+                  <div style="text-align: center; margin: 25px 0;">
+                    <p style="
+                      background-color: #b71c1c;
+                      color: #ffffff;
+                      font-weight: 700;
+                      font-size: 20px;
+                      padding: 16px 32px;
+                      border-radius: 12px;
+                      display: inline-block;
+                      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    ">
+                      Cancelled
+                    </p>
+                  </div>
+
+                  <p style="color: #555555;">
+                    If you have any questions or concerns regarding this cancellation, please reach out to us directly.
+                  </p>
+
+                  <p style="color: #555555;">Sincerely,<br><strong>Coffee Beats By Life Team</strong></p>
+
+                  <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 35px 0;">
+
+                  <p style="font-size: 12px; color: #999999; text-align: center;">
+                    This is an automated message. Please do not reply to this email.
+                  </p>
+                </div>
+              </div>
+            </div>
+          `,
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(
+          `Cancellation email sent to ${existingOrder.user.email}`
+        );
+      } catch (emailError: unknown) {
+        if (emailError instanceof Error) {
+          console.error(
+            "Failed to send cancellation email:",
+            emailError.message
+          );
+        } else {
+          console.error("Unknown error sending cancellation email");
+        }
+      }
+    }
 
     return NextResponse.json({ message: "Order deleted" }, { status: 200 });
   } catch (error) {

@@ -10,19 +10,18 @@ export async function middleware(req: NextRequest) {
   const adminRoutes = [
     "/dashboard",
     "/products",
-    "/orders",
     "/messages",
-    "/seats",
     "/user",
     "/cms",
-    "/customers",
   ];
+  const staffRoutes = ["/orders", "/seats", "/customers"];
   const userRoutes = ["/home", "/profile"];
   const walkinRoutes = ["/walk-ins"];
 
   // Skip routes that are not protected
   if (
     !adminRoutes.some((r) => path.startsWith(r)) &&
+    !staffRoutes.some((r) => path.startsWith(r)) &&
     !userRoutes.some((r) => path.startsWith(r)) &&
     !walkinRoutes.some((r) => path.startsWith(r))
   ) {
@@ -50,6 +49,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Staff routes: staff + admin allowed
+  if (staffRoutes.some((r) => path.startsWith(r))) {
+    if (role === "admin" || role === "staff") {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/404", req.url));
+  }
+
   // User routes: only non-admins allowed
   if (userRoutes.some((r) => path.startsWith(r))) {
     if (role === "admin") {
@@ -57,6 +64,9 @@ export async function middleware(req: NextRequest) {
     }
     if (role === "walkin") {
       return NextResponse.redirect(new URL("/walk-ins", req.url));
+    }
+    if (role === "staff") {
+      return NextResponse.redirect(new URL("/orders", req.url));
     }
     return NextResponse.next();
   }

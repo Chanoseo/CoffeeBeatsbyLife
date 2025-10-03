@@ -3,38 +3,47 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
-interface User {
-  name: string | null;
-  email: string | null;
-  image: string | null;
-}
-
-interface ProfileModalProps {
-  user: User;
+interface ChangeProfileProps {
+  user: {
+    name: string;
+    email: string;
+    role: string;
+    image?: string | null;
+  };
   onClose: () => void;
-  onUpdate?: (user: User) => void; // optional callback for parent
 }
 
-export default function ProfileModal({
-  user,
-  onClose,
-  onUpdate,
-}: ProfileModalProps) {
-  const [name, setName] = useState(user.name ?? "");
-  const [previewImage, setPreviewImage] = useState(user.image ?? null);
+// ✅ Define a proper response type (no `any`)
+interface ChangeProfileResponse {
+  success: boolean;
+  message?: string;
+  user?: {
+    name: string;
+    email: string;
+    role: string;
+    image?: string | null;
+  };
+}
+
+export default function ChangeProfile({ user, onClose }: ChangeProfileProps) {
+  const [name, setName] = useState(user.name);
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    user.image ?? null
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,32}$/;
 
-  // Handle image selection
+  // Handle image preview
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -48,8 +57,8 @@ export default function ProfileModal({
   };
 
   const handleSave = async () => {
-    setError(null);
-    setSuccess(null);
+    setError("");
+    setSuccess("");
 
     if (!name.trim()) {
       setError("Name cannot be empty.");
@@ -79,52 +88,57 @@ export default function ProfileModal({
       if (newPassword) formData.append("password", newPassword);
       if (selectedFile) formData.append("image", selectedFile);
 
-      const res = await fetch("/api/profile", {
+      const res = await fetch("/api/change-profile", {
         method: "PUT",
-        body: formData, // send FormData instead of JSON
+        body: formData,
       });
 
-      const result: { message?: string; user?: User; error?: string } =
-        await res.json();
-
-      if (!res.ok) throw new Error(result.error || "Failed to update profile");
-
-      if (result.user) {
-        setPreviewImage(result.user.image ?? null);
-        setName(result.user.name ?? "");
-        onUpdate?.(result.user);
-        setSelectedFile(null); // reset file input
+      if (!res.ok) {
+        const errData: { error?: string } = await res.json();
+        setError(errData.error || "Failed to update profile");
+        return;
       }
 
+      const result: ChangeProfileResponse = await res.json();
+
       setSuccess(result.message || "Profile updated successfully!");
+
+      if (result.success) {
+        // 🔑 simplest + reliable: reload so session refetches from backend
+        window.location.reload();
+      }
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Something went wrong!");
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong");
+      }
     }
   };
 
-  // Refresh latest user data if parent updates
+  // Sync with latest props
   useEffect(() => {
-    setName(user.name ?? "");
+    setName(user.name);
     setPreviewImage(user.image ?? null);
   }, [user]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md shadow-lg relative">
+        {/* Profile image */}
         <div className="flex flex-col items-center mb-4">
           <div className="w-24 h-24 relative mb-2">
             {previewImage ? (
               <Image
-                key={previewImage} // force refresh on new URL
+                key={previewImage}
                 src={previewImage}
-                alt={user.name ?? "User"}
+                alt={user.name}
                 fill
                 className="rounded-full object-cover"
               />
             ) : (
               <div className="w-24 h-24 rounded-full bg-[#3C604C] flex items-center justify-center text-white text-3xl font-bold">
-                {user.name?.charAt(0).toUpperCase() ?? "U"}
+                {user.name.charAt(0).toUpperCase()}
               </div>
             )}
           </div>
@@ -139,52 +153,67 @@ export default function ProfileModal({
           </label>
         </div>
 
-        <h2 className="text-xl font-bold text-center mb-4">Edit Profile</h2>
+        <h2 className="text-xl font-bold text-center mb-4">Change Profile</h2>
 
         {error && <p className="message-error">{error}</p>}
         {success && <p className="message-success">{success}</p>}
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1 focus:outline-none">
+        {/* Name */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Name
           </label>
           <input
             type="text"
+            className="w-full mt-1 p-2 border rounded-md focus:outline-none"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3C604C]/30"
-            placeholder="Enter your name"
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        {/* Email */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Email
           </label>
           <input
             type="email"
-            value={user.email ?? ""}
+            value={user.email}
             disabled
-            className="w-full px-3 py-2 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+            className="w-full mt-1 p-2 border rounded-md bg-gray-100 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed"
           />
         </div>
 
-        <div className="flex flex-col gap-2 mb-4">
-          <label htmlFor="password">New Password</label>
+        {/* Role */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Role
+          </label>
+          <input
+            type="text"
+            value={user.role}
+            disabled
+            className="w-full mt-1 p-2 border rounded-md bg-gray-100 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed"
+          />
+        </div>
+
+        {/* Password */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            New Password
+          </label>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
-              id="password"
-              placeholder="Enter new password"
-              className="w-full px-3 py-2 border rounded-lg pr-16 focus:outline-none focus:ring-2 focus:ring-[#3C604C]/30"
+              className="w-full mt-1 p-2 border rounded-md pr-16 focus:outline-none"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
             {newPassword && (
               <button
                 type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-sm text-[#3C604C] bg-transparent focus:outline-none"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-[#3C604C]"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -192,22 +221,23 @@ export default function ProfileModal({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 mb-6">
-          <label htmlFor="confirm-password">Confirm Password</label>
+        {/* Confirm Password */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Confirm Password
+          </label>
           <div className="relative">
             <input
               type={showConfirmPassword ? "text" : "password"}
-              id="confirm-password"
-              placeholder="Confirm new password"
-              className="w-full px-3 py-2 border rounded-lg pr-16 focus:outline-none focus:ring-2 focus:ring-[#3C604C]/30"
+              className="w-full mt-1 p-2 border rounded-md pr-16 focus:outline-none"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
             {confirmPassword && (
               <button
                 type="button"
-                onClick={() => setShowConfirmPassword((prev) => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-sm text-[#3C604C] bg-transparent focus:outline-none"
+                onClick={() => setShowConfirmPassword((p) => !p)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-[#3C604C]"
               >
                 {showConfirmPassword ? "Hide" : "Show"}
               </button>
@@ -215,14 +245,18 @@ export default function ProfileModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        {/* Actions */}
+        <div className="flex justify-end gap-3 mt-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500"
           >
             Cancel
           </button>
-          <button onClick={handleSave} className="button-style">
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-[#3C604C] text-white rounded-md hover:bg-[#345240]"
+          >
             Save
           </button>
         </div>

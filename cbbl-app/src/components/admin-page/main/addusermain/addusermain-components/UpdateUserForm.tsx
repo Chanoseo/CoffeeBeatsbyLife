@@ -130,6 +130,7 @@ function UpdateUserForm({ user }: UpdateUserFormProps) {
         >
           <option value="admin">Admin</option>
           <option value="staff">Staff</option>
+          <option value="walkin">Walkin</option>
         </select>
       </div>
 

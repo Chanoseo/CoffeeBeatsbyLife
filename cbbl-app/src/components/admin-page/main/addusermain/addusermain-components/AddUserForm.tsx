@@ -134,6 +134,7 @@ function AddUserForm() {
           <option value="">-- Select Role --</option>
           <option value="admin">Admin</option>
           <option value="staff">Staff</option>
+          <option value="walkin">Walkin</option>
         </select>
       </div>
 

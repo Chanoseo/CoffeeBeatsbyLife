@@ -62,13 +62,9 @@ export default function Users({ searchInput }: { searchInput: string }) {
                 className="w-20 h-20 rounded-full object-cover border-2 border-[#3C604C]"
               />
             ) : (
-              <Image
-                src="/profile-default.png"
-                alt={user.name || "User"}
-                width={80}
-                height={80}
-                className="w-20 h-20 rounded-full object-cover border-2 border-[#3C604C]"
-              />
+              <div className="w-20 h-20 rounded-full bg-[#3C604C]/10 flex items-center justify-center text-[#3C604C] text-2xl font-bold border-2 border-[#3C604C]">
+                {user.name?.charAt(0).toUpperCase() ?? "U"}
+              </div>
             )}
             <p className="font-semibold text-gray-800 dark:text-gray-100 text-center truncate w-full">
               {user.name || "No Name"}
