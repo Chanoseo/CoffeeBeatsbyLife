@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -14,20 +15,22 @@ import {
 } from "recharts";
 
 function ReservationTrends() {
-  const data = [
-    { month: "Jan", current: 120, previous: 100 },
-    { month: "Feb", current: 200, previous: 180 },
-    { month: "Mar", current: 150, previous: 130 },
-    { month: "Apr", current: 170, previous: 160 },
-    { month: "May", current: 250, previous: 220 },
-    { month: "Jun", current: 300, previous: 270 },
-    { month: "Jul", current: 280, previous: 260 },
-    { month: "Aug", current: 320, previous: 300 },
-    { month: "Sep", current: 290, previous: 270 },
-    { month: "Oct", current: 310, previous: 290 },
-    { month: "Nov", current: 400, previous: 370 },
-    { month: "Dec", current: 380, previous: 350 },
-  ];
+  const [data, setData] = useState<
+    { month: string; current: number; previous: number }[]
+  >([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/reservation-trends");
+        const result = await res.json();
+        setData(result);
+      } catch (error) {
+        console.error("Error fetching reservation trends:", error);
+      }
+    }
+    fetchData();
+  }, []);
 
   return (
     <section className="dashboard-card">

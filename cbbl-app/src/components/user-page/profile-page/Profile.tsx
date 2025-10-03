@@ -49,7 +49,7 @@ export default function Profile() {
               className="rounded-full object-cover"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-amber-500 flex items-center justify-center text-white text-3xl font-bold">
+            <div className="w-24 h-24 rounded-full bg-[#3C604C] flex items-center justify-center text-white text-3xl font-bold">
               {user.name?.charAt(0).toUpperCase() ?? "U"}
             </div>
           )}

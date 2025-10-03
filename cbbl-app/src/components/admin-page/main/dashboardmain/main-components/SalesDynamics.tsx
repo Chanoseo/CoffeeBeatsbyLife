@@ -10,41 +10,88 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
-const data = [
-  { name: "Jan", sales: 10000 },
-  { name: "Feb", sales: 3000 },
-  { name: "Mar", sales: 2000 },
-  { name: "Apr", sales: 2780 },
-  { name: "May", sales: 1890 },
-  { name: "Jun", sales: 2390 },
-  { name: "Jul", sales: 3490 },
-  { name: "Aug", sales: 3200 },
-  { name: "Sep", sales: 3100 },
-  { name: "Oct", sales: 2800 },
-  { name: "Nov", sales: 7500 },
-  { name: "Dec", sales: 3500 },
-];
+import { useCallback, useEffect, useState } from "react";
 
 function SalesDynamics() {
+  const [data, setData] = useState<{ name: string; sales: number }[]>([]);
+  const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+
+  const fetchData = useCallback(async (selectedYear: number) => {
+    const res = await fetch(`/api/salesdynamics?year=${selectedYear}`);
+    const chartData = await res.json();
+    setData(chartData);
+  }, []);
+
+  const fetchYears = useCallback(async () => {
+    const res = await fetch("/api/salesdynamics/years");
+    const years = await res.json();
+
+    const currentYear = new Date().getFullYear();
+    const filtered = years.filter((y: number) => y <= currentYear);
+
+    setAvailableYears(filtered);
+    if (!filtered.includes(year)) {
+      setYear(currentYear);
+    }
+  }, [year]);
+
+  useEffect(() => {
+    fetchData(year);
+  }, [year, fetchData]);
+
+  useEffect(() => {
+    fetchYears();
+  }, [fetchYears]);
+
   return (
-    <section className="dashboard-card">
+    <section className="dashboard-card relative">
       <div className="dashboard-card-header">
         <div className="dashboard-card-title">
           <h2 className="md:block hidden">Sales Dynamics</h2>
           <FontAwesomeIcon icon={faBarChart} />
         </div>
-        <button className="flex items-center gap-1 cursor-pointer">
-          <p>2025</p>
-          <FontAwesomeIcon icon={faAngleDown} />
-        </button>
+
+        {/* ✅ Year Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-1 cursor-pointer"
+          >
+            <p>{year}</p>
+            <FontAwesomeIcon icon={faAngleDown} />
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-24 bg-white border border-gray-200 rounded shadow-sm z-10 overflow-hidden">
+              {availableYears.map((y) => (
+                <button
+                  key={y}
+                  onClick={() => {
+                    setYear(y);
+                    setDropdownOpen(false);
+                  }}
+                  className={`w-full px-3 py-1 text-left hover:bg-gray-100 ${
+                    year === y ? "font-bold text-green-700" : ""
+                  }`}
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Chart Container */}
       <div className="w-full h-80 mt-4 overflow-x-auto">
         <div className="min-w-[600px] h-full">
           <ResponsiveContainer>
-            <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <BarChart
+              data={data}
+              margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+            >
               <XAxis
                 dataKey="name"
                 tick={{ fill: "#333", fontSize: 14 }}

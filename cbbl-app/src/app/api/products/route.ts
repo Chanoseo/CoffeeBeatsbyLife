@@ -106,7 +106,8 @@ export async function GET(req: Request) {
         where: { category: { name: categoryName } },
         include: {
           category: true,
-          _count: { select: { orderItems: true } }, // ✅ count orders
+          _count: { select: { orderItems: true } }, // count orders
+          ratings: true, // ✅ include ratings
         },
         orderBy: { createdAt: "desc" },
       });
@@ -114,17 +115,26 @@ export async function GET(req: Request) {
       products = await prisma.product.findMany({
         include: {
           category: true,
-          _count: { select: { orderItems: true } }, // ✅ count orders
+          _count: { select: { orderItems: true } },
+          ratings: true, // ✅ include ratings
         },
         orderBy: { createdAt: "desc" },
       });
     }
 
-    // ✅ map _count into totalOrders
-    const data = products.map((p) => ({
-      ...p,
-      totalOrders: p._count.orderItems,
-    }));
+    // map _count into totalOrders and compute avgRating
+    const data = products.map((p) => {
+      const avgRating =
+        p.ratings.length > 0
+          ? p.ratings.reduce((sum, r) => sum + r.rating, 0) / p.ratings.length
+          : 0;
+
+      return {
+        ...p,
+        totalOrders: p._count.orderItems,
+        avgRating,
+      };
+    });
 
     return NextResponse.json(data);
   } catch (error) {

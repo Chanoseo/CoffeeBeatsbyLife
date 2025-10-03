@@ -22,6 +22,18 @@ export interface OrderItem {
   size?: string; // ✅ add size
 }
 
+export interface Feedback {
+  id: string;
+  user?: { name?: string | null };
+  overallReview?: string | null;
+  appExperience: number;
+  orderCompleteness: number;
+  speedOfService: number;
+  valueForMoney: number;
+  reservationExperience: number;
+  overallSatisfaction: number;
+}
+
 export interface FullOrder {
   id: string; // DB id
   displayId?: string; // formatted ID for UI
@@ -34,20 +46,7 @@ export interface FullOrder {
   paymentProof?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface FullOrder {
-  id: string; // DB id
-  displayId?: string; // formatted ID for UI
-  user?: { name?: string | null };
-  totalAmount: number;
-  seat?: string | null;
-  time?: string | null;
-  status: string;
-  items?: OrderItem[];
-  paymentProof?: string;
-  createdAt: string;
-  updatedAt: string;
+  feedbacks?: Feedback[];
 }
 
 const STATUS_OPTIONS = [
@@ -70,12 +69,16 @@ function Orders({ searchInput }: OrdersProps) {
   const [selectedOrder, setSelectedOrder] = useState<FullOrder | null>(null);
 
   useEffect(() => {
+    let isMounted = true; // prevent state update if component unmounts
+
     const fetchOrders = async () => {
       try {
         const res = await fetch("/api/orders");
         const data: FullOrder[] = await res.json();
 
-        // Exclude completed orders
+        if (!isMounted) return;
+
+        // Exclude completed orders and keep displayId logic
         const filteredOrders = data
           .filter((order) => order.status !== "Completed")
           .map((order, index) => ({
@@ -84,13 +87,20 @@ function Orders({ searchInput }: OrdersProps) {
           }));
 
         setOrders(filteredOrders);
+        setLoading(false);
       } catch (err) {
         console.error("Failed to fetch orders", err);
-      } finally {
-        setLoading(false);
       }
     };
-    fetchOrders();
+
+    fetchOrders(); // initial fetch
+
+    const interval = setInterval(fetchOrders, 3000); // fetch every 3 seconds
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval); // cleanup on unmount
+    };
   }, []);
 
   const getRowColor = (status: string) =>

@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import nodemailer from "nodemailer";
 
 // Cloudinary config
 cloudinary.config({
@@ -146,10 +147,145 @@ export async function POST(req: Request) {
         },
       },
       include: {
-        items: true,
+        items: { include: { product: true } },
         seat: true, // include seat info if needed
+        user:true,
       },
     });
+
+    // ✅ Send confirmation email
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail", // or use SMTP config
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      // Format date and time
+      const dateFormatted = new Date(order.startTime).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      const startFormatted = new Date(order.startTime).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).replace(" ", "");
+      const endFormatted = new Date(order.endTime).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).replace(" ", "");
+
+      // Generate product list
+      const productsHtml = order.items
+        .map(
+          (item) => `
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; color:#333;">
+                ${item.product.name} (${item.size || "Regular"})
+              </td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; text-align:center; color:#333;">
+                ${item.quantity}
+              </td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; text-align:right; color:#333;">
+                ₱${(item.price * item.quantity).toFixed(2)}
+              </td>
+            </tr>
+          `
+        )
+        .join("");
+
+      const mailOptions = {
+        from: `"Coffee Beats By Life" <${process.env.SMTP_USER}>`,
+        to: order.user.email,
+        subject: `Order Confirmation - ${order.id}`,
+        html: `
+          <div style="font-family: 'Arial', sans-serif; background-color: rgba(60, 96, 76, 0.08); padding: 30px;">
+            <div style="
+              max-width: 650px;
+              margin: 0 auto;
+              background-color: #ffffff;
+              border-radius: 16px;
+              box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+              border: 1px solid #e0e0e0;
+              overflow: hidden;
+            ">
+              <!-- Header -->
+              <div style="
+                background-color: rgb(60, 96, 76);
+                text-align: center;
+                padding: 30px 20px;
+              ">
+                <h1 style="
+                  color: #ffffff;
+                  font-size: 28px;
+                  font-weight: 700;
+                  margin: 0;
+                  line-height: 1.2;
+                ">
+                  Order Confirmed
+                </h1>
+              </div>
+
+              <!-- Body -->
+              <div style="padding: 35px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
+                <p style="color: #555555;">Dear ${order.user.name || "Valued Customer"},</p>
+
+                <p style="color: #555555;">
+                  Thank you for your order at <strong>Coffee Beats By Life</strong>. Your order has been placed successfully. Below are your details:
+                </p>
+
+                <p style="color: #555; font-size: 15px; line-height: 1.6;">
+                  <strong>Order ID:</strong> ${order.id}<br/>
+                  <strong>Seat:</strong> ${order.seat?.name || "N/A"}<br/>
+                  <strong>Date:</strong> ${dateFormatted}<br/>
+                  <strong>Start Time:</strong> ${startFormatted}<br/>
+                  <strong>End Time:</strong> ${endFormatted}<br/>
+                  <strong>Seat Cost:</strong> ₱${seatCost.toFixed(2)}<br/>
+                  <strong>Total Amount:</strong> ₱${order.totalAmount.toFixed(2)}
+                </p>
+
+                <h3 style="color:#3c604c; margin-top: 30px;">Ordered Items</h3>
+                <table style="width:100%; border-collapse: collapse; font-size: 15px; margin-top:10px;">
+                  <thead>
+                    <tr style="background-color:#f1f1f1; text-align:left;">
+                      <th style="padding:8px; border-bottom:1px solid #ddd;">Product</th>
+                      <th style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">Qty</th>
+                      <th style="padding:8px; border-bottom:1px solid #ddd; text-align:right;">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${productsHtml}
+                  </tbody>
+                </table>
+
+                <p style="color: #555; margin-top: 25px;">
+                  We look forward to serving you! ☕
+                </p>
+                <p style="color: #555;">
+                  Sincerely,<br/>
+                  <strong>Coffee Beats By Life Team</strong>
+                </p>
+
+                <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 35px 0;">
+
+                <p style="font-size: 12px; color: #999999; text-align: center;">
+                  This is an automated message. Please do not reply to this email.
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+    }
 
     // ✅ Clean up cart
     const userCart = await prisma.cart.findFirst({ where: { userId } });
@@ -174,15 +310,17 @@ export async function GET() {
       include: {
         user: true,
         items: { include: { product: true } },
-        seat: true, // seat object: {id, name, status}
+        seat: true,
+        feedbacks: { include: { user: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" }, // oldest first
     });
 
-    // Map seat object to seat name
-    const mappedOrders = orders.map((order) => ({
+    // Add persistent displayId based on DB order
+    const mappedOrders = orders.map((order, index) => ({
       ...order,
-      seat: order.seat?.name ?? null, // ✅ convert seat object to string
+      seat: order.seat?.name ?? null,
+      displayId: `ORD${(index + 1).toString().padStart(3, "0")}`, // now sequential
     }));
 
     return NextResponse.json(mappedOrders, { status: 200 });

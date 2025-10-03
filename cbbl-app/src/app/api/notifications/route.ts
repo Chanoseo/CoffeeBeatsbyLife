@@ -71,11 +71,74 @@ export async function POST(req: Request) {
           to: user.email,
           subject: `Store Status Update: ${storeStatus.toUpperCase()}`,
           html: `
-            <p>Dear ${user.name || "Valued Customer"},</p>
-            <p><strong>Current Store Status:</strong> ${storeStatus.toUpperCase()}</p>
-            <p>${statusText}</p>
-            <p>Thank you for your continued support.</p>
-            <p>Best regards,<br/>Coffee Beats By Life Team</p>
+            <div style="font-family: 'Arial', sans-serif; background-color: rgba(60, 96, 76, 0.08); padding: 30px;">
+              <div style="
+                max-width: 650px;
+                margin: 0 auto;
+                background-color: #ffffff;
+                border-radius: 16px;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+                border: 1px solid #e0e0e0;
+                overflow: hidden;
+              ">
+                <!-- Header -->
+                <div style="
+                  background-color: rgb(60, 96, 76);
+                  text-align: center;
+                  padding: 30px 20px;
+                ">
+                  <h1 style="
+                    color: #ffffff;
+                    font-size: 28px;
+                    font-weight: 700;
+                    margin: 0;
+                    line-height: 1.2;
+                  ">
+                    Store Status Update
+                  </h1>
+                </div>
+
+                <!-- Body -->
+                <div style="padding: 35px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
+                  <p style="color: #555555;">Dear ${user.name || "Valued Customer"},</p>
+
+                  <p style="color: #555555;">
+                    <strong>Current Store Status:</strong> ${storeStatus.toUpperCase()}
+                  </p>
+
+                  <p style="color: #555555;">
+                    ${statusText}
+                  </p>
+
+                  <div style="text-align: center; margin: 25px 0;">
+                    <p style="
+                      background-color: rgb(60, 96, 76);
+                      color: #ffffff;
+                      font-weight: 700;
+                      font-size: 20px;
+                      padding: 16px 32px;
+                      border-radius: 12px;
+                      display: inline-block;
+                      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    ">
+                      ${storeStatus.toUpperCase()}
+                    </p>
+                  </div>
+
+                  <p style="color: #555555;">
+                    Thank you for your continued support.
+                  </p>
+
+                  <p style="color: #555555;">Sincerely,<br><strong>Coffee Beats By Life Team</strong></p>
+
+                  <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 35px 0;">
+
+                  <p style="font-size: 12px; color: #999999; text-align: center;">
+                    This is an automated message. Please do not reply to this email.
+                  </p>
+                </div>
+              </div>
+            </div>
           `,
         });
       } catch (err) {

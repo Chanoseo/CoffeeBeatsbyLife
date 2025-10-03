@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -12,26 +13,27 @@ import {
 } from "recharts";
 
 function PearHoursAnalytics() {
-  const data = [
-    { hour: "7 AM", sales: 500 },
-    { hour: "8 AM", sales: 800 },
-    { hour: "9 AM", sales: 1200 },
-    { hour: "10 AM", sales: 1500 },
-    { hour: "11 AM", sales: 1800 },
-    { hour: "12 PM", sales: 2200 },
-    { hour: "1 PM", sales: 2000 },
-    { hour: "2 PM", sales: 1900 },
-    { hour: "3 PM", sales: 2100 },
-    { hour: "4 PM", sales: 2300 },
-    { hour: "5 PM", sales: 2500 },
-    { hour: "6 PM", sales: 2700 },
-    { hour: "7 PM", sales: 3000 },
-    { hour: "8 PM", sales: 3200 },
-    { hour: "9 PM", sales: 3100 },
-    { hour: "10 PM", sales: 2800 },
-    { hour: "11 PM", sales: 2600 },
-    { hour: "12 AM", sales: 2400 },
-  ];
+  const [data, setData] = useState<{ hour: string; customers: number }[]>([]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch(`/api/peakhours?date=${selectedDate}`);
+        const result = await res.json();
+        setData(result);
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+      }
+    }
+    fetchData();
+  }, [selectedDate]);
 
   return (
     <section className="dashboard-card">
@@ -40,7 +42,12 @@ function PearHoursAnalytics() {
           <h2 className="md:block hidden">Peak Hours Analytics</h2>
           <FontAwesomeIcon icon={faClock} />
         </div>
-        <p>Today</p>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="border rounded px-2 py-1"
+        />
       </div>
       <div className="w-full h-80 mt-4 overflow-x-auto">
         <div className="min-w-[600px] h-full">
@@ -60,6 +67,8 @@ function PearHoursAnalytics() {
                 tick={{ fill: "#333", fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
+                allowDecimals={false}
+                domain={[0, Math.max(...data.map((d) => d.customers), 1)]} // ensures proper scaling
               />
               <Tooltip
                 content={({ payload, label }) => {
@@ -67,7 +76,8 @@ function PearHoursAnalytics() {
                     return (
                       <div className="bg-white p-2 border border-gray-300 rounded shadow-sm">
                         <p>{label}</p>
-                        <p>Sales: {payload[0].value}</p>
+                        <p>customers: {Math.round(payload[0].value)}</p>{" "}
+                        {/* ✅ rounded in tooltip */}
                       </div>
                     );
                   }
@@ -76,7 +86,7 @@ function PearHoursAnalytics() {
                 cursor={{ fill: "rgba(60, 96, 76, 0.1)" }}
               />
               <Bar
-                dataKey="sales"
+                dataKey="customers"
                 fill="#3C604C"
                 barSize={10}
                 radius={[15, 15, 15, 15]}
@@ -89,4 +99,5 @@ function PearHoursAnalytics() {
     </section>
   );
 }
+
 export default PearHoursAnalytics;

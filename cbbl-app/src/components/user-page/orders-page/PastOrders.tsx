@@ -3,6 +3,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import RateButton from "./RateButton";
 
 async function getPastOrdersForUser(userId: string) {
   return prisma.order.findMany({
@@ -97,7 +98,8 @@ export default async function PastOrders() {
               </div>
 
               {/* Reorder Button */}
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-4">
+                <RateButton orderId={order.id} items={order.items} />
                 <ReorderButton orderId={order.id} />
               </div>
             </div>

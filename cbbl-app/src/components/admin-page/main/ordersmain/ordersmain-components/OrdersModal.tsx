@@ -165,6 +165,58 @@ function OrdersModal({ order, onClose }: OrdersModalProps) {
             />
           </div>
         )}
+        <div className="mt-6">
+          {order.feedbacks && order.feedbacks.length > 0 && (
+            <>
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                Customer Feedback
+              </h3>
+              <div className="space-y-4">
+                {order.feedbacks.map((fb) => (
+                  <div
+                    key={fb.id}
+                    className="border border-gray-200 rounded-2xl p-5 bg-white"
+                  >
+                    {/* Ratings Grid */}
+                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
+                      <div className="flex justify-between">
+                        <span>App Experience:</span>
+                        <span>{fb.appExperience}/5</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Order Completeness:</span>
+                        <span>{fb.orderCompleteness}/5</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Speed of Service:</span>
+                        <span>{fb.speedOfService}/5</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Value for Money:</span>
+                        <span>{fb.valueForMoney}/5</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Reservation Experience:</span>
+                        <span>{fb.reservationExperience}/5</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Overall Satisfaction:</span>
+                        <span>{fb.overallSatisfaction}/5</span>
+                      </div>
+                    </div>
+
+                    {/* Overall Review */}
+                    {fb.overallReview && (
+                      <p className="mt-4 p-3 bg-gray-50 rounded-2xl border-l-4 border-green-500 italic text-gray-800 text-sm">
+                        {fb.overallReview}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

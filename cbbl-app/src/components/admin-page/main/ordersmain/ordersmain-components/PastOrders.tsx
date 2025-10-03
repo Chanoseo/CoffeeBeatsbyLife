@@ -17,6 +17,18 @@ export interface OrderItem {
   size?: string;
 }
 
+export interface Feedback {
+  id: string;
+  user?: { name?: string | null };
+  overallReview?: string | null;
+  appExperience: number;
+  orderCompleteness: number;
+  speedOfService: number;
+  valueForMoney: number;
+  reservationExperience: number;
+  overallSatisfaction: number;
+}
+
 export interface FullOrder {
   id: string;
   displayId?: string;
@@ -29,6 +41,7 @@ export interface FullOrder {
   paymentProof?: string;
   createdAt: string;
   updatedAt: string;
+  feedbacks?: Feedback[]; // ✅ Add this
 }
 
 interface PastOrdersProps {

@@ -49,6 +49,10 @@ model User {
   orders    Order[]
   carts     Cart[]
   favorites Favorite[]
+
+  // 🔹 Opposite sides
+  ratings   Rating[]
+  feedbacks OrderFeedback[]
 }
 
 model VerificationToken {
@@ -110,6 +114,54 @@ model Product {
   orderItems OrderItem[]
   cartItems  CartItem[]
   favorites  Favorite[]
+
+  // 🔹 Opposite side
+  ratings Rating[]
+}
+
+model Rating {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  orderId String @db.ObjectId
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  orderItemId String    @db.ObjectId
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  productId String  @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rating Int
+  review String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orderItemId, userId])
+}
+
+model OrderFeedback {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  orderId String @db.ObjectId
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  appExperience         Int
+  orderCompleteness     Int
+  speedOfService        Int
+  valueForMoney         Int
+  reservationExperience Int
+  overallSatisfaction   Int
+  overallReview         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orderId, userId])
 }
 
 model Seat {
@@ -158,6 +210,10 @@ model Order {
   paymentProof String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  // 🔹 Opposite sides
+  ratings   Rating[]
+  feedbacks OrderFeedback[]
 }
 
 model OrderItem {
@@ -169,6 +225,9 @@ model OrderItem {
   quantity  Int     @default(1)
   price     Float // snapshot of product price at the time of order
   size      String?
+
+  // 🔹 Opposite side
+  ratings Rating[]
 }
 
 model Cart {

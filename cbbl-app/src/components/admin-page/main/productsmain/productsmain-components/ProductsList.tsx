@@ -14,6 +14,7 @@ type Product = {
   isBestSeller: boolean;
   totalOrders: number;
   type: string;
+  avgRating?: number;
   category?: {
     id: string;
     name: string;
@@ -142,6 +143,23 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
               <p className="text-sm truncate md:text-base">
                 Total Orders: {product.totalOrders ?? 0}
               </p>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    className={`text-lg ${
+                      product.avgRating && product.avgRating >= star
+                        ? "text-yellow-400"
+                        : "text-gray-300"
+                    }`}
+                  >
+                    ★
+                  </span>
+                ))}
+                <span className="text-sm text-gray-500 ml-2">
+                  {product.avgRating ? product.avgRating.toFixed(1) : "0.0"}
+                </span>
+              </div>
             </div>
           </div>
         ))}
