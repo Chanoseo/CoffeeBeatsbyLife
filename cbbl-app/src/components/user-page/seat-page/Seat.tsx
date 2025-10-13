@@ -81,7 +81,6 @@ function Seat() {
     "08:00 PM",
     "09:00 PM",
     "10:00 PM",
-    "11:00 PM",
   ];
 
   const now = new Date();
@@ -230,32 +229,64 @@ function Seat() {
               if (selectedTime) {
                 const selectedStart = new Date(selectedTime);
 
-                const hasOrderConflict = seat.orders.some((order) => {
+                let hasReservedConflict = false;
+                let hasOccupiedConflict = false;
+
+                // Helper function for overlap detection
+                const overlaps = (start: Date, end: Date) => {
+                  const selectedEnd = new Date(selectedStart);
+                  selectedEnd.setHours(selectedEnd.getHours() + 1);
+                  return start < selectedEnd && end > selectedStart;
+                };
+
+                // Check order conflicts based on status (with overlap)
+                seat.orders.forEach((order) => {
                   const orderStart = new Date(order.startTime);
                   const orderEnd = new Date(order.endTime);
-                  return (
-                    selectedStart >= orderStart && selectedStart < orderEnd
-                  );
+
+                  if (overlaps(orderStart, orderEnd)) {
+                    if (order.status === "Completed") {
+                      hasOccupiedConflict = true;
+                    } else if (order.status !== "Canceled") {
+                      hasReservedConflict = true;
+                    }
+                  }
                 });
 
+                // Check walk-in conflicts
                 const hasWalkInConflict = seat.walkIns?.some((walkIn) => {
                   const walkInStart = new Date(walkIn.startTime);
                   const walkInEnd = new Date(walkIn.endTime);
-                  return (
-                    selectedStart >= walkInStart && selectedStart < walkInEnd
-                  );
+                  return overlaps(walkInStart, walkInEnd);
                 });
 
-                if (hasOrderConflict) {
-                  seatColorClass = "bg-red-100 text-red-600 border-red-400";
+                // ✅ Apply color logic
+                if (hasOccupiedConflict) {
+                  seatColorClass = "bg-blue-100 text-blue-600 border-blue-400"; // Occupied
+                } else if (hasReservedConflict) {
+                  seatColorClass = "bg-red-100 text-red-600 border-red-400"; // Reserved
                 } else if (hasWalkInConflict) {
-                  seatColorClass = "bg-blue-100 text-blue-600 border-blue-400";
+                  seatColorClass = "bg-blue-100 text-blue-600 border-blue-400"; // Walk-in = Occupied
                 }
               }
 
-              // ✅ Highlight if selected (green)
+              // ✅ Highlight green only if available
               const isSelected = previewSeat?.id === seat.id;
-              if (isSelected) {
+              const isReservedOrOccupied =
+                seat.orders.some(
+                  (order) =>
+                    order.status !== "Canceled" &&
+                    new Date(selectedTime ?? "") >= new Date(order.startTime) &&
+                    new Date(selectedTime ?? "") < new Date(order.endTime)
+                ) ||
+                seat.walkIns.some(
+                  (walkIn) =>
+                    new Date(selectedTime ?? "") >=
+                      new Date(walkIn.startTime) &&
+                    new Date(selectedTime ?? "") < new Date(walkIn.endTime)
+                );
+
+              if (isSelected && !isReservedOrOccupied) {
                 seatColorClass = "bg-green-500 text-white border-green-600";
               }
 

@@ -290,4 +290,8 @@ model CMS {
   qrCodeImage         String?
   qrCodeImagePublicId String?
   paymentNumber       String?
+
+  qrCodeMayaImage String?
+  qrCodeImageMayaPublicId String?
+  paymentMayaNumber String?
 }

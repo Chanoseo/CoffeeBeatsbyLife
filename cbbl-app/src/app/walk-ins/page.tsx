@@ -46,24 +46,33 @@ function WalkInsPage() {
 
   // ✅ Fetch seats
   useEffect(() => {
+    let isMounted = true;
+
     const fetchSeats = async () => {
       try {
         const res = await fetch("/api/seats");
         const data = await res.json();
 
-        if (data.success) {
+        if (data.success && isMounted) {
           setSeats(data.seats);
-        } else {
-          console.error("Failed to fetch seats");
         }
       } catch (err) {
         console.error("Error fetching seats:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
+    // Initial fetch
     fetchSeats();
+
+    // 🔁 Auto refresh every 5 seconds
+    const interval = setInterval(fetchSeats, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   // ✅ Always use the current time
@@ -159,16 +168,43 @@ function WalkInsPage() {
 
               let isReservedNow = false;
               let isWalkInNow = false;
+              let isOccupiedNow = false;
 
               if (selectedTime) {
                 const now = new Date(selectedTime);
 
-                // ✅ Check reserved orders
+                // ✅ Check reserved and completed orders
                 isReservedNow = seat.orders.some((order) => {
                   if (!order.startTime || !order.endTime) return false;
+
+                  // ✅ Skip canceled orders
+                  if (order.status === "Canceled") return false;
+
                   const orderStart = new Date(order.startTime);
                   const orderEnd = new Date(order.endTime);
-                  return orderStart <= now && now <= orderEnd;
+
+                  // 🧩 Mark as occupied if status is Completed and current time overlaps
+                  if (
+                    order.status === "Completed" &&
+                    orderStart <= now &&
+                    now <= orderEnd
+                  ) {
+                    isOccupiedNow = true;
+                    return false; // skip marking as reserved
+                  }
+
+                  // 🧩 Mark as reserved if active order overlaps
+                  if (
+                    ["Pending", "Confirmed", "Preparing", "Ready"].includes(
+                      order.status
+                    ) &&
+                    orderStart <= now &&
+                    now <= orderEnd
+                  ) {
+                    return true;
+                  }
+
+                  return false;
                 });
 
                 // ✅ Check walk-ins
@@ -190,6 +226,7 @@ function WalkInsPage() {
 
                 hasConflict = seat.orders.some((order) => {
                   if (!order.startTime || !order.endTime) return false;
+                  if (order.status === "Canceled") return false;
                   const orderStart = new Date(order.startTime);
                   const orderEnd = new Date(order.endTime);
                   return selectedStart < orderEnd && orderStart < selectedEnd;
@@ -205,7 +242,7 @@ function WalkInsPage() {
                   key={seat.id}
                   className={`flex flex-col items-center p-4 rounded-xl border
                     ${
-                      isWalkInNow
+                      isOccupiedNow || isWalkInNow
                         ? "bg-blue-100 text-blue-600 cursor-not-allowed"
                         : isReservedNow || hasConflict
                         ? "bg-red-100 text-red-600 cursor-not-allowed"
@@ -338,9 +375,7 @@ function WalkInsPage() {
                   {(() => {
                     const now = new Date(selectedTime);
                     const start = new Date(now);
-                    start.setMinutes(0, 0, 0);
-                    const end = new Date(start);
-                    end.setHours(start.getHours() + 2);
+                    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // +2 hours
 
                     return (
                       <>
@@ -385,9 +420,7 @@ function WalkInsPage() {
 
                   const now = new Date(selectedTime);
                   const start = new Date(now);
-                  start.setMinutes(0, 0, 0);
-                  const end = new Date(start);
-                  end.setHours(start.getHours() + 2);
+                  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // +2 hours
 
                   const res = await fetch("/api/walkins", {
                     method: "POST",

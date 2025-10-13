@@ -124,14 +124,15 @@ function Menu({
             <div className="absolute top-3 right-3 z-10">
               <FavoriteButton productId={product.id} />
             </div>
-
-            <Image
-              src={product.imageUrl || "/default-image.jpg"}
-              alt={product.name}
-              width={200}
-              height={200}
-              className="w-full h-36 object-cover"
-            />
+            <div className="bg-gray-200">
+              <Image
+                src={product.imageUrl || "/cbbl-image.jpg"}
+                alt={product.name}
+                width={200}
+                height={200}
+                className="w-full h-36 object-cover"
+              />
+            </div>
 
             <div className="p-3 h-full flex flex-col gap-3 text-left">
               <div className="flex-1">

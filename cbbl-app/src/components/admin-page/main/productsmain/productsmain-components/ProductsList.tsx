@@ -113,7 +113,7 @@ function ProductsList({ selectedCategory, searchInput }: ProductsListProps) {
               )}
             </div>
 
-            <div className="w-full h-36 relative overflow-hidden rounded-t-xl">
+            <div className="w-full h-36 relative overflow-hidden rounded-t-xl bg-gray-200">
               <Image
                 src={product.imageUrl || "/default-image.jpg"}
                 alt={product.name}

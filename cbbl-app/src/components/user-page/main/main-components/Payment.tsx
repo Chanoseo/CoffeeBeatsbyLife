@@ -8,8 +8,10 @@ interface Props {
 }
 
 interface PaymentData {
-  qrCodeImage?: string;
-  paymentNumber?: string;
+  qrCodeImage?: string; // GCash
+  paymentNumber?: string; // GCash
+  qrCodeMayaImage?: string;
+  paymentMayaNumber?: string;
 }
 
 function Payment({ setPaymentProof }: Props) {
@@ -17,24 +19,29 @@ function Payment({ setPaymentProof }: Props) {
   const [paymentData, setPaymentData] = useState<PaymentData>({
     qrCodeImage: "/gcash-qrcode.png",
     paymentNumber: "+63 947 261 2046",
+    qrCodeMayaImage: "/maya-qrcode.png",
+    paymentMayaNumber: "0947 261 2046",
   });
+  const [paymentMethod, setPaymentMethod] = useState<"GCash" | "Maya">("GCash");
 
   useEffect(() => {
     async function fetchPaymentData() {
       try {
         const res = await fetch("/api/cms");
-        const data = await res.json();
+        const data: PaymentData = await res.json();
 
         setPaymentData((prev) => ({
           qrCodeImage: data.qrCodeImage || prev.qrCodeImage,
           paymentNumber: data.paymentNumber || prev.paymentNumber,
+          qrCodeMayaImage: data.qrCodeMayaImage || prev.qrCodeMayaImage,
+          paymentMayaNumber: data.paymentMayaNumber || prev.paymentMayaNumber,
         }));
       } catch (err) {
         console.error("Failed to fetch payment data:", err);
       }
     }
     fetchPaymentData();
-  }, []); // ✅ no warning, safe to leave empty
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -50,27 +57,59 @@ function Payment({ setPaymentProof }: Props) {
     }
   };
 
+  // ✅ Pick data depending on the selected method
+  const qrCode =
+    paymentMethod === "GCash"
+      ? paymentData.qrCodeImage!
+      : paymentData.qrCodeMayaImage!;
+  const number =
+    paymentMethod === "GCash"
+      ? paymentData.paymentNumber!
+      : paymentData.paymentMayaNumber!;
+
   return (
     <div>
       <div className="mt-6 p-6 bg-[#3C604C] rounded-lg w-full text-white">
+        {/* Payment Method Selector */}
+        <div className="flex justify-center gap-2 bg-white p-1 rounded-full mb-6 w-full max-w-sm mx-auto">
+          <button
+            className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
+              paymentMethod === "GCash"
+                ? "bg-[#3C604C] text-white shadow-inner"
+                : "text-gray-600 hover:bg-gray-200"
+            }`}
+            onClick={() => setPaymentMethod("GCash")}
+          >
+            GCash
+          </button>
+          <button
+            className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
+              paymentMethod === "Maya"
+                ? "bg-[#3C604C] text-white shadow-inner"
+                : "text-gray-600 hover:bg-gray-200"
+            }`}
+            onClick={() => setPaymentMethod("Maya")}
+          >
+            Maya
+          </button>
+        </div>
+
         <h1 className="text-2xl font-semibold mb-4 text-center">Payment</h1>
 
         <div className="flex flex-col items-center gap-4">
           <div className="border p-2 rounded-lg shadow-sm bg-white">
             <Image
-              src={paymentData.qrCodeImage!}
-              alt="GCash QR Code"
+              src={qrCode}
+              alt={`${paymentMethod} QR Code`}
               width={200}
               height={200}
               className="rounded-md"
             />
           </div>
-
           <p className="text-center text-lg">
-            Scan or Pay via GCash <br />
-            <span className="font-bold">{paymentData.paymentNumber}</span>
+            Scan or Pay via {paymentMethod} <br />
+            <span className="font-bold">{number}</span>
           </p>
-
           <p className="text-center text-sm">
             After payment, please send a screenshot to confirm your reservation.
           </p>

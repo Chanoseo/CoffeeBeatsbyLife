@@ -9,6 +9,13 @@ interface Order {
   id: string;
   startTime: string;
   endTime: string;
+  status:
+    | "Pending"
+    | "Confirmed"
+    | "Preparing"
+    | "Ready"
+    | "Completed"
+    | "Canceled";
 }
 
 interface WalkIn {
@@ -22,15 +29,15 @@ interface Seat {
   name: string;
   status: string;
   capacity: number;
-  imageUrl?: string; // 👈 add this
-  description?: string; // 👈 add this
+  imageUrl?: string;
+  description?: string;
   orders?: Order[];
   walkIns?: WalkIn[];
 }
 
 interface Props {
   selectedTime: string | null;
-  refreshSignal?: number; // added to trigger refresh from parent
+  refreshSignal?: number;
 }
 
 function SeatsList({ selectedTime, refreshSignal }: Props) {
@@ -54,12 +61,11 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
   };
 
   useEffect(() => {
-    fetchSeats(); // initial fetch
-    const interval = setInterval(fetchSeats, 5000); // fetch every 5 sec for real-time
+    fetchSeats();
+    const interval = setInterval(fetchSeats, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // refresh when parent signals a new seat added
   useEffect(() => {
     if (refreshSignal !== undefined) fetchSeats();
   }, [refreshSignal]);
@@ -70,24 +76,46 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
   };
 
   const getSeatStatus = (seat: Seat) => {
+    // ✅ If no selected time, treat all seats as available
     if (!selectedTime) return "available";
+
     const selected = new Date(selectedTime);
+    const selectedEnd = new Date(selected);
+    selectedEnd.setHours(selected.getHours() + 1);
 
-    const reservedByOrder = seat.orders?.some((order) => {
-      const orderStart = new Date(order.startTime);
-      const orderEnd = new Date(order.endTime);
-      return selected >= orderStart && selected < orderEnd;
+    const orders = seat.orders ?? [];
+    const walkIns = seat.walkIns ?? [];
+
+    // Helper: check overlap between [selected, selectedEnd] and [start, end]
+    const overlaps = (start: Date, end: Date) =>
+      start < selectedEnd && end > selected;
+
+    // 1️⃣ Completed order overlap → OCCUPIED
+    const hasCompletedOverlap = orders.some((order) => {
+      if (order.status !== "Completed") return false;
+      const start = new Date(order.startTime);
+      const end = new Date(order.endTime);
+      return overlaps(start, end);
     });
+    if (hasCompletedOverlap) return "occupied";
 
-    if (reservedByOrder) return "order";
-
-    const reservedByWalkIn = seat.walkIns?.some((walkIn) => {
-      const walkInStart = new Date(walkIn.startTime);
-      const walkInEnd = new Date(walkIn.endTime);
-      return selected >= walkInStart && selected < walkInEnd;
+    // 2️⃣ Active (non-completed) order overlap → RESERVED
+    const hasActiveOverlap = orders.some((order) => {
+      if (order.status === "Completed" || order.status === "Canceled")
+        return false;
+      const start = new Date(order.startTime);
+      const end = new Date(order.endTime);
+      return overlaps(start, end);
     });
+    if (hasActiveOverlap) return "order";
 
-    if (reservedByWalkIn) return "walkin";
+    // 3️⃣ Walk-in overlap → OCCUPIED
+    const hasWalkInOverlap = walkIns.some((w) => {
+      const start = new Date(w.startTime);
+      const end = new Date(w.endTime);
+      return overlaps(start, end);
+    });
+    if (hasWalkInOverlap) return "walkin";
 
     return "available";
   };
@@ -108,7 +136,7 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
             if (status === "order") {
               displayStatus = "Reserved";
               seatColorClass = "text-red-500";
-            } else if (status === "walkin") {
+            } else if (status === "walkin" || status === "occupied") {
               displayStatus = "Occupied";
               seatColorClass = "text-blue-500";
             }
@@ -143,7 +171,8 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
             status:
               getSeatStatus(selectedSeat) === "order"
                 ? "Reserved"
-                : getSeatStatus(selectedSeat) === "walkin"
+                : getSeatStatus(selectedSeat) === "walkin" ||
+                  getSeatStatus(selectedSeat) === "occupied"
                 ? "Occupied"
                 : "Available",
             capacity: selectedSeat.capacity,

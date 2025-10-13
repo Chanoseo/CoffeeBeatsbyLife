@@ -37,6 +37,7 @@ function OrderDetails() {
   const searchParams = useSearchParams();
   const orderId = searchParams?.get("id") ?? null;
   const [order, setOrder] = useState<Order | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
@@ -72,20 +73,23 @@ function OrderDetails() {
     Preparing: "bg-purple-100 text-purple-700 border-purple-200",
     Ready: "bg-indigo-100 text-indigo-700 border-indigo-200",
     Completed: "bg-green-100 text-green-700 border-green-200",
+    Canceled: "bg-red-100 text-red-700 border-red-200",
   };
 
   const getBannerMessage = (status: string) => {
     switch (status) {
       case "Pending":
-        return "Your reservation has been received. Your table is secured.";
+        return "Your payment is being verified. Please wait for confirmation from our staff.";
       case "Confirmed":
-        return "Your order has been confirmed. Preparation will begin shortly.";
+        return "Your reservation is confirmed! We’ll start preparing your food 30 minutes before your scheduled time.";
       case "Preparing":
-        return "Your order is currently being prepared.";
+        return "Your order is now being prepared and will be ready shortly.";
       case "Ready":
-        return "Your order is ready to be served.";
+        return "Your order is ready! Please arrive at your reserved time to enjoy your meal.";
       case "Completed":
-        return "Your order is completed. Thank you for dining with us.";
+        return "Thank you for dining with us! Your order is completed.";
+      case "Canceled":
+        return "Your order has been canceled.";
       default:
         return null;
     }
@@ -99,17 +103,17 @@ function OrderDetails() {
     { status: "Completed", label: "Completed", icon: faCheckCircle },
   ];
 
-  const downloadReceipt = async () => {
+  const downloadConfirmation = async () => {
     if (!order) return;
 
     const res = await fetch(`/api/orders/${order.id}/receipt`);
-    if (!res.ok) return alert("Failed to download receipt");
+    if (!res.ok) return alert("Failed to download confirmation");
 
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `receipt-${order.id}.pdf`;
+    a.download = `confirmation-${order.id}.pdf`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -181,19 +185,92 @@ function OrderDetails() {
           </section>
         )}
 
+        {(order.status === "Pending" || order.status === "Confirmed") && (
+          <section className="w-full bg-yellow-100 border border-yellow-200 shadow-sm text-center rounded-2xl p-5">
+            <p className="text-md text-yellow-700 text-center font-medium">
+              <span className="font-semibold">Note:</span> Cancellation of an
+              order is only permitted while the status is
+              <span className="font-semibold"> Pending </span> or{" "}
+              <span className="font-semibold"> Confirmed</span>.
+            </p>
+          </section>
+        )}
+
         {/* Order Info Card */}
         <section className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Order Details</h1>
             <div className="flex items-center gap-4">
-              {order.status !== "Pending" && (
+              {order.status !== "Pending" && order.status !== "Canceled" && (
                 <button
-                  onClick={downloadReceipt}
+                  onClick={downloadConfirmation}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
                 >
                   <FontAwesomeIcon icon={faDownload} />
-                  Download Receipt
+                  Download Confirmation
                 </button>
+              )}
+
+              {/* Cancel Button */}
+              {(order.status === "Pending" || order.status === "Confirmed") && (
+                <>
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600"
+                  >
+                    Cancel Order
+                  </button>
+
+                  {showCancelModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                      <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-lg">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                          Cancel Order
+                        </h2>
+                        <p className="text-gray-600 mb-6">
+                          Are you sure you want to cancel this order? This
+                          action cannot be undone.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                          <button
+                            onClick={() => setShowCancelModal(false)}
+                            className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300"
+                          >
+                            No, Keep Order
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(
+                                  `/api/orders/${order.id}`,
+                                  {
+                                    method: "PUT",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      status: "Canceled",
+                                    }),
+                                  }
+                                );
+                                if (!res.ok)
+                                  throw new Error("Failed to cancel order");
+                                setOrder({ ...order, status: "Canceled" });
+                                setShowCancelModal(false);
+                              } catch (err) {
+                                console.error(err);
+                                alert("Failed to cancel order.");
+                              }
+                            }}
+                            className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                          >
+                            Yes, Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Status Badge */}
@@ -209,6 +286,13 @@ function OrderDetails() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Order ID</span>
+              <span className="text-gray-800 font-medium break-all">
+                {order.id}
+              </span>
+            </div>
+
+            <div className="flex flex-col">
               <span className="text-sm text-gray-500">Total Amount</span>
               <span className="text-lg font-semibold text-gray-800">
                 ₱{order.totalAmount.toFixed(2)}
@@ -223,8 +307,24 @@ function OrderDetails() {
             </div>
 
             <div className="flex flex-col">
-              <span className="text-sm text-gray-500">Seat Cost</span>
-              <span className="text-gray-800 font-medium">₱ 20</span>
+              <span className="text-sm text-gray-500">Reservation Fee</span>
+              <span className="text-gray-800 font-medium">
+                ₱{" "}
+                {(() => {
+                  if (!order.startTime || !order.endTime) return "0.00";
+                  const start = new Date(order.startTime);
+                  const end = new Date(order.endTime);
+
+                  // calculate hours, capped at 10 PM if needed
+                  const closingTime = new Date(start);
+                  closingTime.setHours(22, 0, 0, 0); // 10 PM
+                  const finalEnd = end > closingTime ? closingTime : end;
+
+                  const hours =
+                    (finalEnd.getTime() - start.getTime()) / (1000 * 60 * 60);
+                  return (hours * 10).toFixed(2); // ₱10 per hour
+                })()}
+              </span>
             </div>
 
             <div className="flex flex-col">

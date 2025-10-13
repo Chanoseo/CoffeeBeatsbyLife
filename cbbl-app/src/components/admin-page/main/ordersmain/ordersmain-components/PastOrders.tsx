@@ -11,7 +11,7 @@ import OrdersModal from "./OrdersModal";
 
 export interface OrderItem {
   id: string;
-  product: { name: string };
+  product: { name: string; imageUrl?: string };
   quantity: number;
   price: number;
   size?: string;
@@ -37,6 +37,9 @@ export interface FullOrder {
   seat?: string | null;
   time?: string | null;
   status: string;
+  guest: number;
+  startTime: string;
+  endTime: string;
   items?: OrderItem[];
   paymentProof?: string;
   createdAt: string;
@@ -56,6 +59,10 @@ function PastOrders({ searchInput }: PastOrdersProps) {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<FullOrder | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // default: current date
+  });
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -135,25 +142,28 @@ function PastOrders({ searchInput }: PastOrdersProps) {
     });
   }, [orders, sortConfig]);
 
+  // ✅ Filter orders by search input and selected date
   const filteredOrders = useMemo(() => {
     const query = searchInput.toLowerCase();
-    return sortedOrders.filter((order) =>
-      [
-        order.displayId ?? "",
-        order.user?.name ?? "",
-        `₱${order.totalAmount.toFixed(2)}`,
-        order.seat ?? "",
-        order.time
-          ? new Date(order.time).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-            })
-          : "",
-        order.time ? new Date(order.time).toLocaleDateString() : "",
-        order.status,
-      ].some((field) => field.toLowerCase().includes(query))
-    );
-  }, [sortedOrders, searchInput]);
+
+    return sortedOrders
+      .filter((order) => {
+        // Match date
+        const orderDate = order.time
+          ? new Date(order.time).toISOString().split("T")[0]
+          : "";
+        return orderDate === selectedDate; // Filter by selected date
+      })
+      .filter((order) =>
+        [
+          order.displayId ?? "",
+          order.user?.name ?? "",
+          `₱${order.totalAmount.toFixed(2)}`,
+          order.seat ?? "",
+          order.status,
+        ].some((field) => field.toLowerCase().includes(query))
+      );
+  }, [sortedOrders, searchInput, selectedDate]);
 
   const handleSort = (key: keyof FullOrder) => {
     setSortConfig((prev) => ({
@@ -171,7 +181,15 @@ function PastOrders({ searchInput }: PastOrdersProps) {
 
   return (
     <section className="products-card">
-      <h1 className="text-2xl mb-4">Past Orders</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl">Past Orders</h1>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="border border-gray-200 rounded-lg px-4 py-2 bg-white shadow cursor-pointer focus:outline-none"
+        />
+      </div>
 
       <table className="w-full text-center border-separate border-spacing-y-2 mt-4 bg-white p-4 rounded-xl shadow-sm">
         <thead>

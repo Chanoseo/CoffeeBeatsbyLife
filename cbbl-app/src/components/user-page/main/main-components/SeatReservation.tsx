@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  faAngleDown,
-  faExpand,
-  faUser,
-  faX,
-} from "@fortawesome/free-solid-svg-icons";
+import { faExpand, faUser, faX } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 
@@ -76,7 +71,12 @@ function SeatReservation({
       }
     };
 
-    fetchSeats();
+    fetchSeats(); // ✅ initial fetch
+
+    // ✅ Poll every 5 seconds for real-time updates
+    const interval = setInterval(fetchSeats, 5000);
+
+    return () => clearInterval(interval); // ✅ cleanup
   }, []);
 
   // ✅ Unselect seat if guest count doesn’t match its capacity
@@ -95,26 +95,8 @@ function SeatReservation({
   // Unselect seat only when time changes
   useEffect(() => {
     setSelectedSeat(null);
+    setPreviewSeat(null);
   }, [selectedTime, setSelectedSeat]);
-
-  const timeOptions = [
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "01:00 PM",
-    "02:00 PM",
-    "03:00 PM",
-    "04:00 PM",
-    "05:00 PM",
-    "06:00 PM",
-    "07:00 PM",
-    "08:00 PM",
-    "09:00 PM",
-    "10:00 PM",
-    "11:00 PM",
-  ];
-
-  const now = new Date();
 
   if (loading) return <p className="text-center">Loading seats...</p>;
 
@@ -123,6 +105,78 @@ function SeatReservation({
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Select Your Preferable Seat
       </h1>
+
+      {/* Time & Guest Section */}
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Time Selection */}
+        <div className="flex flex-col">
+          <label
+            htmlFor="time"
+            className="text-lg font-semibold text-gray-700 mb-2"
+          >
+            Select Time:
+          </label>
+
+          <input
+            type="time"
+            id="time"
+            step="900" // 900 seconds = 15 minutes
+            value={
+              selectedTime
+                ? new Date(selectedTime).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : ""
+            }
+            min="10:00"
+            max="22:00"
+            onChange={(e) => {
+              const [hourStr, minuteStr] = e.target.value.split(":");
+              const hours = Number(hourStr);
+              const minutes = Number(minuteStr);
+
+              const now = new Date();
+              const selectedDate = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate(),
+                hours,
+                minutes
+              );
+
+              setSelectedTime(selectedDate.toString());
+            }}
+            className="border border-gray-300 rounded-lg p-3 outline-none bg-white text-gray-800"
+          />
+        </div>
+
+        {/* Guest Selection */}
+        <div className="flex flex-col">
+          <label
+            htmlFor="guest"
+            className="text-lg font-semibold text-gray-700 mb-2"
+          >
+            Guests:
+          </label>
+          <input
+            type="number"
+            name="guest"
+            id="guest"
+            min="1"
+            value={guestCount || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "") {
+                setGuestCount(0); // ✅ keep it empty visually
+              } else {
+                setGuestCount(Number(value));
+              }
+            }}
+            className="border border-gray-300 rounded-lg p-3 outline-none bg-white text-gray-800"
+          />
+        </div>
+      </div>
 
       {/* Seat Status Legend */}
       <div className="flex justify-center gap-6 mb-6">
@@ -222,15 +276,38 @@ function SeatReservation({
             let hasOrderConflict = false; // red → fully inside reserved time
             let hasWalkInConflict = false; // blue → fully inside walk-in
             let isUnavailable = false; // gray → partially overlaps future reservation/walk-in
+            // const now = new Date();
+
+            const isOccupied = selectedTime
+              ? seat.orders.some((order) => {
+                  const start = new Date(order.startTime);
+                  const end = new Date(order.endTime);
+                  const selected = new Date(selectedTime);
+                  return (
+                    order.status === "Completed" &&
+                    selected >= start &&
+                    selected < end
+                  );
+                })
+              : false;
 
             if (selectedTime) {
               const selectedStart = new Date(selectedTime);
-              const selectedEnd = new Date(
+              // 2-hour default slot
+              let selectedEnd = new Date(
                 selectedStart.getTime() + 2 * 60 * 60 * 1000
-              ); // 2-hour slot
+              );
+
+              // Cap end time at 10 PM
+              const closingTime = new Date(selectedStart);
+              closingTime.setHours(22, 0, 0, 0); // 10:00 PM
+              if (selectedEnd > closingTime) {
+                selectedEnd = closingTime;
+              }
 
               // RED: selectedStart inside reservation
               hasOrderConflict = seat.orders.some((order) => {
+                if (order.status === "Canceled") return false; 
                 const orderStart = new Date(order.startTime);
                 const orderEnd = new Date(order.endTime);
                 return selectedStart >= orderStart && selectedStart < orderEnd;
@@ -262,12 +339,15 @@ function SeatReservation({
               hasOrderConflict ||
               hasWalkInConflict ||
               capacityMismatch ||
-              isUnavailable;
+              isUnavailable ||
+              isOccupied;
 
             // Seat color
             let seatColorClass = "";
             if (isSelected) {
               seatColorClass = "bg-green-500 text-white";
+            } else if (isOccupied) {
+              seatColorClass = "bg-blue-100 text-blue-600 cursor-not-allowed"; // occupied (completed order)
             } else if (hasOrderConflict) {
               seatColorClass = "bg-red-100 text-red-600 cursor-not-allowed"; // fully reserved
             } else if (hasWalkInConflict) {
@@ -305,94 +385,6 @@ function SeatReservation({
             No seats available.
           </p>
         )}
-      </div>
-
-      {/* Time & Guest Section */}
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {/* Time Selection */}
-        <div className="flex flex-col">
-          <label
-            htmlFor="time"
-            className="text-lg font-semibold text-gray-700 mb-2"
-          >
-            Select Time:
-          </label>
-          <div className="relative">
-            <select
-              id="time"
-              value={selectedTime ?? ""}
-              onChange={(e) => {
-                const isoStr = e.target.value;
-                if (!isoStr) {
-                  setSelectedTime(null);
-                  return;
-                }
-                setSelectedTime(isoStr);
-              }}
-              className="border border-gray-300 rounded-lg p-3 pr-10 outline-none bg-white text-gray-800 appearance-none w-full"
-            >
-              <option value="">-- Select Time --</option>
-              {timeOptions.map((time) => {
-                const [timePart, modifier] = time.split(" ");
-                const [hourStr, minuteStr] = timePart.split(":");
-                let hours = Number(hourStr);
-                const minutes = Number(minuteStr);
-
-                if (modifier === "PM" && hours < 12) hours += 12;
-                if (modifier === "AM" && hours === 12) hours = 0;
-
-                const timeDate = new Date(
-                  now.getFullYear(),
-                  now.getMonth(),
-                  now.getDate(),
-                  hours,
-                  minutes
-                );
-
-                const isoTime = timeDate.toISOString();
-                const isPast = timeDate < now;
-
-                return (
-                  <option key={time} value={isoTime} disabled={isPast}>
-                    {time} {isPast ? "(Past)" : ""}
-                  </option>
-                );
-              })}
-            </select>
-
-            {/* Custom Arrow Icon */}
-            <FontAwesomeIcon
-              icon={faAngleDown}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
-            />
-          </div>
-        </div>
-
-        {/* Guest Selection */}
-        <div className="flex flex-col">
-          <label
-            htmlFor="guest"
-            className="text-lg font-semibold text-gray-700 mb-2"
-          >
-            Guests:
-          </label>
-          <input
-            type="number"
-            name="guest"
-            id="guest"
-            min="1"
-            value={guestCount || ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === "") {
-                setGuestCount(0); // ✅ keep it empty visually
-              } else {
-                setGuestCount(Number(value));
-              }
-            }}
-            className="border border-gray-300 rounded-lg p-3 outline-none bg-white text-gray-800"
-          />
-        </div>
       </div>
     </div>
   );

@@ -8,10 +8,10 @@ function DashboardContent() {
   return (
     <section className="products-card">
       <KeyMetrics />
+      <CustomerOrder />
       <SalesDynamics />
       <PeakHoursAnalytics />
       <ReservationTrends />
-      <CustomerOrder />
     </section>
   );
 }

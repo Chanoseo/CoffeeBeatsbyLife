@@ -12,7 +12,7 @@ import OrdersModal from "../../ordersmain/ordersmain-components/OrdersModal";
 
 interface OrderItem {
   id: string;
-  product: { name: string };
+  product: { name: string; imageUrl?: string };
   quantity: number;
   price: number;
   size?: string;
@@ -26,6 +26,9 @@ interface FullOrder {
   seat?: string | null;
   time?: string | null;
   status: "Pending" | "Confirmed" | "Preparing" | "Ready" | "Completed";
+  guest: number;
+  startTime: string;
+  endTime: string;
   items?: OrderItem[];
   paymentProof?: string;
   createdAt: string;
@@ -93,6 +96,7 @@ function CustomerOrder() {
       Preparing: "bg-purple-50",
       Ready: "bg-indigo-50",
       Completed: "bg-green-50",
+      Canceled: "bg-red-50",
     }[status] || "bg-white");
 
   const handleSort = (key: SortKey) => {
@@ -177,7 +181,7 @@ function CustomerOrder() {
           placeholder="Search orders..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none placeholder-gray-400"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none placeholder-gray-400"
         />
       </div>
 

@@ -93,7 +93,7 @@ export async function GET(
     }
 
     // --- Header ---
-    const headerText = "RECEIPT";
+    const headerText = "PAYMENT CONFIRMATION";
     const headerWidth = font.widthOfTextAtSize(headerText, 22);
     page.drawText(headerText, {
       x: (width - headerWidth) / 2,
@@ -189,7 +189,15 @@ export async function GET(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
-    const seatCost = 20; // fixed seat tax
+
+    // ✅ Dynamic reservation fee based on duration (₱10 per hour)
+    let seatCost = 0;
+    if (order.startTime && order.endTime) {
+      const start = new Date(order.startTime);
+      const end = new Date(order.endTime);
+      const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+      seatCost = hours * 10;
+    }
 
     // Subtotal
     const subtotalLabel = "Subtotal:";
@@ -212,7 +220,7 @@ export async function GET(
     y -= 16;
 
     // Seat Cost
-    const seatLabel = "Seat Cost:";
+    const seatLabel = "Reservation Fee:";
     const seatAmount = `P ${seatCost.toFixed(2)}`;
     const seatAmountWidth = font.widthOfTextAtSize(seatAmount, 12);
     page.drawText(seatLabel, {
@@ -270,7 +278,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename=receipt-${id}.pdf`,
+        "Content-Disposition": `attachment; filename=confirmation-${id}.pdf`,
       },
     });
   } catch (error) {

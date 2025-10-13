@@ -20,7 +20,6 @@ const timeOptions = [
   "08:00 PM",
   "09:00 PM",
   "10:00 PM",
-  "11:00 PM",
 ];
 
 function Seats({

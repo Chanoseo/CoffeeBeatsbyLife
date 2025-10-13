@@ -82,9 +82,21 @@ export async function POST(req: Request) {
 
     // Define start & end times
     const startTime = time ? new Date(time) : new Date();
-    const endTime = time
-      ? new Date(new Date(time).getTime() + 2 * 60 * 60 * 1000) // +2 hrs
-      : new Date();
+
+    let endTime: Date;
+    if (time) {
+      // Default 2-hour slot
+      endTime = new Date(startTime.getTime() + 2 * 60 * 60 * 1000);
+
+      // Cap endTime at 10 PM
+      const closingTime = new Date(startTime);
+      closingTime.setHours(22, 0, 0, 0); // 10:00 PM
+      if (endTime > closingTime) {
+        endTime = closingTime;
+      }
+    } else {
+      endTime = new Date();
+    }
 
     // ✅ Check if seat is already reserved in the given timeframe (allow selecting at end)
     if (seat) {
@@ -149,7 +161,7 @@ export async function POST(req: Request) {
       include: {
         items: { include: { product: true } },
         seat: true, // include seat info if needed
-        user:true,
+        user: true,
       },
     });
 
@@ -164,21 +176,28 @@ export async function POST(req: Request) {
       });
 
       // Format date and time
-      const dateFormatted = new Date(order.startTime).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      const startFormatted = new Date(order.startTime).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      }).replace(" ", "");
-      const endFormatted = new Date(order.endTime).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      }).replace(" ", "");
+      const dateFormatted = new Date(order.startTime).toLocaleDateString(
+        "en-US",
+        {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }
+      );
+      const startFormatted = new Date(order.startTime)
+        .toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        })
+        .replace(" ", "");
+      const endFormatted = new Date(order.endTime)
+        .toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        })
+        .replace(" ", "");
 
       // Generate product list
       const productsHtml = order.items
@@ -233,7 +252,9 @@ export async function POST(req: Request) {
 
               <!-- Body -->
               <div style="padding: 35px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
-                <p style="color: #555555;">Dear ${order.user.name || "Valued Customer"},</p>
+                <p style="color: #555555;">Dear ${
+                  order.user.name || "Valued Customer"
+                },</p>
 
                 <p style="color: #555555;">
                   Thank you for your order at <strong>Coffee Beats By Life</strong>. Your order has been placed successfully. Below are your details:
@@ -246,7 +267,9 @@ export async function POST(req: Request) {
                   <strong>Start Time:</strong> ${startFormatted}<br/>
                   <strong>End Time:</strong> ${endFormatted}<br/>
                   <strong>Seat Cost:</strong> ₱${seatCost.toFixed(2)}<br/>
-                  <strong>Total Amount:</strong> ₱${order.totalAmount.toFixed(2)}
+                  <strong>Total Amount:</strong> ₱${order.totalAmount.toFixed(
+                    2
+                  )}
                 </p>
 
                 <h3 style="color:#3c604c; margin-top: 30px;">Ordered Items</h3>

@@ -49,6 +49,9 @@ export async function POST(req: Request) {
       if (section === "payment" && existing?.qrCodeImagePublicId) {
         await cloudinary.uploader.destroy(existing.qrCodeImagePublicId);
       }
+      if (section === "maya" && existing?.qrCodeImageMayaPublicId) {
+        await cloudinary.uploader.destroy(existing.qrCodeImageMayaPublicId);
+      }
       if (
         (!section || section === "one") &&
         existing?.landingSecOneImagePublicId
@@ -82,6 +85,12 @@ export async function POST(req: Request) {
                 qrCodeImage: imageUrl ?? "",
                 qrCodeImagePublicId: publicId ?? "",
                 paymentNumber: paymentNumber ?? "",
+              }
+            : section === "maya"
+            ? {
+                qrCodeMayaImage: imageUrl ?? "",
+                qrCodeImageMayaPublicId: publicId ?? "",
+                paymentMayaNumber: paymentNumber ?? "",
               }
             : section === "two"
             ? {
@@ -124,6 +133,10 @@ export async function POST(req: Request) {
       if (paymentNumber) updateData.paymentNumber = paymentNumber;
       if (imageUrl) updateData.qrCodeImage = imageUrl;
       if (publicId) updateData.qrCodeImagePublicId = publicId;
+    } else if (section === "maya") {
+      if (paymentNumber) updateData.paymentMayaNumber = paymentNumber;
+      if (imageUrl) updateData.qrCodeMayaImage = imageUrl;
+      if (publicId) updateData.qrCodeImageMayaPublicId = publicId;
     } else if (section === "two") {
       if (title) updateData.landingSecTwoTitle = title;
       if (description) updateData.landingSecTwoDesc = description;

@@ -16,7 +16,7 @@ interface OrdersProps {
 
 export interface OrderItem {
   id: string;
-  product: { name: string };
+  product: { name: string; imageUrl?: string };
   quantity: number;
   price: number;
   size?: string; // ✅ add size
@@ -42,6 +42,9 @@ export interface FullOrder {
   seat?: string | null;
   time?: string | null;
   status: string;
+  guest: number;
+  startTime: string;
+  endTime: string;
   items?: OrderItem[]; // ✅ items now include size
   paymentProof?: string;
   createdAt: string;
@@ -54,7 +57,7 @@ const STATUS_OPTIONS = [
   "Confirmed",
   "Preparing",
   "Ready",
-  "Completed",
+  "Canceled",
 ];
 
 function Orders({ searchInput }: OrdersProps) {
@@ -110,6 +113,7 @@ function Orders({ searchInput }: OrdersProps) {
       Preparing: "bg-purple-50",
       Ready: "bg-indigo-50",
       Completed: "bg-green-50",
+      Canceled: "bg-red-50",
     }[status] || "bg-white");
 
   const sortedOrders = useMemo(() => {
