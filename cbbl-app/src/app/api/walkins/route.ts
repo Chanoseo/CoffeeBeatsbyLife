@@ -31,25 +31,44 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { seatId, guest, startTime, endTime } = body;
+    const { seatIds, guest, startTime, endTime } = body;
 
-    if (!seatId || !startTime || !endTime) {
+    // Validate inputs
+    if (!seatIds?.length || !startTime || !endTime) {
       return NextResponse.json(
         { success: false, message: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const walkIn = await prisma.walkIn.create({
-      data: {
-        seatId,
-        guest,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-      },
-    });
+    // Ensure guest is either a single number or an array of numbers
+    let guestArray: number[] = [];
+    if (Array.isArray(guest)) {
+      guestArray = guest;
+    } else if (typeof guest === "number") {
+      guestArray = Array(seatIds.length).fill(guest); // same guest count for all seats
+    } else {
+      return NextResponse.json(
+        { success: false, message: "Invalid guest field" },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({ success: true, walkIn }, { status: 201 });
+    // ✅ Create a walk-in per seat with the corresponding guest count
+    const creations = seatIds.map((seatId: string, i: number) =>
+      prisma.walkIn.create({
+        data: {
+          seatId,
+          guest: guestArray[i] || 1, // fallback to 1 if undefined
+          startTime: new Date(startTime),
+          endTime: new Date(endTime),
+        },
+      })
+    );
+
+    const walkIns = await Promise.all(creations);
+
+    return NextResponse.json({ success: true, walkIns }, { status: 201 });
   } catch (err) {
     console.error("Error creating walk-in:", err);
     return NextResponse.json(

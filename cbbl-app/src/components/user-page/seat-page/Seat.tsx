@@ -24,6 +24,15 @@ interface WalkIn {
   guest: number;
 }
 
+interface OrderSeat {
+  id: string;
+  seatId: string;
+  orderId: string;
+  order: Order;
+  startTime: string;
+  endTime: string;
+}
+
 interface Seat {
   id: string;
   name: string;
@@ -31,7 +40,7 @@ interface Seat {
   capacity: number;
   imageUrl?: string;
   description?: string;
-  orders: Order[];
+  orderSeats: OrderSeat[];
   walkIns: WalkIn[];
 }
 
@@ -228,6 +237,8 @@ function Seat() {
 
               if (selectedTime) {
                 const selectedStart = new Date(selectedTime);
+                const selectedEnd = new Date(selectedStart);
+                selectedEnd.setHours(selectedEnd.getHours() + 1);
 
                 let hasReservedConflict = false;
                 let hasOccupiedConflict = false;
@@ -240,14 +251,15 @@ function Seat() {
                 };
 
                 // Check order conflicts based on status (with overlap)
-                seat.orders.forEach((order) => {
-                  const orderStart = new Date(order.startTime);
-                  const orderEnd = new Date(order.endTime);
+                seat.orderSeats.forEach((orderSeat) => {
+                  const osStart = new Date(orderSeat.startTime);
+                  const osEnd = new Date(orderSeat.endTime);
+                  const orderStatus = orderSeat.order.status;
 
-                  if (overlaps(orderStart, orderEnd)) {
-                    if (order.status === "Completed") {
+                  if (osStart < selectedEnd && osEnd > selectedStart) {
+                    if (orderStatus === "Completed") {
                       hasOccupiedConflict = true;
-                    } else if (order.status !== "Canceled") {
+                    } else if (orderStatus !== "Canceled") {
                       hasReservedConflict = true;
                     }
                   }
@@ -272,21 +284,11 @@ function Seat() {
 
               // ✅ Highlight green only if available
               const isSelected = previewSeat?.id === seat.id;
-              const isReservedOrOccupied =
-                seat.orders.some(
-                  (order) =>
-                    order.status !== "Canceled" &&
-                    new Date(selectedTime ?? "") >= new Date(order.startTime) &&
-                    new Date(selectedTime ?? "") < new Date(order.endTime)
-                ) ||
-                seat.walkIns.some(
-                  (walkIn) =>
-                    new Date(selectedTime ?? "") >=
-                      new Date(walkIn.startTime) &&
-                    new Date(selectedTime ?? "") < new Date(walkIn.endTime)
-                );
 
-              if (isSelected && !isReservedOrOccupied) {
+              if (
+                isSelected &&
+                seatColorClass === "bg-white text-gray-800 border-gray-200"
+              ) {
                 seatColorClass = "bg-green-500 text-white border-green-600";
               }
 

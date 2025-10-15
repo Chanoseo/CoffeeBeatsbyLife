@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { cartItems, seat, time, paymentProof, guestCount } = body as {
       cartItems: CartItem[];
-      seat?: string | null;
+      seat?: string[]; // ⚠ now an array
       time?: string | null;
       paymentProof?: string | null;
       guestCount?: number;
@@ -98,30 +98,30 @@ export async function POST(req: Request) {
       endTime = new Date();
     }
 
-    // ✅ Check if seat is already reserved in the given timeframe (allow selecting at end)
-    if (seat) {
-      const overlapping = await prisma.order.findFirst({
-        where: {
-          seatId: seat,
-          status: { in: ["Pending", "Confirmed"] },
-          // existing start < new end AND existing end > new start
-          startTime: { lt: endTime },
-          endTime: { gt: startTime },
-        },
-      });
+    // ✅ Check each seat for availability
+    if (seat && seat.length > 0) {
+      for (const seatId of seat) {
+        const overlapping = await prisma.order.findFirst({
+          where: {
+            seatId,
+            status: { in: ["Pending", "Confirmed"] },
+            startTime: { lt: endTime },
+            endTime: { gt: startTime },
+          },
+        });
 
-      if (overlapping) {
-        const existingStart = new Date(overlapping.startTime).getTime();
-        const existingEnd = new Date(overlapping.endTime).getTime();
-        const newStart = startTime.getTime();
-        const newEnd = endTime.getTime();
+        if (overlapping) {
+          const existingStart = new Date(overlapping.startTime).getTime();
+          const existingEnd = new Date(overlapping.endTime).getTime();
+          const newStart = startTime.getTime();
+          const newEnd = endTime.getTime();
 
-        // Allow selecting exactly at the end of existing booking
-        if (!(newStart >= existingEnd || newEnd <= existingStart)) {
-          return NextResponse.json(
-            { error: "Seat already reserved during this time" },
-            { status: 400 }
-          );
+          if (!(newStart >= existingEnd || newEnd <= existingStart)) {
+            return NextResponse.json(
+              { error: `Seat ${seatId} already reserved during this time` },
+              { status: 400 }
+            );
+          }
         }
       }
     }
@@ -130,7 +130,6 @@ export async function POST(req: Request) {
     const order = await prisma.order.create({
       data: {
         userId,
-        seatId: seat ?? null, // store seatId correctly
         time: time ? new Date(time) : null,
         paymentProof: uploadedProof,
         totalAmount,
@@ -160,10 +159,33 @@ export async function POST(req: Request) {
       },
       include: {
         items: { include: { product: true } },
-        seat: true, // include seat info if needed
         user: true,
       },
     });
+
+    // ✅ Link multiple seats to the order
+    if (seat && seat.length > 0) {
+      for (const seatId of seat) {
+        await prisma.orderSeat.create({
+          data: {
+            orderId: order.id,
+            seatId,
+            startTime,
+            endTime,
+          },
+        });
+      }
+    }
+
+    // ✅ Attach first seat for email display (optional)
+    let emailSeats: string[] = [];
+    if (seat && seat.length > 0) {
+      const seats = await prisma.seat.findMany({
+        where: { id: { in: seat } },
+        select: { name: true },
+      });
+      emailSeats = seats.map((s) => s.name);
+    }
 
     // ✅ Send confirmation email
     try {
@@ -262,7 +284,9 @@ export async function POST(req: Request) {
 
                 <p style="color: #555; font-size: 15px; line-height: 1.6;">
                   <strong>Order ID:</strong> ${order.id}<br/>
-                  <strong>Seat:</strong> ${order.seat?.name || "N/A"}<br/>
+                  <strong>Seat:</strong> ${
+                    emailSeats.length > 0 ? emailSeats.join(", ") : "N/A"
+                  }<br/>
                   <strong>Date:</strong> ${dateFormatted}<br/>
                   <strong>Start Time:</strong> ${startFormatted}<br/>
                   <strong>End Time:</strong> ${endFormatted}<br/>
@@ -333,17 +357,21 @@ export async function GET() {
       include: {
         user: true,
         items: { include: { product: true } },
-        seat: true,
+        orderSeats: {
+          include: {
+            seat: { select: { name: true } },
+          },
+        },
         feedbacks: { include: { user: true } },
       },
       orderBy: { createdAt: "asc" }, // oldest first
     });
 
-    // Add persistent displayId based on DB order
+    // Add persistent displayId and seat names
     const mappedOrders = orders.map((order, index) => ({
       ...order,
-      seat: order.seat?.name ?? null,
-      displayId: `ORD${(index + 1).toString().padStart(3, "0")}`, // now sequential
+      seats: order.orderSeats?.map((os) => os.seat.name).join(", ") ?? null,
+      displayId: `ORD${(index + 1).toString().padStart(3, "0")}`,
     }));
 
     return NextResponse.json(mappedOrders, { status: 200 });

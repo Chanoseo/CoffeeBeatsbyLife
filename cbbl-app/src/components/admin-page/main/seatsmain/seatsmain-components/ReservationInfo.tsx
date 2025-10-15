@@ -2,18 +2,45 @@
 
 import { useEffect, useState } from "react";
 
+type OrderSeat = {
+  id: string;
+  startTime: string;
+  endTime: string;
+  seat?: { name: string } | null;
+};
+
 type Order = {
   id: string;
   startTime: string;
   endTime: string;
   status?: string;
   user: { name: string };
-  seat?: string | null;
+  seats?: string | null;
+  seatName?: string;
+  orderSeats?: OrderSeat[];
+};
+
+type FlatSeat = {
+  orderId: string;
+  orderSeatId: string;
+  startTime: string;
+  endTime: string;
+  status?: string;
+  user: { name: string };
+  seatName?: string | null;
 };
 
 type ReservationInfoProps = {
   selectedTime: string | null;
 };
+
+function formatISOToHHMM(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const hh = `${d.getHours()}`.padStart(2, "0");
+  const mm = `${d.getMinutes()}`.padStart(2, "0");
+  return `${hh}:${mm}`;
+}
 
 export default function ReservationInfo({
   selectedTime,
@@ -36,9 +63,24 @@ export default function ReservationInfo({
         const data = await res.json();
         setOrders(data);
 
+        // --- CHANGED: populate selectedTimes per orderSeat id, fallback to synthetic legacy keys ---
         const times: Record<string, string> = {};
         data.forEach((order: Order) => {
-          times[order.id] = order.endTime;
+          if (order.orderSeats && order.orderSeats.length > 0) {
+            order.orderSeats.forEach((os) => {
+              times[os.id] = os.endTime;
+            });
+          } else {
+            // legacy: multiple seats stored as comma string or single seatName
+            const seatList = order.seats
+              ? order.seats.split(",").map((s) => s.trim())
+              : [order.seatName ?? "N/A"];
+            seatList.forEach((_, idx) => {
+              times[`${order.id}-${idx}`] = order.endTime;
+            });
+            // also keep order-level fallback key for single-seat legacy consumers
+            times[order.id] = order.endTime;
+          }
         });
         setSelectedTimes(times);
         setError("");
@@ -66,30 +108,40 @@ export default function ReservationInfo({
   };
 
   const isTimeReserved = (
-    seat: string | null,
+    seatNames: string | null,
     checkEndTime: Date,
     currentStartTime: Date,
     currentOrderId: string
   ) => {
+    if (!seatNames) return false;
+    const seatList = seatNames.split(",").map((s) => s.trim());
     return orders.some((order) => {
-      if (!order.seat || order.id === currentOrderId) return false;
-      if (order.seat !== seat) return false;
+      if (!order.seats || order.id === currentOrderId) return false;
+
+      const otherSeatList = order.seats.split(",").map((s) => s.trim());
+      const overlap = seatList.some((s) => otherSeatList.includes(s));
+
+      if (!overlap) return false;
 
       const otherStart = new Date(order.startTime);
       const otherEnd = new Date(order.endTime);
-
       return currentStartTime < otherEnd && checkEndTime > otherStart;
     });
   };
 
-  const handleUpdate = async (orderId: string) => {
-    const newEndTime = selectedTimes[orderId];
+  const handleUpdate = async (orderId: string, orderSeatId: string) => {
+    // use orderSeatId key (per-seat) first, fallback to orderId (legacy)
+    const newEndTime = selectedTimes[orderSeatId] ?? selectedTimes[orderId];
     if (!newEndTime) return;
 
     const order = orders.find((o) => o.id === orderId);
     if (!order) return;
 
-    const startTime = new Date(order.startTime);
+    const seat = order.orderSeats?.find((s) => s.id === orderSeatId);
+
+    const startTime = seat
+      ? new Date(seat.startTime)
+      : new Date(order.startTime);
     const endTime = new Date(newEndTime);
 
     // ✅ VALIDATIONS moved to Update button
@@ -109,7 +161,7 @@ export default function ReservationInfo({
     }
 
     const conflict = isTimeReserved(
-      order.seat ?? null,
+      order.seats ?? null,
       endTime,
       startTime,
       order.id
@@ -120,27 +172,42 @@ export default function ReservationInfo({
     }
 
     try {
+      // --- CHANGED: send orderSeatId so backend updates only that OrderSeat ---
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endTime: newEndTime }),
+        body: JSON.stringify({ orderSeatId, endTime: newEndTime }),
       });
 
       if (!res.ok) throw new Error("Failed to update order");
 
-      const updatedOrder = await res.json();
+      const updatedSeat = await res.json();
 
+      // update local state: only update the specific orderSeat endTime
       setOrders((prev) =>
-        prev.map((order) =>
-          order.id === orderId
-            ? { ...order, endTime: updatedOrder.endTime }
-            : order
-        )
+        prev.map((o) => {
+          if (o.id !== orderId) return o;
+          if (!o.orderSeats) return o;
+          return {
+            ...o,
+            orderSeats: o.orderSeats.map((os) =>
+              os.id === updatedSeat.id
+                ? { ...os, endTime: updatedSeat.endTime }
+                : os
+            ),
+          };
+        })
       );
+
+      // keep selectedTimes in-sync for that seat key
+      setSelectedTimes((prev) => ({
+        ...prev,
+        [orderSeatId]: updatedSeat.endTime,
+      }));
 
       alert(
         `Order updated successfully! New end time: ${new Date(
-          updatedOrder.endTime
+          updatedSeat.endTime
         ).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
@@ -152,39 +219,67 @@ export default function ReservationInfo({
     }
   };
 
-  // ✅ Show only today's orders
+  // ✅ Show only today's order seats (per-seat filtering)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const filteredOrders = orders.filter((order) => {
-    // 🟡 Skip canceled orders
-    if (order.status === "Canceled") return false;
+  // 🔹 Flatten first, then filter each seat reservation individually
+  const allSeats: FlatSeat[] = orders.flatMap((order) => {
+    if (order.orderSeats && order.orderSeats.length > 0) {
+      return order.orderSeats.map((os) => ({
+        orderId: order.id,
+        orderSeatId: os.id,
+        startTime: os.startTime,
+        endTime: os.endTime,
+        status: order.status,
+        user: order.user,
+        seatName: os.seat?.name ?? null,
+      }));
+    }
 
-    const start = new Date(order.startTime);
-    const end = new Date(order.endTime);
+    // legacy fallback
+    const seatList = order.seats
+      ? order.seats.split(",").map((s) => s.trim())
+      : [order.seatName ?? "N/A"];
 
+    return seatList.map((seatName, idx) => ({
+      orderId: order.id,
+      orderSeatId: `${order.id}-${idx}`,
+      startTime: order.startTime,
+      endTime: order.endTime,
+      status: order.status,
+      user: order.user,
+      seatName,
+    }));
+  });
+
+  // ✅ Filter per-seat basis (not by whole order)
+  const filteredSeats = allSeats.filter((seat) => {
+    // skip canceled
+    if (seat.status === "Canceled") return false;
+
+    const seatStart = new Date(seat.startTime);
+    const seatEnd = new Date(seat.endTime);
+    const seatDay = new Date(seatStart);
+    seatDay.setHours(0, 0, 0, 0);
+
+    // only show today's seats
+    if (seatDay.getTime() !== today.getTime()) return false;
+
+    // if a specific selectedTime is chosen, check if it overlaps with this seat
     if (selectedTime) {
       const selected = new Date(selectedTime);
       const selectedEnd = new Date(selected);
       selectedEnd.setHours(selected.getHours() + 1);
-
-      // ✅ Check overlap just like getSeatStatus()
-      const overlaps = start < selectedEnd && end > selected;
-      return overlaps;
+      return seatStart < selectedEnd && seatEnd > selected;
     }
 
-    // ✅ If no selected time, show only today's ongoing/future orders
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const orderDay = new Date(start);
-    orderDay.setHours(0, 0, 0, 0);
-
-    return (
-      orderDay.getTime() === today.getTime() &&
-      new Date(order.endTime) > new Date() // This hides done/past orders
-    );
+    // default: show ongoing or future reservations today
+    return seatEnd > new Date();
   });
+
+  // ✅ Final flattened list (filtered per seat)
+  const flattenedOrders = filteredSeats;
 
   // ✅ Message handling
   let message: string | null = null;
@@ -192,7 +287,7 @@ export default function ReservationInfo({
     message = "Loading...";
   } else if (error) {
     message = error;
-  } else if (filteredOrders.length === 0) {
+  } else if (flattenedOrders.length === 0) {
     message = "No orders found for today";
   }
 
@@ -205,12 +300,12 @@ export default function ReservationInfo({
         </p>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredOrders.map((order) => {
+        {flattenedOrders.map((order) => {
           const startTime = new Date(order.startTime);
 
           return (
             <div
-              key={order.id}
+              key={`${order.orderId}-${order.orderSeatId}`}
               className="bg-white rounded-xl p-5 flex flex-col justify-between shadow-sm"
             >
               <div className="mb-4 flex-grow">
@@ -231,7 +326,7 @@ export default function ReservationInfo({
                 )}
                 <p className="text-gray-500 text-sm mb-1">
                   <span className="font-medium">Seat:</span>{" "}
-                  {order.seat ?? "N/A"}
+                  {order.seatName ?? "N/A"}
                 </p>
                 <p className="text-gray-500 text-sm mb-1">
                   <span className="font-medium">Date:</span>{" "}
@@ -248,26 +343,17 @@ export default function ReservationInfo({
 
               <div className="mb-4">
                 <label
-                  htmlFor={`endTime-${order.id}`}
+                  htmlFor={`endTime-${order.orderSeatId}`}
                   className="text-gray-700 font-medium mb-2 block"
                 >
                   End Time
                 </label>
                 <input
                   type="time"
-                  id={`endTime-${order.id}`}
-                  value={
-                    selectedTimes[order.id]
-                      ? new Date(selectedTimes[order.id]).toLocaleTimeString(
-                          [],
-                          {
-                            hour12: false,
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )
-                      : ""
-                  }
+                  id={`endTime-${order.orderSeatId}`}
+                  value={formatISOToHHMM(
+                    selectedTimes[order.orderSeatId] ?? order.endTime
+                  )}
                   min="10:00"
                   max="22:00"
                   step={300}
@@ -275,15 +361,15 @@ export default function ReservationInfo({
                     const [hours, minutes] = e.target.value
                       .split(":")
                       .map(Number);
-                    const startTime = new Date(order.startTime);
+                    const start = new Date(order.startTime);
                     const timeDate = new Date(
-                      startTime.getFullYear(),
-                      startTime.getMonth(),
-                      startTime.getDate(),
+                      start.getFullYear(),
+                      start.getMonth(),
+                      start.getDate(),
                       hours,
                       minutes
                     );
-                    handleTimeChange(order.id, timeDate.toISOString());
+                    handleTimeChange(order.orderSeatId, timeDate.toISOString());
                   }}
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-800"
                 />
@@ -291,10 +377,11 @@ export default function ReservationInfo({
 
               <button
                 className="w-full button-style"
-                onClick={() => handleUpdate(order.id)}
+                onClick={() => handleUpdate(order.orderId, order.orderSeatId)}
               >
                 Update
               </button>
+
               {(() => {
                 const now = new Date();
                 const start = new Date(order.startTime);
@@ -308,28 +395,89 @@ export default function ReservationInfo({
                       onClick={async () => {
                         const currentTimeIso = new Date().toISOString();
                         try {
-                          const res = await fetch(`/api/orders/${order.id}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ endTime: currentTimeIso }),
-                          });
+                          // synthetic id (fallback) -> update order-level endTime
+                          if (order.orderSeatId.includes("-")) {
+                            const res = await fetch(
+                              `/api/orders/${order.orderId}`,
+                              {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  endTime: currentTimeIso,
+                                }),
+                              }
+                            );
+
+                            if (!res.ok)
+                              throw new Error("Failed to update order");
+
+                            const updatedOrder = await res.json();
+
+                            setOrders((prev) =>
+                              prev.map((o) =>
+                                o.id === order.orderId
+                                  ? { ...o, endTime: updatedOrder.endTime }
+                                  : o
+                              )
+                            );
+
+                            alert(
+                              `Order marked as done at ${new Date(
+                                updatedOrder.endTime
+                              ).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}`
+                            );
+                            return;
+                          }
+
+                          // Per-seat update: send orderSeatId so backend updates only that OrderSeat
+                          const res = await fetch(
+                            `/api/orders/${order.orderId}`,
+                            {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                orderSeatId: order.orderSeatId,
+                                endTime: currentTimeIso,
+                              }),
+                            }
+                          );
 
                           if (!res.ok)
-                            throw new Error("Failed to update order");
+                            throw new Error("Failed to update order seat");
 
-                          const updatedOrder = await res.json();
+                          const updatedSeat = await res.json();
 
+                          // update only the seat's endTime in local state
                           setOrders((prev) =>
                             prev.map((o) =>
-                              o.id === order.id
-                                ? { ...o, endTime: updatedOrder.endTime }
+                              o.id === order.orderId
+                                ? {
+                                    ...o,
+                                    orderSeats: o.orderSeats?.map((os) =>
+                                      os.id === updatedSeat.id
+                                        ? {
+                                            ...os,
+                                            endTime: updatedSeat.endTime,
+                                          }
+                                        : os
+                                    ),
+                                  }
                                 : o
                             )
                           );
 
+                          // sync selectedTimes for this seat
+                          setSelectedTimes((prev) => ({
+                            ...prev,
+                            [order.orderSeatId]: updatedSeat.endTime,
+                          }));
+
                           alert(
-                            `Order marked as done at ${new Date(
-                              updatedOrder.endTime
+                            `Order seat marked as done at ${new Date(
+                              updatedSeat.endTime
                             ).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",

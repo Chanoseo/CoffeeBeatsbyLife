@@ -34,7 +34,7 @@ export interface FullOrder {
   displayId?: string;
   user?: { name?: string | null };
   totalAmount: number;
-  seat?: string | null;
+  seats?: string | null;
   time?: string | null;
   status: string;
   guest: number;
@@ -61,7 +61,10 @@ function PastOrders({ searchInput }: PastOrdersProps) {
   const [selectedOrder, setSelectedOrder] = useState<FullOrder | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const today = new Date();
-    return today.toISOString().split("T")[0]; // default: current date
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`; // YYYY-MM-DD
   });
 
   useEffect(() => {
@@ -106,9 +109,9 @@ function PastOrders({ searchInput }: PastOrdersProps) {
           aVal = new Date(a.createdAt).getTime();
           bVal = new Date(b.createdAt).getTime();
           break;
-        case "seat":
-          aVal = a.seat ?? "";
-          bVal = b.seat ?? "";
+        case "seats":
+          aVal = a.seats ?? "";
+          bVal = b.seats ?? "";
           break;
         case "status":
           aVal = a.status;
@@ -159,7 +162,7 @@ function PastOrders({ searchInput }: PastOrdersProps) {
           order.displayId ?? "",
           order.user?.name ?? "",
           `₱${order.totalAmount.toFixed(2)}`,
-          order.seat ?? "",
+          order.seats ?? "",
           order.status,
         ].some((field) => field.toLowerCase().includes(query))
       );
@@ -201,22 +204,13 @@ function PastOrders({ searchInput }: PastOrdersProps) {
               className="dashboard-customer-th-style cursor-pointer"
               onClick={() => handleSort("time")}
             >
-              Reservation Details{" "}
+              Reservation Time{" "}
               <FontAwesomeIcon
                 icon={getSortIcon("time")}
                 className="ml-1 text-sm"
               />
             </th>
-            <th
-              className="dashboard-customer-th-style cursor-pointer"
-              onClick={() => handleSort("createdAt")}
-            >
-              Order Date{" "}
-              <FontAwesomeIcon
-                icon={getSortIcon("createdAt")}
-                className="ml-1 text-sm"
-              />
-            </th>
+            <th className="dashboard-customer-th-style">Order Date</th>
             <th className="dashboard-customer-th-style">Status</th>
           </tr>
         </thead>
@@ -253,9 +247,8 @@ function PastOrders({ searchInput }: PastOrdersProps) {
                   <td className="dashboard-customer-td-style">
                     ₱{order.totalAmount.toFixed(2)}
                   </td>
-                  <td className="dashboard-customer-td-style">
-                    {order.seat || "-"}
-                    {timeStr !== "-" ? `, ${timeStr}` : ""}
+                  <td className="dashboard-customer-td-style whitespace-nowrap overflow-hidden text-ellipsis">
+                    {timeStr !== "-" ? timeStr : "-"}
                   </td>
                   <td className="dashboard-customer-td-style">{dateStr}</td>
                   <td className="dashboard-customer-td-style rounded-r-2xl">
@@ -267,7 +260,7 @@ function PastOrders({ searchInput }: PastOrdersProps) {
           ) : (
             <tr>
               <td colSpan={6} className="py-6 text-gray-500">
-                No past orders found
+                No orders found
               </td>
             </tr>
           )}

@@ -14,6 +14,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+type OrderSeat = {
+  seat: { id: string; name: string };
+  startTime: string;
+  endTime: string;
+};
+
 type OrderItem = {
   product: { name: string; price: number; imageUrl: string };
   quantity: number;
@@ -23,6 +29,7 @@ type OrderItem = {
 
 type Order = {
   id: string;
+  orderSeats: OrderSeat[];
   seat: { id: string; name: string } | null;
   time: string | null;
   totalAmount: number;
@@ -38,6 +45,8 @@ function OrderDetails() {
   const orderId = searchParams?.get("id") ?? null;
   const [order, setOrder] = useState<Order | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
@@ -104,19 +113,27 @@ function OrderDetails() {
   ];
 
   const downloadConfirmation = async () => {
-    if (!order) return;
+    if (!order || isDownloading) return;
 
-    const res = await fetch(`/api/orders/${order.id}/receipt`);
-    if (!res.ok) return alert("Failed to download confirmation");
+    setIsDownloading(true);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/receipt`);
+      if (!res.ok) return alert("Failed to download confirmation");
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `confirmation-${order.id}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `confirmation-${order.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to download confirmation.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -205,9 +222,10 @@ function OrderDetails() {
                 <button
                   onClick={downloadConfirmation}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
+                  disabled={isDownloading}
                 >
                   <FontAwesomeIcon icon={faDownload} />
-                  Download Confirmation
+                  {isDownloading ? "Downloading..." : "Download Confirmation"}
                 </button>
               )}
 
@@ -240,6 +258,10 @@ function OrderDetails() {
                           </button>
                           <button
                             onClick={async () => {
+                              if (isCancelling) return; // prevent multiple clicks
+
+                              setIsCancelling(true);
+
                               try {
                                 const res = await fetch(
                                   `/api/orders/${order.id}`,
@@ -253,18 +275,23 @@ function OrderDetails() {
                                     }),
                                   }
                                 );
+
                                 if (!res.ok)
                                   throw new Error("Failed to cancel order");
+
                                 setOrder({ ...order, status: "Canceled" });
                                 setShowCancelModal(false);
                               } catch (err) {
                                 console.error(err);
                                 alert("Failed to cancel order.");
+                              } finally {
+                                setIsCancelling(false);
                               }
                             }}
                             className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                            disabled={isCancelling}
                           >
-                            Yes, Cancel
+                            {isCancelling ? "Cancelling..." : "Yes, Cancel"}
                           </button>
                         </div>
                       </div>
@@ -300,10 +327,14 @@ function OrderDetails() {
             </div>
 
             <div className="flex flex-col">
-              <span className="text-sm text-gray-500">Seat</span>
-              <span className="text-gray-800 font-medium">
-                {order.seat?.name ?? "Not selected"}
-              </span>
+              <span className="text-sm text-gray-500">Seats</span>
+              {order.orderSeats && order.orderSeats.length > 0 ? (
+                <span className="text-gray-800 font-medium">
+                  {order.orderSeats.map((os) => os.seat.name).join(", ")}
+                </span>
+              ) : (
+                <span className="text-gray-500">No seats selected</span>
+              )}
             </div>
 
             <div className="flex flex-col">

@@ -5,11 +5,11 @@ import { faExpand, faUser, faX } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 
-interface Order {
+interface OrderSeat {
   id: string;
-  status: string;
   startTime: string;
   endTime: string;
+  order: { status: string };
 }
 
 interface WalkIn {
@@ -24,15 +24,15 @@ interface Seat {
   name: string;
   status: string;
   capacity: number;
-  imageUrl?: string; // ✅ Add this
-  description?: string; // ✅ Add this
-  orders: Order[];
-  walkIns: WalkIn[]; // ✅ add this
+  imageUrl?: string;
+  description?: string;
+  orderSeats: OrderSeat[];
+  walkIns: WalkIn[];
 }
 
 interface Props {
-  selectedSeat: string | null;
-  setSelectedSeat: (seatId: string | null) => void;
+  selectedSeats: string[];
+  setSelectedSeats: React.Dispatch<React.SetStateAction<string[]>>;
   selectedTime: string | null;
   setSelectedTime: (time: string | null) => void;
   guestCount: number;
@@ -40,8 +40,8 @@ interface Props {
 }
 
 function SeatReservation({
-  selectedSeat,
-  setSelectedSeat,
+  selectedSeats,
+  setSelectedSeats,
   selectedTime,
   setSelectedTime,
   guestCount,
@@ -52,7 +52,7 @@ function SeatReservation({
   const [previewSeat, setPreviewSeat] = useState<Seat | null>(null);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
-  // ✅ Fetch seats
+  //Fetch seats
   useEffect(() => {
     const fetchSeats = async () => {
       try {
@@ -71,32 +71,25 @@ function SeatReservation({
       }
     };
 
-    fetchSeats(); // ✅ initial fetch
+    fetchSeats(); //initial fetch
 
-    // ✅ Poll every 5 seconds for real-time updates
+    //Poll every 5 seconds for real-time updates
     const interval = setInterval(fetchSeats, 5000);
 
-    return () => clearInterval(interval); // ✅ cleanup
+    return () => clearInterval(interval); //cleanup
   }, []);
 
-  // ✅ Unselect seat if guest count doesn’t match its capacity
+  // Reset selection if time changes
   useEffect(() => {
-    if (selectedSeat) {
-      const seat = seats.find((s) => s.id === selectedSeat);
-      if (seat) {
-        const capacityMismatch = guestCount !== seat.capacity;
-        if (capacityMismatch) {
-          setSelectedSeat(null);
-        }
-      }
-    }
-  }, [guestCount, seats, selectedSeat, setSelectedSeat]);
-
-  // Unselect seat only when time changes
-  useEffect(() => {
-    setSelectedSeat(null);
+    setSelectedSeats([]);
     setPreviewSeat(null);
-  }, [selectedTime, setSelectedSeat]);
+  }, [selectedTime, setSelectedSeats]);
+
+  // Reset selection if guest count changes
+  useEffect(() => {
+    setSelectedSeats([]);
+    setPreviewSeat(null);
+  }, [guestCount, setSelectedSeats]);
 
   if (loading) return <p className="text-center">Loading seats...</p>;
 
@@ -167,11 +160,7 @@ function SeatReservation({
             value={guestCount || ""}
             onChange={(e) => {
               const value = e.target.value;
-              if (value === "") {
-                setGuestCount(0); // ✅ keep it empty visually
-              } else {
-                setGuestCount(Number(value));
-              }
+              setGuestCount(value === "" ? 0 : Number(value));
             }}
             className="border border-gray-300 rounded-lg p-3 outline-none bg-white text-gray-800"
           />
@@ -190,7 +179,7 @@ function SeatReservation({
         </div>
         <div className="flex items-center gap-2">
           <span className="w-4 h-4 rounded-full bg-red-500 border border-gray-400"></span>
-          <span className="text-gray-600 text-sm">Reserved</span>
+          <span className="text-gray-600 text-sm">Reserved / Unavailable</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-4 h-4 rounded-full bg-blue-500 border border-gray-400"></span>
@@ -271,20 +260,20 @@ function SeatReservation({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {seats.length > 0 ? (
           seats.map((seat) => {
-            const isSelected = selectedSeat === seat.id;
+            const isSelected = selectedSeats.includes(seat.id);
 
-            let hasOrderConflict = false; // red → fully inside reserved time
-            let hasWalkInConflict = false; // blue → fully inside walk-in
-            let isUnavailable = false; // gray → partially overlaps future reservation/walk-in
-            // const now = new Date();
+            let hasOrderConflict = false;
+            let hasWalkInConflict = false;
+            let isUnavailable = false;
 
             const isOccupied = selectedTime
-              ? seat.orders.some((order) => {
-                  const start = new Date(order.startTime);
-                  const end = new Date(order.endTime);
+              ? seat.orderSeats.some((os) => {
+                  const start = new Date(os.startTime);
+                  const end = new Date(os.endTime);
                   const selected = new Date(selectedTime);
+                  const status = os.order?.status?.toLowerCase?.() || "";
                   return (
-                    order.status === "Completed" &&
+                    status === "completed" &&
                     selected >= start &&
                     selected < end
                   );
@@ -306,11 +295,12 @@ function SeatReservation({
               }
 
               // RED: selectedStart inside reservation
-              hasOrderConflict = seat.orders.some((order) => {
-                if (order.status === "Canceled") return false; 
-                const orderStart = new Date(order.startTime);
-                const orderEnd = new Date(order.endTime);
-                return selectedStart >= orderStart && selectedStart < orderEnd;
+              hasOrderConflict = seat.orderSeats.some((os) => {
+                const status = os.order?.status?.toLowerCase?.() || "";
+                if (status === "canceled") return false;
+                const seatStart = new Date(os.startTime);
+                const seatEnd = new Date(os.endTime);
+                return selectedStart >= seatStart && selectedStart < seatEnd;
               });
 
               // BLUE: selectedStart inside walk-in
@@ -322,45 +312,54 @@ function SeatReservation({
                 );
               });
 
-              // GRAY: partially overlaps any reservation/walk-in but not fully inside
+              // RED: partially overlaps any reservation/walk-in
               if (!hasOrderConflict && !hasWalkInConflict) {
-                const allBookings = [...seat.orders, ...(seat.walkIns ?? [])];
+                const allBookings = [
+                  ...seat.orderSeats.map((os) => ({
+                    startTime: os.startTime,
+                  })),
+                  ...(seat.walkIns ?? []),
+                ];
                 isUnavailable = allBookings.some((booking) => {
                   const start = new Date(booking.startTime);
-                  // partial overlap: selectedStart before booking start but selectedEnd overlaps booking start
                   return selectedStart < start && selectedEnd > start;
                 });
               }
             }
 
-            // Disable seat if fully conflicted or partially conflicted
-            const capacityMismatch = guestCount !== seat.capacity;
+            // Seat is considered "would exceed" when selecting it
+            const currentSelectedCapacity = selectedSeats.reduce(
+              (sum, seatId) => {
+                const s = seats.find((s) => s.id === seatId);
+                return s ? sum + s.capacity : sum;
+              },
+              0
+            );
+
+            const wouldExceedGuest =
+              guestCount > 0 && currentSelectedCapacity >= guestCount;
+
+            // Disabled logic
             const isDisabled =
               hasOrderConflict ||
               hasWalkInConflict ||
-              capacityMismatch ||
               isUnavailable ||
-              isOccupied;
+              isOccupied ||
+              wouldExceedGuest;
 
             // Seat color
             let seatColorClass = "";
             if (isSelected) {
-              seatColorClass = "bg-green-500 text-white";
-            } else if (isOccupied) {
-              seatColorClass = "bg-blue-100 text-blue-600 cursor-not-allowed"; // occupied (completed order)
-            } else if (hasOrderConflict) {
-              seatColorClass = "bg-red-100 text-red-600 cursor-not-allowed"; // fully reserved
-            } else if (hasWalkInConflict) {
-              seatColorClass = "bg-blue-100 text-blue-600 cursor-not-allowed"; // fully occupied
-            } else if (capacityMismatch) {
-              seatColorClass =
-                "bg-gray-200 text-gray-500 cursor-not-allowed opacity-70"; // ❌ capacity mismatch
-            } else if (isUnavailable) {
-              seatColorClass =
-                "bg-gray-200 text-gray-500 cursor-not-allowed opacity-70"; // partial conflict
+              seatColorClass = "bg-green-500 text-white"; // Selected seat
+            } else if (isOccupied || hasWalkInConflict) {
+              seatColorClass = "bg-blue-100 text-blue-600 cursor-not-allowed"; // Occupied / walk-in
+            } else if (hasOrderConflict || isUnavailable) {
+              seatColorClass = "bg-red-100 text-red-600 cursor-not-allowed"; // Reserved / conflict
+            } else if (wouldExceedGuest) {
+              seatColorClass = "bg-gray-200 text-gray-400 cursor-not-allowed"; // Would exceed guest count
             } else {
               seatColorClass =
-                "bg-white text-gray-800 hover:bg-green-50 cursor-pointer";
+                "bg-white text-gray-800 hover:bg-green-50 cursor-pointer"; // Available
             }
 
             return (
@@ -368,9 +367,20 @@ function SeatReservation({
                 key={seat.id}
                 className={`flex flex-col items-center p-4 rounded-xl border ${seatColorClass}`}
                 onClick={() => {
-                  if (!isDisabled) {
-                    setSelectedSeat(seat.id);
-                    setPreviewSeat(seat); // ✅ update preview
+                  if (!isSelected && isDisabled) return;
+
+                  const currentSeat = seats.find((s) => s.id === seat.id);
+                  if (!currentSeat) return;
+
+                  // Toggle seat selection
+                  if (isSelected) {
+                    setSelectedSeats(
+                      selectedSeats.filter((s) => s !== seat.id)
+                    );
+                    if (previewSeat?.id === seat.id) setPreviewSeat(null);
+                  } else {
+                    setSelectedSeats([...selectedSeats, seat.id]);
+                    setPreviewSeat(currentSeat);
                   }
                 }}
               >

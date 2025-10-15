@@ -175,6 +175,9 @@ model Seat {
 
   orders  Order[]
   walkIns WalkIn[]
+
+  // 🔹 New: multiple orders
+  orderSeats OrderSeat[] // 🔹 add this line
 }
 
 model WalkIn {
@@ -214,6 +217,23 @@ model Order {
   // 🔹 Opposite sides
   ratings   Rating[]
   feedbacks OrderFeedback[]
+
+  // 🔹 New: multiple seats
+  orderSeats OrderSeat[] // 🔹 add this line
+}
+
+model OrderSeat {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  orderId String @db.ObjectId
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  seatId  String @db.ObjectId
+  seat    Seat   @relation(fields: [seatId], references: [id])
+
+  // 🔹 Seat-specific reservation time
+  startTime DateTime
+  endTime   DateTime
+
+  @@unique([orderId, seatId]) // prevents duplicate seats for same order
 }
 
 model OrderItem {
@@ -291,7 +311,7 @@ model CMS {
   qrCodeImagePublicId String?
   paymentNumber       String?
 
-  qrCodeMayaImage String?
+  qrCodeMayaImage         String?
   qrCodeImageMayaPublicId String?
-  paymentMayaNumber String?
+  paymentMayaNumber       String?
 }

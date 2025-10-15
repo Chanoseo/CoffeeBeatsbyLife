@@ -23,6 +23,7 @@ export async function GET(
       where: { id },
       include: {
         items: { include: { product: true } },
+        orderSeats: { include: { seat: true } },
         seat: true,
         user: true,
       },
@@ -120,7 +121,12 @@ export async function GET(
       ["Start Time", formatTime(order.startTime)],
       ["End Time", formatTime(order.endTime)],
       ["Guest", order.guest.toString()],
-      ["Seat", order.seat?.name ?? "Not selected"],
+      [
+        "Seat",
+        order.orderSeats && order.orderSeats.length > 0
+          ? order.orderSeats.map((os) => os.seat.name).join(", ")
+          : "Not selected",
+      ],
       ["Customer", order.user?.name ?? "N/A"],
     ];
 

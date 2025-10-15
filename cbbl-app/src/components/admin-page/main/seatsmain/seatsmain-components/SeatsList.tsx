@@ -5,23 +5,23 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import UpdateSeats from "./UpdateSeats";
 
-interface Order {
-  id: string;
-  startTime: string;
-  endTime: string;
-  status:
-    | "Pending"
-    | "Confirmed"
-    | "Preparing"
-    | "Ready"
-    | "Completed"
-    | "Canceled";
-}
-
 interface WalkIn {
   id: string;
   startTime: string;
   endTime: string;
+}
+
+interface SeatOrderSeatEntry {
+  // supports both shapes: OrderSeat with its own start/end OR legacy nested order
+  startTime?: string;
+  endTime?: string;
+  status?: string;
+  order?: {
+    id: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+  };
 }
 
 interface Seat {
@@ -31,7 +31,7 @@ interface Seat {
   capacity: number;
   imageUrl?: string;
   description?: string;
-  orders?: Order[];
+  orderSeats?: SeatOrderSeatEntry[];
   walkIns?: WalkIn[];
 }
 
@@ -75,6 +75,8 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
     setIsUpdateOpen(true);
   };
 
+  const parseDate = (s?: string) => (s ? new Date(s) : null);
+
   const getSeatStatus = (seat: Seat) => {
     // ✅ If no selected time, treat all seats as available
     if (!selectedTime) return "available";
@@ -83,7 +85,20 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
     const selectedEnd = new Date(selected);
     selectedEnd.setHours(selected.getHours() + 1);
 
-    const orders = seat.orders ?? [];
+    // Build list of reservation intervals using OrderSeat times first,
+    // fallback to nested order times for backward compatibility.
+    const orders = (seat.orderSeats ?? [])
+      .map((os) => {
+        const start = parseDate(os.startTime ?? os.order?.startTime);
+        const end = parseDate(os.endTime ?? os.order?.endTime);
+        const status = os.status ?? os.order?.status ?? "Reserved";
+        return { start, end, status };
+      })
+      .filter((o) => o.start && o.end) as {
+      start: Date;
+      end: Date;
+      status: string;
+    }[];
     const walkIns = seat.walkIns ?? [];
 
     // Helper: check overlap between [selected, selectedEnd] and [start, end]
@@ -93,9 +108,7 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
     // 1️⃣ Completed order overlap → OCCUPIED
     const hasCompletedOverlap = orders.some((order) => {
       if (order.status !== "Completed") return false;
-      const start = new Date(order.startTime);
-      const end = new Date(order.endTime);
-      return overlaps(start, end);
+      return overlaps(order.start, order.end);
     });
     if (hasCompletedOverlap) return "occupied";
 
@@ -103,9 +116,7 @@ function SeatsList({ selectedTime, refreshSignal }: Props) {
     const hasActiveOverlap = orders.some((order) => {
       if (order.status === "Completed" || order.status === "Canceled")
         return false;
-      const start = new Date(order.startTime);
-      const end = new Date(order.endTime);
-      return overlaps(start, end);
+      return overlaps(order.start, order.end);
     });
     if (hasActiveOverlap) return "order";
 

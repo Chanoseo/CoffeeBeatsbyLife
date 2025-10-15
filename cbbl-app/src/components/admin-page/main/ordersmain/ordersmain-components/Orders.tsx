@@ -39,7 +39,7 @@ export interface FullOrder {
   displayId?: string; // formatted ID for UI
   user?: { name?: string | null };
   totalAmount: number;
-  seat?: string | null;
+  seats?: string | null;
   time?: string | null;
   status: string;
   guest: number;
@@ -131,9 +131,9 @@ function Orders({ searchInput }: OrdersProps) {
           aVal = new Date(a.createdAt).getTime();
           bVal = new Date(b.createdAt).getTime();
           break;
-        case "seat":
-          aVal = a.seat ?? "";
-          bVal = b.seat ?? "";
+        case "seats":
+          aVal = a.seats ?? "";
+          bVal = b.seats ?? "";
           break;
         case "status":
           aVal = a.status;
@@ -174,7 +174,7 @@ function Orders({ searchInput }: OrdersProps) {
         order.displayId ?? "",
         order.user?.name ?? "",
         `₱${order.totalAmount.toFixed(2)}`,
-        order.seat ?? "",
+        order.seats ?? "",
         order.time
           ? new Date(order.time).toLocaleTimeString([], {
               hour: "numeric",
@@ -256,7 +256,7 @@ function Orders({ searchInput }: OrdersProps) {
               className="dashboard-customer-th-style cursor-pointer"
               onClick={() => handleSort("time")}
             >
-              Reservation Details{" "}
+              Reservation Time{" "}
               <FontAwesomeIcon
                 icon={getSortIcon("time")}
                 className="ml-1 text-sm"
@@ -309,8 +309,7 @@ function Orders({ searchInput }: OrdersProps) {
                     ₱{order.totalAmount.toFixed(2)}
                   </td>
                   <td className="dashboard-customer-td-style">
-                    {order.seat || "-"}
-                    {timeStr !== "-" ? `, ${timeStr}` : ""}
+                    {timeStr !== "-" ? timeStr : "-"}
                   </td>
                   <td className="dashboard-customer-td-style">{dateStr}</td>
                   <td className="dashboard-customer-td-style rounded-r-2xl">

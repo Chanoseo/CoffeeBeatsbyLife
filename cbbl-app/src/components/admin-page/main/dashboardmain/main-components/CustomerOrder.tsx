@@ -251,8 +251,7 @@ function CustomerOrder() {
                       ₱{order.totalAmount.toFixed(2)}
                     </td>
                     <td className="dashboard-customer-td-style">
-                      {order.seat || "-"}
-                      {timeStr !== "-" ? `, ${timeStr}` : ""}
+                      {timeStr !== "-" ? timeStr : "-"}
                     </td>
                     <td className="dashboard-customer-td-style">{dateStr}</td>
                     <td className="dashboard-customer-td-style rounded-r-2xl">

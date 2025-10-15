@@ -14,12 +14,16 @@ export async function GET() {
     const seats = await prisma.seat.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        orders: {
-          select: {
-            id: true,
-            startTime: true,
-            endTime: true,
-            status: true,
+        orderSeats: {
+          include: {
+            order: {
+              select: {
+                id: true,
+                status: true,
+                startTime: true,
+                endTime: true,
+              },
+            },
           },
         },
         walkIns: {

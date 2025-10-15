@@ -20,6 +20,14 @@ interface WalkIn {
   guest: number;
 }
 
+interface OrderSeat {
+  id: string;
+  startTime: string;
+  endTime: string;
+  order: Order; // includes status
+  seatId: string;
+}
+
 interface Seat {
   id: string;
   name: string;
@@ -29,10 +37,11 @@ interface Seat {
   description?: string;
   orders: Order[];
   walkIns: WalkIn[]; // ✅ added
+  orderSeats: OrderSeat[];
 }
 
 function WalkInsPage() {
-  const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [guestCount, setGuestCount] = useState<number>(1);
 
@@ -87,19 +96,11 @@ function WalkInsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // ✅ Close modal when guest count mismatch
   useEffect(() => {
-    if (selectedSeat) {
-      const seat = seats.find((s) => s.id === selectedSeat);
-      if (seat) {
-        const capacityMismatch = guestCount !== seat.capacity;
-        if (capacityMismatch) {
-          setSelectedSeat(null);
-          setIsModalOpen(false);
-        }
-      }
-    }
-  }, [guestCount, seats, selectedSeat]);
+    setSelectedSeats([]);
+    setPreviewSeat(null);
+    setIsModalOpen(false);
+  }, [guestCount]);
 
   if (loading) return <p className="text-center">Loading seats...</p>;
 
@@ -122,7 +123,9 @@ function WalkInsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded-full bg-red-500 border border-gray-400"></span>
-            <span className="text-gray-600 text-sm">Reserved</span>
+            <span className="text-gray-600 text-sm">
+              Reserved / Unavailable
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded-full bg-blue-500 border border-gray-400"></span>
@@ -130,41 +133,126 @@ function WalkInsPage() {
           </div>
         </div>
 
-        <div className="flex items-center mb-6">
-          {/* Guest Selection */}
-          <label
-            htmlFor="guest"
-            className="text-lg font-semibold text-gray-700 mr-2"
-          >
-            Guests:
-          </label>
-          <input
-            type="number"
-            name="guest"
-            id="guest"
-            min="1"
-            value={guestCount}
-            onChange={(e) => setGuestCount(Number(e.target.value))}
-            className="border border-gray-300 rounded-lg p-3 outline-none bg-white text-gray-800"
-          />
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            {/* Guest Selection */}
+            <label
+              htmlFor="guest"
+              className="text-lg font-semibold text-gray-700 mr-2"
+            >
+              Guests:
+            </label>
+            <input
+              type="number"
+              name="guest"
+              id="guest"
+              min="1"
+              value={guestCount}
+              onChange={(e) => setGuestCount(Number(e.target.value))}
+              className="border border-gray-300 rounded-lg p-3 outline-none bg-white text-gray-800"
+            />
 
-          {/* ✅ Show current time */}
-          <span className="ml-6 text-gray-700 font-medium">
-            Current Time:{" "}
-            {selectedTime
-              ? new Date(selectedTime).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
+            {/* ✅ Show current time */}
+            <span className="ml-6 text-gray-700 font-medium">
+              Current Time:{" "}
+              {selectedTime
+                ? new Date(selectedTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : ""}
+            </span>
+          </div>
+
+          <button
+            className="button-style w-1/6"
+            onClick={async () => {
+              if (!selectedSeats.length || !selectedTime) return;
+
+              // Calculate total capacity of selected seats
+              const totalCapacity = selectedSeats.reduce((sum, seatId) => {
+                const s = seats.find((s) => s.id === seatId);
+                return s ? sum + s.capacity : sum;
+              }, 0);
+
+              // ✅ Validation: check if guestCount exceeds total selected capacity
+              if (guestCount > totalCapacity) {
+                alert(
+                  `Selected seats cannot accommodate ${guestCount} guests. Total seat capacity is ${totalCapacity}. Please select more seats.`
+                );
+                return; // stop execution
+              }
+
+              const now = new Date(selectedTime);
+              const start = new Date(now);
+              const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // +2 hours
+
+              // Distribute guests across selected seats according to capacity
+              let remainingGuests = guestCount;
+              const seatsToCreate = selectedSeats
+                .map((seatId) => {
+                  const seat = seats.find((s) => s.id === seatId)!;
+                  const assigned = Math.min(seat.capacity, remainingGuests);
+                  remainingGuests -= assigned;
+                  return { seatId, guest: assigned };
                 })
-              : ""}
-          </span>
+                .filter((s) => s.guest > 0); // ignore if 0 guests
+
+              const res = await fetch("/api/walkins", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  seatIds: seatsToCreate.map((s) => s.seatId),
+                  guest: seatsToCreate.map((s) => s.guest), // array of guests per seat
+                  startTime: start.toISOString(),
+                  endTime: end.toISOString(),
+                }),
+              });
+
+              const data = await res.json();
+              if (data.success) {
+                alert("Walk-in added successfully!");
+                setIsModalOpen(false);
+
+                // Optimistically update seats locally
+                setSeats((prevSeats) =>
+                  prevSeats.map((seat) => {
+                    const seatAssign = seatsToCreate.find(
+                      (s) => s.seatId === seat.id
+                    );
+                    if (seatAssign) {
+                      return {
+                        ...seat,
+                        walkIns: [
+                          ...(seat.walkIns || []),
+                          {
+                            id: `temp-${Date.now()}`, // temporary ID
+                            startTime: start.toISOString(),
+                            endTime: end.toISOString(),
+                            guest: seatAssign.guest,
+                          },
+                        ],
+                      };
+                    }
+                    return seat;
+                  })
+                );
+
+                setSelectedSeats([]);
+              } else {
+                alert("Failed to add walk-in");
+              }
+            }}
+          >
+            Add
+          </button>
         </div>
 
         {/* Seat Selection */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {seats.length > 0 ? (
             seats.map((seat) => {
-              const isSelected = selectedSeat === seat.id;
+              const isSelected = selectedSeats.includes(seat.id);
 
               let isReservedNow = false;
               let isWalkInNow = false;
@@ -174,36 +262,25 @@ function WalkInsPage() {
                 const now = new Date(selectedTime);
 
                 // ✅ Check reserved and completed orders
-                isReservedNow = seat.orders.some((order) => {
-                  if (!order.startTime || !order.endTime) return false;
-
-                  // ✅ Skip canceled orders
-                  if (order.status === "Canceled") return false;
-
-                  const orderStart = new Date(order.startTime);
-                  const orderEnd = new Date(order.endTime);
-
-                  // 🧩 Mark as occupied if status is Completed and current time overlaps
+                isReservedNow = seat.orderSeats.some((os) => {
+                  const orderStart = new Date(os.startTime);
+                  const orderEnd = new Date(os.endTime);
                   if (
-                    order.status === "Completed" &&
+                    os.order?.status === "Completed" &&
                     orderStart <= now &&
                     now <= orderEnd
                   ) {
                     isOccupiedNow = true;
-                    return false; // skip marking as reserved
+                    return false;
                   }
-
-                  // 🧩 Mark as reserved if active order overlaps
                   if (
                     ["Pending", "Confirmed", "Preparing", "Ready"].includes(
-                      order.status
+                      os.order?.status || ""
                     ) &&
                     orderStart <= now &&
                     now <= orderEnd
-                  ) {
+                  )
                     return true;
-                  }
-
                   return false;
                 });
 
@@ -224,18 +301,32 @@ function WalkInsPage() {
                   selectedStart.getTime() + 2 * 60 * 60 * 1000
                 );
 
-                hasConflict = seat.orders.some((order) => {
-                  if (!order.startTime || !order.endTime) return false;
-                  if (order.status === "Canceled") return false;
-                  const orderStart = new Date(order.startTime);
-                  const orderEnd = new Date(order.endTime);
+                hasConflict = seat.orderSeats.some((os) => {
+                  if (!os.startTime || !os.endTime) return false;
+                  if (os.order?.status === "Canceled") return false;
+                  const orderStart = new Date(os.startTime);
+                  const orderEnd = new Date(os.endTime);
                   return selectedStart < orderEnd && orderStart < selectedEnd;
                 });
               }
 
-              const capacityMismatch = guestCount !== seat.capacity;
+              // Calculate total capacity if this seat is selected
+              const currentCapacity = selectedSeats.reduce((sum, seatId) => {
+                const s = seats.find((s) => s.id === seatId);
+                return s ? sum + s.capacity : sum;
+              }, 0);
+
+              // ✅ Seat is only disabled if selecting it would exceed guest count
+              let wouldExceedGuest = false;
+
+              // Only consider exceeding if there are already selected seats
+              if (selectedSeats.length > 0) {
+                wouldExceedGuest = currentCapacity + seat.capacity > guestCount;
+              }
+
+              // Disabled if reserved, walk-in, conflict, or would exceed guest count
               const isDisabled =
-                hasConflict || capacityMismatch || isReservedNow || isWalkInNow;
+                hasConflict || isReservedNow || isWalkInNow || wouldExceedGuest;
 
               return (
                 <div
@@ -244,34 +335,36 @@ function WalkInsPage() {
                     ${
                       isOccupiedNow || isWalkInNow
                         ? "bg-blue-100 text-blue-600 cursor-not-allowed"
-                        : isReservedNow || hasConflict
+                        : ""
+                    }
+                    ${
+                      isReservedNow || hasConflict
                         ? "bg-red-100 text-red-600 cursor-not-allowed"
-                        : capacityMismatch
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed opacity-70"
+                        : ""
+                    }
+                    ${isSelected ? "bg-green-500 text-white" : ""}
+                    ${
+                      !isSelected && wouldExceedGuest
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                         : ""
                     }
                     ${
-                      isSelected &&
-                      !(isReservedNow || hasConflict || isWalkInNow)
-                        ? "bg-green-500 text-white"
-                        : ""
-                    }
-                    ${
-                      !isDisabled &&
-                      !isSelected &&
-                      !(isReservedNow || hasConflict || isWalkInNow)
+                      !isDisabled && !isSelected
                         ? "bg-white text-gray-800 hover:bg-green-50 cursor-pointer"
                         : ""
                     }
                 `}
                   onClick={() => {
-                    if (
-                      !isDisabled &&
-                      !(isReservedNow || hasConflict || isWalkInNow)
-                    ) {
-                      setSelectedSeat(seat.id);
-                      setIsModalOpen(true);
-                      setPreviewSeat(seat);
+                    if (!isDisabled) {
+                      if (isSelected) {
+                        setSelectedSeats((prev) =>
+                          prev.filter((id) => id !== seat.id)
+                        );
+                      } else {
+                        setSelectedSeats((prev) => [...prev, seat.id]);
+                        setPreviewSeat(seat);
+                        setIsModalOpen(true);
+                      }
                     }
                   }}
                 >
@@ -291,7 +384,7 @@ function WalkInsPage() {
         </div>
 
         {/* ✅ Modal stays same */}
-        {isModalOpen && (
+        {isModalOpen && previewSeat && (
           <div className="fixed left-0 top-0 w-full h-full z-50 flex justify-end bg-black/10">
             <div className="w-full md:w-1/3 bg-white p-6 shadow-lg overflow-auto">
               <div className="flex items-center justify-between mb-4">
@@ -300,7 +393,6 @@ function WalkInsPage() {
                   icon={faX}
                   onClick={() => {
                     setIsModalOpen(false);
-                    setSelectedSeat(null);
                   }}
                   className="text-xl cursor-pointer"
                 />
@@ -412,42 +504,6 @@ function WalkInsPage() {
                   })()}
                 </div>
               )}
-
-              <button
-                className="button-style w-full"
-                onClick={async () => {
-                  if (!selectedSeat || !selectedTime) return;
-
-                  const now = new Date(selectedTime);
-                  const start = new Date(now);
-                  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // +2 hours
-
-                  const res = await fetch("/api/walkins", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      seatId: selectedSeat,
-                      guest: guestCount,
-                      startTime: start.toISOString(),
-                      endTime: end.toISOString(),
-                    }),
-                  });
-
-                  const data = await res.json();
-                  if (data.success) {
-                    alert("Walk-in added successfully!");
-                    setIsModalOpen(false);
-
-                    const refresh = await fetch("/api/seats");
-                    const refreshData = await refresh.json();
-                    if (refreshData.success) setSeats(refreshData.seats);
-                  } else {
-                    alert("Failed to add walk-in");
-                  }
-                }}
-              >
-                Add
-              </button>
             </div>
           </div>
         )}

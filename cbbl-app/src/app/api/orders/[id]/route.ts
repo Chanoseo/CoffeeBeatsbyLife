@@ -28,7 +28,9 @@ export async function GET(
         items: {
           include: { product: true },
         },
+        orderSeats: { include: { seat: true } },
         seat: true,
+        user: true,
       },
     });
 
@@ -54,7 +56,31 @@ export async function PUT(
   try {
     const { id } = await context.params;
     const body = await req.json();
-    const { status, endTime } = body;
+    const { status, endTime, seatId, orderSeatId } = body;
+
+    // If orderSeatId provided -> update only that OrderSeat (seat-specific endTime)
+    if (orderSeatId) {
+      if (!endTime) {
+        return NextResponse.json(
+          { error: "endTime is required when updating an orderSeat" },
+          { status: 400 }
+        );
+      }
+
+      const updatedOrderSeat = await prisma.orderSeat.update({
+        where: { id: orderSeatId },
+        data: {
+          ...(endTime && { endTime: new Date(endTime) }),
+        },
+        include: {
+          order: { include: { user: true } },
+          seat: true,
+        },
+      });
+
+      // return the updated orderSeat (frontend updates local state)
+      return NextResponse.json(updatedOrderSeat, { status: 200 });
+    }
 
     if (!status && !endTime) {
       return NextResponse.json(
@@ -68,8 +94,9 @@ export async function PUT(
       data: {
         ...(status && { status }),
         ...(endTime && { endTime: new Date(endTime) }),
+        ...(seatId && { seatId }), // ✅ update only the selected seat
       },
-      include: { user: true },
+      include: { user: true, seat: true },
     });
 
     // ✅ Send formal email if status changed
@@ -289,9 +316,7 @@ export async function DELETE(
         };
 
         await transporter.sendMail(mailOptions);
-        console.log(
-          `Cancellation email sent to ${existingOrder.user.email}`
-        );
+        console.log(`Cancellation email sent to ${existingOrder.user.email}`);
       } catch (emailError: unknown) {
         if (emailError instanceof Error) {
           console.error(

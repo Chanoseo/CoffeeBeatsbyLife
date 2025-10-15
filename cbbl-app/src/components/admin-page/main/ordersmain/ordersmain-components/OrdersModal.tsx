@@ -104,12 +104,12 @@ function OrdersModal({ order, onClose }: OrdersModalProps) {
           <div className="flex items-center gap-4">
             <FontAwesomeIcon
               icon={faTrash}
-              className="text-red-500 cursor-pointer hover:text-red-600"
+              className="text-red-500 cursor-pointer text-xl hover:text-red-600"
               onClick={deleteOrder}
             />
             <FontAwesomeIcon
               icon={faX}
-              className="text-gray-500 cursor-pointer hover:text-gray-900"
+              className="text-gray-500 cursor-pointer text-xl hover:text-gray-900"
               onClick={onClose}
             />
           </div>
@@ -199,7 +199,7 @@ function OrdersModal({ order, onClose }: OrdersModalProps) {
                   Selected Seat:
                 </span>{" "}
                 <span className="font-semibold text-gray-800">
-                  {order.seat || "-"}
+                  {order.seats || "-"}
                 </span>
               </p>
               {/* Optional guest count if available */}

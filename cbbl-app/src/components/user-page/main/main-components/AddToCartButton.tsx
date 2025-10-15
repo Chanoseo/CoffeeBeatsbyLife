@@ -49,6 +49,7 @@ export default function AddToCartButton({
   const [isOpen, setIsOpen] = useState(false);
   const [size, setSize] = useState("small");
   const [quantity, setQuantity] = useState<string>("1");
+  const [isAdding, setIsAdding] = useState(false);
 
   // ✅ Compute price based on selected size (add medium/large price to base price)
   const displayPrice = (() => {
@@ -65,6 +66,9 @@ export default function AddToCartButton({
   })();
 
   const handleAddToCart = async () => {
+    if (isAdding) return;
+    setIsAdding(true);
+
     try {
       type CartRequestBody =
         | { productId: string; quantity: number }
@@ -104,6 +108,8 @@ export default function AddToCartButton({
       setIsOpen(false);
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -212,8 +218,9 @@ export default function AddToCartButton({
             <button
               onClick={handleAddToCart}
               className="button-style mt-6 w-full"
+              disabled={isAdding}
             >
-              Confirm Add to Cart
+              {isAdding ? "Adding..." : "Confirm Add to Cart"}
             </button>
           </div>
         </div>
