@@ -31,6 +31,10 @@ body {
 .recharts-surface:focus {
   outline: none;
 }
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 @layer components {
   .line-hover {

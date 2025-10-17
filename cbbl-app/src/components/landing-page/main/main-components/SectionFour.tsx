@@ -68,7 +68,7 @@ function SectionFour() {
         <div className="w-full flex flex-col justify-center items-center">
           <FontAwesomeIcon
             icon={faLocationDot}
-            className="md:text-6xl lg:text-7xl text-5xl text-[#3C604C]"
+            className="md:text-6xl lg:text-6xl text-5xl text-[#3C604C]"
           />
           <h1 className="md:text-xl mt-2 text-lg font-bold">Our Location</h1>
           <p className="lg:text-base mt-5 text-sm">
@@ -79,7 +79,7 @@ function SectionFour() {
         <div className="w-full flex flex-col justify-center items-center">
           <FontAwesomeIcon
             icon={faPhone}
-            className="md:text-6xl lg:text-7xl text-5xl text-[#3C604C]"
+            className="md:text-6xl lg:text-6xl text-5xl text-[#3C604C]"
           />
           <h1 className="md:text-xl mt-2 text-lg font-bold">Call Us</h1>
           <p className="lg:text-base mt-5 text-sm">
@@ -90,7 +90,7 @@ function SectionFour() {
         <div className="w-full flex flex-col justify-center items-center">
           <FontAwesomeIcon
             icon={faEnvelope}
-            className="md:text-6xl lg:text-7xl text-5xl text-[#3C604C]"
+            className="md:text-6xl lg:text-6xl text-5xl text-[#3C604C]"
           />
           <h1 className="md:text-xl mt-2 text-lg font-bold">Email Us</h1>
           <p className="lg:text-base mt-5 text-sm">

@@ -97,23 +97,23 @@ function Seat() {
   if (loading) return <p className="text-center">Loading seats...</p>;
 
   return (
-    <div className="px-40 py-25 text-brown">
+    <div className="px-4 py-10 md:px-10 md:py-20 lg:px-40 lg:py-25 text-brown">
       <div className="flex flex-col">
         {/* Seat Status Legend */}
-        <div className="flex justify-center gap-6 mb-6">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap md:flex-row justify-center gap-6 mb-6">
+          <div className="flex items-center gap-2 p-1">
             <span className="w-4 h-4 rounded-full bg-white border border-gray-400"></span>
             <span className="text-gray-600 text-sm">Available</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-1">
             <span className="w-4 h-4 rounded-full bg-green-500 border border-gray-400"></span>
             <span className="text-gray-600 text-sm">Selected</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-1">
             <span className="w-4 h-4 rounded-full bg-red-500 border border-gray-400"></span>
             <span className="text-gray-600 text-sm">Reserved</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-1">
             <span className="w-4 h-4 rounded-full bg-blue-500 border border-gray-400"></span>
             <span className="text-gray-600 text-sm">Occupied</span>
           </div>
@@ -218,10 +218,11 @@ function Seat() {
             )}
 
             <div className="flex flex-col gap-1 w-full text-center">
-              <p className="text-gray-600 text-sm">
-                {previewSeat.description ||
-                  "Comfortable seating with premium view"}
-              </p>
+              {previewSeat.description && (
+                <p className="text-gray-600 text-sm">
+                  {previewSeat.description}
+                </p>
+              )}
               <span className="inline-block bg-[#3C604C]/10 text-[#3C604C] px-3 py-1 rounded-full text-sm font-medium">
                 Capacity: {previewSeat.capacity} People
               </span>

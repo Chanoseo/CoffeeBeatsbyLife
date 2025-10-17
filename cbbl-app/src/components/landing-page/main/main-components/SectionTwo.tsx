@@ -58,7 +58,7 @@ Welcome to a place where life slows down, and every sip is a step in the journey
       </div>
       <div className="lg:flex-row flex flex-col-reverse justify-center items-center gap-4">
         {/* Content */}
-        <div className="lg:w-2/5 md:text-left w-full text-center">
+        <div className="lg:w-2/5 lg:text-left w-full text-justify">
           {data.landingSecTwoContent &&
             data.landingSecTwoContent.split("\n").map((paragraph, i) => (
               <p key={i} className="mb-3 leading-relaxed">
