@@ -103,7 +103,7 @@ function UserPageHeader() {
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end text-brown">
           <div className="w-3/4 max-w-xs bg-white h-full shadow-lg flex flex-col p-6 gap-6 animate-slide-left">
             <button className="self-end text-2xl" onClick={toggleMenu}>
               <FontAwesomeIcon icon={faX} />

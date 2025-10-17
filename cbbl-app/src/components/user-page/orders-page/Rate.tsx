@@ -229,7 +229,7 @@ function Rate({
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
               : !isAllRated
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-red-500 text-white"
+              : "bg-[#3C604C] text-white"
           }`}
           disabled={alreadyRated || !isAllRated}
         >

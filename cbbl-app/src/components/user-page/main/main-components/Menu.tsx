@@ -114,7 +114,7 @@ function Menu({
     return <p className="p-4 text-gray-600">No products match your search</p>;
 
   return (
-    <div className="w-full p-4 bg-[#3C604C]/10 rounded custom-scrollbar">
+    <div className="w-full p-4 bg-[rgba(60,96,76,0.1)] rounded custom-scrollbar">
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,auto))] gap-4 justify-center">
         {sortedProducts.map((product) => (
           <div

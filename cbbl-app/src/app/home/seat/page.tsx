@@ -20,7 +20,7 @@ export default function UserHomePage() {
       <UserPageHeader />
 
       {/* Main content */}
-      <div className="flex-grow">
+      <div className="flex-grow bg-white">
         <Seat />
       </div>
 

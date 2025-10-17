@@ -125,9 +125,9 @@ function Payment({ setPaymentProof }: Props) {
         {!screenshot && (
           <label
             htmlFor="file-upload"
-            className="flex flex-col items-center justify-center p-6 md:p-0 w-full h-32 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-[#3C604C] transition-colors bg-gray-50 dark:bg-gray-700"
+            className="flex flex-col items-center justify-center p-6 md:p-0 w-full h-32 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-[#3C604C] transition-colors bg-gray-50"
           >
-            <span className="text-gray-500 dark:text-gray-200">
+            <span className="text-gray-500">
               Drag & Drop your file here or click to browse
             </span>
             <input

@@ -123,7 +123,7 @@ function SectionOne() {
       <div className="flex flex-col justify-center">
         <div className="flex gap-4 items-center justify-end">
           {/* Search Menu */}
-          <div className="relative">
+          <div className="relative w-full">
             <input
               type="text"
               placeholder="Search menu items..."
@@ -160,7 +160,7 @@ function SectionOne() {
         />
 
         {/* Navigation */}
-        <nav className="bg-[#3C604C]/10 mt-6 p-4 w-full rounded">
+        <nav className="bg-[rgba(60,96,76,0.1)] mt-6 p-4 w-full rounded">
           <div className="overflow-x-auto scrollbar-hide">
             <ul className="flex flex-nowrap gap-3">
               <li>

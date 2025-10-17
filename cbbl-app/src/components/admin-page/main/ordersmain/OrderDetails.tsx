@@ -140,7 +140,7 @@ function OrderDetails() {
     <>
       <UserPageHeader />
 
-      <main className="px-4 py-10 md:px-10 md:py-20 lg:px-40 lg:py-25 space-y-6">
+      <main className="px-4 py-10 md:px-10 md:py-20 lg:px-40 lg:py-25 space-y-6 bg-white">
         {/* Progress Icons Section */}
         <section className="flex flex-wrap justify-center gap-4 md:gap-6 py-4">
           {steps.map((step, index) => {

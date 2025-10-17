@@ -88,9 +88,9 @@ function Header() {
 
       {/* ✅ Mobile Menu */}
       <div
-        className={`fixed top-0 left-0 w-full h-full bg-white shadow-md z-40 lg:hidden
-    transition-transform duration-500 ease-in-out
-    ${isMenuOpen ? "translate-y-0" : "-translate-y-full"}`}
+        className={`fixed top-0 left-0 text-brown w-full h-full bg-white shadow-md z-40 lg:hidden
+                    transition-transform duration-500 ease-in-out
+                    ${isMenuOpen ? "translate-y-0" : "-translate-y-full"}`}
         style={{ pointerEvents: isMenuOpen ? "auto" : "none" }}
       >
         <div className="flex flex-col items-center justify-center h-full gap-10 text-lg font-medium">

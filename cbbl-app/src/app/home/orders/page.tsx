@@ -19,7 +19,7 @@ function OrdersPage() {
       <UserPageHeader />
 
       {/* Main content grows to fill available space */}
-      <main className="flex-grow">
+      <main className="flex-grow bg-white">
         <OrdersPageMain />
       </main>
 

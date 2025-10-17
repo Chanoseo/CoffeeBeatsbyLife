@@ -164,7 +164,7 @@ function SectionThree() {
 
   return (
     <section
-      className="md:px-30 bg-[#E4E0D6]/20 py-10 px-5 text-center text-brown"
+      className="md:px-30 bg-[rgba(228,224,214,0.2)] py-10 px-5 text-center text-brown"
       id="menu"
     >
       <div className="mb-10">

@@ -33,7 +33,7 @@ function RateButton({
 
       {open && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg relative w-[28rem] max-h-[90vh] overflow-y-auto">
+          <div className="bg-white p-6 md:rounded-xl shadow-lg relative w-full h-full md:w-[28rem] md:max-h-[90vh] overflow-y-auto scrollbar-hide">
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-xl">Feedback</h1>
               <FontAwesomeIcon icon={faX} onClick={() => setOpen(false)} />
