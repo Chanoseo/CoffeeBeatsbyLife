@@ -140,9 +140,9 @@ function OrderDetails() {
     <>
       <UserPageHeader />
 
-      <main className="max-w-5xl mx-auto p-6 space-y-6">
+      <main className="px-4 py-10 md:px-10 md:py-20 lg:px-40 lg:py-25 space-y-6">
         {/* Progress Icons Section */}
-        <section className="flex items-center justify-center gap-6">
+        <section className="flex flex-wrap justify-center gap-4 md:gap-6 py-4">
           {steps.map((step, index) => {
             const isActive = order.status === step.status;
             const currentIndex = steps.findIndex(
@@ -164,21 +164,28 @@ function OrderDetails() {
               : "text-gray-400";
 
             return (
-              <div key={step.status} className="flex items-center gap-6">
+              <div
+                key={step.status}
+                className="flex items-center gap-2 md:gap-6 mb-4 md:mb-0"
+              >
                 <div className="flex flex-col items-center">
                   <div
                     className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition ${stepStyle}`}
                   >
-                    <FontAwesomeIcon icon={step.icon} className="w-6 h-6" />
+                    <FontAwesomeIcon
+                      icon={step.icon}
+                      className="w-4 h-4 md:w-6 md:h-6"
+                    />
                   </div>
                   <p
-                    className={`mt-2 text-xs font-medium text-center w-20 truncate ${textColor}`}
+                    className={`mt-1 md:mt-2 text-xs md:text-sm font-medium text-center w-16 md:w-20 truncate ${textColor}`}
                   >
                     {step.label}
                   </p>
                 </div>
+
                 {index < steps.length - 1 && (
-                  <div className="flex items-center gap-1 text-gray-400">
+                  <div className="hidden md:flex items-center gap-1 text-gray-400">
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
@@ -215,13 +222,13 @@ function OrderDetails() {
 
         {/* Order Info Card */}
         <section className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Order Details</h1>
-            <div className="flex items-center gap-4">
+            <div className="flex md:items-center gap-4 mt-4 md:mt-0 flex-col-reverse md:flex-row">
               {order.status !== "Pending" && order.status !== "Canceled" && (
                 <button
                   onClick={downloadConfirmation}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
                   disabled={isDownloading}
                 >
                   <FontAwesomeIcon icon={faDownload} />
@@ -234,13 +241,13 @@ function OrderDetails() {
                 <>
                   <button
                     onClick={() => setShowCancelModal(true)}
-                    className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600"
+                    className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 text-center"
                   >
                     Cancel Order
                   </button>
 
                   {showCancelModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                       <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-lg">
                         <h2 className="text-lg font-semibold text-gray-800 mb-4">
                           Cancel Order
@@ -302,7 +309,7 @@ function OrderDetails() {
 
               {/* Status Badge */}
               <span
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+                className={`px-3 py-1.5 rounded-full text-center text-sm font-medium border ${
                   statusStyles[order.status]
                 }`}
               >
@@ -403,36 +410,38 @@ function OrderDetails() {
           <h2 className="text-xl font-semibold mb-4 text-gray-800">
             Pre-Ordered Items
           </h2>
-          <div className="space-y-4">
-            {order.items.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100">
-                    <Image
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-cover"
-                    />
+          <div className="overflow-x-auto md:overflow-x-visible scrollbar-hide">
+            <div className="flex md:grid md:grid-cols-1 md:gap-4 gap-4">
+              {order.items.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex-shrink-0 w-64 md:w-full flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-200 rounded-xl"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="w-full md:w-16 md:h-16 rounded-xl overflow-hidden bg-gray-100">
+                      <Image
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        width={250}
+                        height={250}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">
+                        {item.product.name}
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        Qty: {item.quantity} {item.size && `(${item.size})`}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-800">
-                      {item.product.name}
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      Qty: {item.quantity} {item.size && `(${item.size})`}
-                    </p>
-                  </div>
+                  <p className="font-semibold text-gray-800 mt-2 md:mt-0">
+                    ₱{item.price.toFixed(2)}
+                  </p>
                 </div>
-                <p className="font-semibold text-gray-800">
-                  ₱{item.price.toFixed(2)}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
       </main>

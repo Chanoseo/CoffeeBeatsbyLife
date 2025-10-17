@@ -48,16 +48,18 @@ export default function Step1CartItems({
         return (
           <div
             key={item.id}
-            className="flex justify-between items-center p-3 rounded-lg border border-gray-100 bg-gray-50"
+            className="flex flex-col md:flex-row md:justify-between md:items-center p-3 rounded-lg border border-gray-100 bg-gray-50"
           >
-            <div className="flex items-center gap-3">
-              <Image
-                src={item.product.imageUrl}
-                alt={item.product.name}
-                width={48}
-                height={48}
-                className="w-12 h-12 object-cover rounded-lg"
-              />
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="bg-white border border-gray-200 rounded-xl p-2 flex justify-center md:bg-transparent md:border-none md:p-0">
+                <Image
+                  src={item.product.imageUrl}
+                  alt={item.product.name}
+                  width={100}
+                  height={100}
+                  className="w-20 h-20 md:w-12 md:h-12 object-cover rounded-lg"
+                />
+              </div>
               <div>
                 <p className="font-medium text-gray-800">{item.product.name}</p>
                 <p className="text-sm text-gray-500">
@@ -67,12 +69,12 @@ export default function Step1CartItems({
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-end gap-1">
+            <div className="flex flex-col md:items-end gap-1 mt-4 md:mt-0">
               <p className="font-semibold text-gray-800">
                 ₱{(price * item.quantity).toFixed(2)}
               </p>
               <button
-                className="text-red-500 text-xs hover:underline mt-1"
+                className="text-white md:text-red-500 text-xs hover:underline mt-1 bg-red-500 md:bg-transparent p-2 md:p-0 rounded"
                 onClick={() => onRemove(item.id)}
                 disabled={removingItems[item.id]}
               >

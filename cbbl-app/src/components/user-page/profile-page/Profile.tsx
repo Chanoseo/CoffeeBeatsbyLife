@@ -46,7 +46,9 @@ export default function Profile() {
               src={user.image}
               alt={user.name ?? "User"}
               fill
+              sizes="250px"
               className="rounded-full object-cover"
+              priority
             />
           ) : (
             <div className="w-24 h-24 rounded-full bg-[#3C604C] flex items-center justify-center text-white text-3xl font-bold">

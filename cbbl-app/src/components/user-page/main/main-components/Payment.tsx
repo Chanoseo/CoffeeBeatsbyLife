@@ -121,24 +121,28 @@ function Payment({ setPaymentProof }: Props) {
           Upload Payment Screenshot
         </label>
 
-        <label
-          htmlFor="file-upload"
-          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-[#3C604C] transition-colors bg-gray-50 dark:bg-gray-700"
-        >
-          <span className="text-gray-500 dark:text-gray-200">
-            Drag & Drop your file here or click to browse
-          </span>
-          <input
-            id="file-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </label>
+        {/* Show upload area only if no file is selected */}
+        {!screenshot && (
+          <label
+            htmlFor="file-upload"
+            className="flex flex-col items-center justify-center p-6 md:p-0 w-full h-32 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-[#3C604C] transition-colors bg-gray-50 dark:bg-gray-700"
+          >
+            <span className="text-gray-500 dark:text-gray-200">
+              Drag & Drop your file here or click to browse
+            </span>
+            <input
+              id="file-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
+        )}
 
+        {/* Show uploaded screenshot */}
         {screenshot && (
-          <div className="mt-4 border p-2 rounded-lg w-fit flex justify-center bg-white">
+          <div className="mt-4 border p-2 rounded-lg w-fit flex flex-col items-center bg-white">
             <Image
               loader={() => URL.createObjectURL(screenshot)}
               src={URL.createObjectURL(screenshot)}
@@ -147,6 +151,21 @@ function Payment({ setPaymentProof }: Props) {
               height={400}
               className="max-w-full h-auto rounded-md"
             />
+
+            {/* Secondary input for editing/replacing the image */}
+            <label
+              htmlFor="file-upload"
+              className="mt-2 text-sm bg-[#3C604C] w-full p-2 rounded text-center text-white cursor-pointer hover:bg-[#2c4a3d]"
+            >
+              Change Image
+              <input
+                id="file-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
           </div>
         )}
       </div>

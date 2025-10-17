@@ -13,7 +13,7 @@ export default function UserProfilePage() {
       <UserPageHeader />
 
       {/* Main content */}
-      <main className="flex-grow py-10 px-40">
+      <main className="flex-grow px-4 py-10 md:px-10 md:py-20 lg:px-40 lg:py-25">
         <Profile />
         <Order />
         <Favorite setCartItems={() => {}} setCartCount={() => {}} />

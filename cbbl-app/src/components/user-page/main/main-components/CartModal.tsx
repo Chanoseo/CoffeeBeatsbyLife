@@ -267,8 +267,8 @@ export default function CartModal({
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full flex justify-center items-center bg-black/20 p-4 z-50 overflow-y-auto">
-      <div className="bg-white w-full max-w-3xl h-full p-6 rounded-xl border border-gray-200 flex flex-col">
+    <div className="fixed inset-0 w-full h-full flex justify-center items-center bg-black/20 md:p-4 z-50 overflow-y-auto">
+      <div className="bg-white w-full max-w-3xl h-full p-6 md:rounded-xl border border-gray-200 flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center mb-4 border-b-2 pb-2 border-[#3C604C]">
           <h3 className="font-bold text-xl text-gray-800">
@@ -286,7 +286,7 @@ export default function CartModal({
         </div>
 
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto pr-2">
+        <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide">
           {/* Step 1 */}
           {currentStep === 1 && (
             <CartItems

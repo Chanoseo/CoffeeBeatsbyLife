@@ -168,7 +168,7 @@ function SeatReservation({
       </div>
 
       {/* Seat Status Legend */}
-      <div className="flex justify-center gap-6 mb-6">
+      <div className="flex flex-wrap justify-center gap-6 mb-6">
         <div className="flex items-center gap-2">
           <span className="w-4 h-4 rounded-full bg-white border border-gray-400"></span>
           <span className="text-gray-600 text-sm">Available</span>
@@ -245,10 +245,9 @@ function SeatReservation({
 
           {/* Seat Info */}
           <div className="flex flex-col gap-1 w-full text-center">
-            <p className="text-gray-600 text-sm">
-              {previewSeat.description ||
-                "Comfortable seating with premium view"}
-            </p>
+            {previewSeat.description && (
+              <p className="text-gray-600 text-sm">{previewSeat.description}</p>
+            )}
             <span className="inline-block bg-[#3C604C]/10 text-[#3C604C] px-3 py-1 rounded-full text-sm font-medium">
               Capacity: {previewSeat.capacity || 4} People
             </span>

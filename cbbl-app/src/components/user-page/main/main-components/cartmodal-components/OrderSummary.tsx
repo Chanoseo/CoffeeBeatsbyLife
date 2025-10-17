@@ -66,46 +66,50 @@ export default function OrderSummary({
         <h4 className="font-semibold text-lg text-gray-900 mb-3 border-b border-gray-200 pb-1">
           Selected Items
         </h4>
-        <div className="flex flex-col gap-3">
-          {cartItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex justify-between items-center p-4 border border-gray-200 rounded-xl bg-gray-50"
-            >
-              <div className="flex items-center gap-4">
-                <Image
-                  src={item.product.imageUrl}
-                  alt={item.product.name}
-                  width={56}
-                  height={56}
-                  className="w-14 h-14 object-cover rounded-lg"
-                />
-                <div>
-                  <p className="font-semibold text-gray-800">
-                    {item.product.name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {item.product.type === "DRINK"
-                      ? `Size: ${item.size} | Qty: ${item.quantity}`
-                      : `Qty: ${item.quantity}`}
-                  </p>
+        <div className="overflow-x-auto md:overflow-x-visible scrollbar-hide p-2">
+          <div className="flex gap-4 md:flex-col md:gap-3">
+            {cartItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex-shrink-0 w-64 md:w-full flex flex-col md:flex-row md:justify-between md:items-center p-4 border border-gray-200 rounded-xl bg-gray-50"
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <div className="flex justify-center bg-white p-4 border border-gray-200 rounded-xl md:border-none md:bg-transparent md:p-0">
+                    <Image
+                      src={item.product.imageUrl}
+                      alt={item.product.name}
+                      width={100}
+                      height={100}
+                      className="w-20 h-20 md:w-14 md:h-14 object-cover rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {item.product.name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {item.product.type === "DRINK"
+                        ? `Size: ${item.size} | Qty: ${item.quantity}`
+                        : `Qty: ${item.quantity}`}
+                    </p>
+                  </div>
                 </div>
+                <p className="font-semibold text-gray-900 text-base mt-4 md:mt-0">
+                  ₱
+                  {(() => {
+                    let price = item.product.price;
+                    if (item.product.type === "DRINK" && item.size) {
+                      if (item.size === "medium" && item.product.mediumPrice)
+                        price += item.product.mediumPrice;
+                      else if (item.size === "large" && item.product.largePrice)
+                        price += item.product.largePrice;
+                    }
+                    return (price * item.quantity).toFixed(2);
+                  })()}
+                </p>
               </div>
-              <p className="font-semibold text-gray-900 text-base">
-                ₱
-                {(() => {
-                  let price = item.product.price;
-                  if (item.product.type === "DRINK" && item.size) {
-                    if (item.size === "medium" && item.product.mediumPrice)
-                      price += item.product.mediumPrice;
-                    else if (item.size === "large" && item.product.largePrice)
-                      price += item.product.largePrice;
-                  }
-                  return (price * item.quantity).toFixed(2);
-                })()}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -191,7 +195,7 @@ export default function OrderSummary({
               alt="Expanded payment screenshot"
               width={800}
               height={800}
-              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              className="max-w-full max-h-[80vh] object-contain"
             />
           </div>
         </div>

@@ -85,68 +85,75 @@ function Favorite({ setCartItems, setCartCount }: FavoriteProps) {
       ) : favorites.length === 0 ? (
         <p className="text-gray-600">No favorites yet</p>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 justify-start">
-          {favorites.map((product) => (
-            <div
-              key={product.id}
-              className="relative bg-white rounded-xl shadow-sm shadow-black/20 w-52 h-auto flex flex-col overflow-hidden"
-            >
-              <div className="absolute top-3 right-3 z-10">
-                <FavoriteButton
-                  productId={product.id}
-                  onToggle={(id, isFav) => {
-                    if (!isFav) {
-                      // Remove unfavorited product from the list immediately
-                      setFavorites((prev) => prev.filter((p) => p.id !== id));
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Product Image */}
-              <Image
-                src={product.imageUrl || "/default-image.jpg"}
-                alt={product.name}
-                width={200}
-                height={200}
-                className="w-full h-36 object-cover"
-              />
-
-              {/* Content */}
-              <div className="p-3 h-full flex flex-col gap-3 text-left">
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      {product.name}
-                    </h1>
-
-                    {product.isNew && (
-                      <span className="bg-green-100 text-green-700 text-xs font-medium py-1 px-3 rounded-full">
-                        New
-                      </span>
-                    )}
-
-                    {product.isBestSeller && (
-                      <span className="bg-yellow-100 text-yellow-700 text-xs font-medium py-1 px-3 rounded-full">
-                        Best Seller
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs mt-1 line-clamp-2">
-                    {product.description}
-                  </p>
-                  <p className="mt-2 underline text-xl">₱ {product.price}</p>
+        <div className="overflow-x-auto md:overflow-x-visible scrollbar-hide p-1 md:p-0">
+          <div className="flex gap-4 md:grid md:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] md:gap-4">
+            {favorites.map((product) => (
+              <div
+                key={product.id}
+                className={`relative flex-shrink-0 ${
+                  favorites.length === 1 ? "w-full" : "w-48"
+                } md:w-auto flex flex-col bg-white rounded-xl shadow-sm shadow-black/20 overflow-hidden`}
+              >
+                <div className="absolute top-3 right-3 z-10">
+                  <FavoriteButton
+                    productId={product.id}
+                    onToggle={(id, isFav) => {
+                      if (!isFav) {
+                        // Remove unfavorited product from the list immediately
+                        setFavorites((prev) => prev.filter((p) => p.id !== id));
+                      }
+                    }}
+                  />
                 </div>
 
-                <AddToCartButton
-                  product={product}
-                  setCartItems={setCartItems}
-                  setCartCount={setCartCount}
-                  hasPreOrder={hasPreOrder}
-                />
+                {/* Product Image */}
+                <div className="bg-gray-200">
+                  <Image
+                    src={product.imageUrl || "/default-image.jpg"}
+                    alt={product.name}
+                    width={200}
+                    height={200}
+                    className="w-full h-36 object-cover"
+                    priority
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="p-3 h-full flex flex-col gap-3 text-left">
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="text-lg font-bold text-gray-900">
+                        {product.name}
+                      </h1>
+
+                      {product.isNew && (
+                        <span className="bg-green-100 text-green-700 text-xs font-medium py-1 px-3 rounded-full">
+                          New
+                        </span>
+                      )}
+
+                      {product.isBestSeller && (
+                        <span className="bg-yellow-100 text-yellow-700 text-xs font-medium py-1 px-3 rounded-full">
+                          Best Seller
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs mt-1 line-clamp-2">
+                      {product.description}
+                    </p>
+                  </div>
+                  <p className="mt-2 underline text-xl">₱ {product.price}</p>
+
+                  <AddToCartButton
+                    product={product}
+                    setCartItems={setCartItems}
+                    setCartCount={setCartCount}
+                    hasPreOrder={hasPreOrder}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

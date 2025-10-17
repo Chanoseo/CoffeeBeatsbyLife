@@ -116,7 +116,7 @@ function SectionOne() {
   }, []);
 
   return (
-    <section className="pt-25 pb-10">
+    <section className="pt-15 md:pt-25 md:pb-10">
       {/* Show BusyStatus only if the store is busy */}
       {storeStatus === "busy" && <BusyStatus />}
 
@@ -161,36 +161,38 @@ function SectionOne() {
 
         {/* Navigation */}
         <nav className="bg-[#3C604C]/10 mt-6 p-4 w-full rounded">
-          <ul className="flex flex-wrap gap-3 justify-center">
-            <li>
-              <button
-                className={`rounded-lg py-2 px-5 transition text-sm sm:text-base ${
-                  activeMenu === "All Menu"
-                    ? "bg-[#3C604C] font-semibold text-white"
-                    : "bg-white hover:bg-[#3C604C]/20"
-                }`}
-                onClick={() => setActiveMenu("All Menu")}
-              >
-                All Menu
-              </button>
-            </li>
+          <div className="overflow-x-auto scrollbar-hide">
+            <ul className="flex flex-nowrap gap-3">
+              <li>
+                <button
+                  className={`rounded-lg py-2 px-5 transition text-nowrap text-sm sm:text-base ${
+                    activeMenu === "All Menu"
+                      ? "bg-[#3C604C] font-semibold text-white"
+                      : "bg-white hover:bg-[#3C604C]/20"
+                  }`}
+                  onClick={() => setActiveMenu("All Menu")}
+                >
+                  All Menu
+                </button>
+              </li>
 
-            {!loading &&
-              categories.map((category) => (
-                <li key={category.id}>
-                  <button
-                    className={`rounded-lg py-2 px-5 transition text-sm sm:text-base ${
-                      activeMenu === category.name
-                        ? "bg-[#3C604C] font-semibold text-white"
-                        : "bg-white hover:bg-[#3C604C]/20"
-                    }`}
-                    onClick={() => setActiveMenu(category.name)}
-                  >
-                    {category.name}
-                  </button>
-                </li>
-              ))}
-          </ul>
+              {!loading &&
+                categories.map((category) => (
+                  <li key={category.id}>
+                    <button
+                      className={`rounded-lg py-2 px-5 transition text-nowrap text-sm sm:text-base ${
+                        activeMenu === category.name
+                          ? "bg-[#3C604C] font-semibold text-white"
+                          : "bg-white hover:bg-[#3C604C]/20"
+                      }`}
+                      onClick={() => setActiveMenu(category.name)}
+                    >
+                      {category.name}
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          </div>
         </nav>
       </div>
 

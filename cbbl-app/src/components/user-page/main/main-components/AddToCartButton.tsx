@@ -128,7 +128,7 @@ export default function AddToCartButton({
       </div>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div className="fixed p-4 inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-96 relative">
             {/* Close Button */}
             <div className="flex justify-end mb-4">
@@ -141,13 +141,16 @@ export default function AddToCartButton({
 
             {/* Product Info */}
             <div>
-              <Image
-                src={product.imageUrl || "/default-image.jpg"}
-                alt={product.name}
-                width={180}
-                height={180}
-                className="rounded-xl object-cover w-full h-44"
-              />
+              <div className="bg-gray-200 rounded">
+                <Image
+                  src={product.imageUrl || "/default-image.jpg"}
+                  alt={product.name}
+                  width={180}
+                  height={180}
+                  className="rounded-xl object-cover w-full h-44"
+                  priority
+                />
+              </div>
               <h2 className="text-xl font-semibold mt-4">{product.name}</h2>
               <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                 {product.description}

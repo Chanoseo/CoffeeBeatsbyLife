@@ -61,7 +61,7 @@ function Order() {
             className="bg-white rounded-xl overflow-hidden p-4 flex flex-col gap-4 hover:bg-white"
           >
             {/* Order Header */}
-            <div className="flex justify-between items-center border-b pb-2 mb-2">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center border-b pb-2 mb-2">
               <div>
                 <h2 className="text-lg font-semibold">Your Order</h2>
                 <p className="text-sm">
@@ -87,37 +87,43 @@ function Order() {
             </div>
 
             {/* Order Items */}
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-4">
-              {order.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col gap-2 bg-white rounded-xl border border-gray-200 overflow-hidden"
-                >
-                  {/* Product Image */}
-                  <div className="relative w-full h-28">
-                    <Image
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      fill
-                      className="object-cover rounded-t-xl"
-                    />
-                  </div>
+            <div className="overflow-x-auto md:overflow-x-visible scrollbar-hide">
+              <div className="flex gap-4 md:grid md:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] md:gap-4">
+                {order.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex-shrink-0 ${
+                      order.items.length === 1 ? "w-full" : "w-40"
+                    } md:w-auto flex flex-col gap-2 bg-white rounded-xl border border-gray-200 overflow-hidden`}
+                  >
+                    {/* Product Image */}
+                    <div className="relative w-full h-28 bg-gray-200">
+                      <Image
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        fill
+                        sizes="250px"
+                        className="object-cover rounded-t-xl"
+                        priority
+                      />
+                    </div>
 
-                  {/* Product Info */}
-                  <div className="flex flex-col p-3 gap-1">
-                    <h3 className="text-sm font-semibold text-gray-800">
-                      {item.product.name}
-                    </h3>
-                    <p className="text-xs text-gray-500 line-clamp-2">
-                      {item.product.description}
-                    </p>
-                    <p className="text-sm font-medium text-gray-700 mt-1">
-                      ₱ {item.price.toFixed(2)} x {item.quantity}
-                      {item.size ? ` (${item.size})` : ""}
-                    </p>
+                    {/* Product Info */}
+                    <div className="flex flex-col p-3 gap-1">
+                      <h3 className="text-sm font-semibold text-gray-800">
+                        {item.product.name}
+                      </h3>
+                      <p className="text-xs text-gray-500 line-clamp-2">
+                        {item.product.description}
+                      </p>
+                      <p className="text-sm font-medium text-gray-700 mt-1">
+                        ₱ {item.price.toFixed(2)} x {item.quantity}
+                        {item.size ? ` (${item.size})` : ""}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </Link>
         ))}

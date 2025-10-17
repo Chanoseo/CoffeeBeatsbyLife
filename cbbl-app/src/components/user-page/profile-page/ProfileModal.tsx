@@ -110,8 +110,8 @@ export default function ProfileModal({
   }, [user]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+    <div className="fixed inset-0 flex md:items-center md:justify-center bg-black/50 z-50">
+      <div className="bg-white md:rounded-lg shadow-lg py-10 px-4 md:p-6 w-full md:max-w-md relative">
         <div className="flex flex-col items-center mb-4">
           <div className="w-24 h-24 relative mb-2">
             {previewImage ? (
@@ -120,7 +120,9 @@ export default function ProfileModal({
                 src={previewImage}
                 alt={user.name ?? "User"}
                 fill
+                sizes="250px"
                 className="rounded-full object-cover"
+                priority
               />
             ) : (
               <div className="w-24 h-24 rounded-full bg-[#3C604C] flex items-center justify-center text-white text-3xl font-bold">

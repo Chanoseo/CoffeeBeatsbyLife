@@ -131,6 +131,7 @@ function Menu({
                 width={200}
                 height={200}
                 className="w-full h-36 object-cover"
+                priority
               />
             </div>
 
@@ -156,8 +157,8 @@ function Menu({
                 <p className="text-xs mt-1 line-clamp-2">
                   {product.description}
                 </p>
-                <p className="mt-2 underline text-xl">₱ {product.price}</p>
               </div>
+              <p className="mt-2 underline text-xl">₱ {product.price}</p>
 
               <AddToCartButton
                 product={product}
