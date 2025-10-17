@@ -41,7 +41,7 @@ function UserPageMain() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <main className="px-40 text-brown">
+    <main className="px-4 md:px-10 lg:px-40 text-brown">
       {/* Open or busy -> show SectionOne */}
       {(storeStatus === "open" || storeStatus === "busy") && <SectionOne />}
 
