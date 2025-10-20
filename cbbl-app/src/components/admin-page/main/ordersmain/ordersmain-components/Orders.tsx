@@ -206,12 +206,12 @@ function Orders({ searchInput }: OrdersProps) {
 
   return (
     <section className="products-card">
-      <div className="flex justify-between">
-        <h1 className="text-2xl mb-4">Manage Orders</h1>
+      <div className="flex flex-col md:flex-row justify-between">
+        <h1 className="text-xl md:text-2xl mb-4">Manage Orders</h1>
         <div className="mb-4 relative inline-block">
           <button
             onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
-            className="flex items-center gap-2 border border-gray-200 rounded-lg px-4 py-2 bg-white shadow cursor-pointer"
+            className="flex items-center justify-between w-full gap-2 border border-gray-200 rounded-lg px-4 py-2 bg-white shadow cursor-pointer"
           >
             {statusFilter === "All"
               ? "Filter by Status"
@@ -219,7 +219,7 @@ function Orders({ searchInput }: OrdersProps) {
             <FontAwesomeIcon icon={faAngleDown} />
           </button>
           {filterDropdownOpen && (
-            <ul className="absolute right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-sm z-10 overflow-hidden">
+            <ul className="absolute right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-sm z-40 overflow-hidden">
               <li
                 onClick={() => {
                   setStatusFilter("All");
@@ -246,87 +246,91 @@ function Orders({ searchInput }: OrdersProps) {
         </div>
       </div>
 
-      <table className="w-full text-center border-separate border-spacing-y-2 mt-4 bg-white p-4 rounded-xl shadow-sm">
-        <thead>
-          <tr>
-            <th className="dashboard-customer-th-style">Order ID</th>
-            <th className="dashboard-customer-th-style">Customer Name</th>
-            <th className="dashboard-customer-th-style">Amount</th>
-            <th
-              className="dashboard-customer-th-style cursor-pointer"
-              onClick={() => handleSort("time")}
-            >
-              Reservation Time{" "}
-              <FontAwesomeIcon
-                icon={getSortIcon("time")}
-                className="ml-1 text-sm"
-              />
-            </th>
-            <th
-              className="dashboard-customer-th-style cursor-pointer"
-              onClick={() => handleSort("createdAt")}
-            >
-              Order Date{" "}
-              <FontAwesomeIcon
-                icon={getSortIcon("createdAt")}
-                className="ml-1 text-sm"
-              />
-            </th>
-            <th className="dashboard-customer-th-style">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan={6} className="py-6 text-gray-500">
-                Loading orders...
-              </td>
-            </tr>
-          ) : filteredOrders.length ? (
-            filteredOrders.map((order) => {
-              const timeStr = order.time
-                ? new Date(order.time).toLocaleTimeString([], {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })
-                : "-";
-              const dateStr = order.time
-                ? new Date(order.time).toLocaleDateString()
-                : "-";
-              return (
-                <tr
-                  key={order.id}
-                  className={`${getRowColor(order.status)} cursor-pointer`}
-                  onClick={() => setSelectedOrder(order)}
+      <div className="bg-white p-4 rounded-xl shadow-sm mt-4">
+        <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
+          <table className="w-full text-center border-separate border-spacing-y-2">
+            <thead className="sticky top-0 bg-white z-10">
+              <tr>
+                <th className="dashboard-customer-th-style">Order ID</th>
+                <th className="dashboard-customer-th-style">Customer Name</th>
+                <th className="dashboard-customer-th-style">Amount</th>
+                <th
+                  className="dashboard-customer-th-style cursor-pointer"
+                  onClick={() => handleSort("time")}
                 >
-                  <td className="dashboard-customer-td-style rounded-l-2xl">
-                    {order.displayId}
-                  </td>
-                  <td className="dashboard-customer-td-style">
-                    {order.user?.name || "Unknown"}
-                  </td>
-                  <td className="dashboard-customer-td-style">
-                    ₱{order.totalAmount.toFixed(2)}
-                  </td>
-                  <td className="dashboard-customer-td-style">
-                    {timeStr !== "-" ? timeStr : "-"}
-                  </td>
-                  <td className="dashboard-customer-td-style">{dateStr}</td>
-                  <td className="dashboard-customer-td-style rounded-r-2xl">
-                    {order.status}
+                  Reservation Time{" "}
+                  <FontAwesomeIcon
+                    icon={getSortIcon("time")}
+                    className="ml-1 text-sm"
+                  />
+                </th>
+                <th
+                  className="dashboard-customer-th-style cursor-pointer"
+                  onClick={() => handleSort("createdAt")}
+                >
+                  Order Date{" "}
+                  <FontAwesomeIcon
+                    icon={getSortIcon("createdAt")}
+                    className="ml-1 text-sm"
+                  />
+                </th>
+                <th className="dashboard-customer-th-style">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-6 text-gray-500">
+                    Loading orders...
                   </td>
                 </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td colSpan={6} className="py-6 text-gray-500">
-                No orders found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              ) : filteredOrders.length ? (
+                filteredOrders.map((order) => {
+                  const timeStr = order.time
+                    ? new Date(order.time).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : "-";
+                  const dateStr = order.time
+                    ? new Date(order.time).toLocaleDateString()
+                    : "-";
+                  return (
+                    <tr
+                      key={order.id}
+                      className={`${getRowColor(order.status)} cursor-pointer`}
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      <td className="dashboard-customer-td-style rounded-l-2xl">
+                        {order.displayId}
+                      </td>
+                      <td className="dashboard-customer-td-style">
+                        {order.user?.name || "Unknown"}
+                      </td>
+                      <td className="dashboard-customer-td-style">
+                        ₱{order.totalAmount.toFixed(2)}
+                      </td>
+                      <td className="dashboard-customer-td-style">
+                        {timeStr !== "-" ? timeStr : "-"}
+                      </td>
+                      <td className="dashboard-customer-td-style">{dateStr}</td>
+                      <td className="dashboard-customer-td-style rounded-r-2xl">
+                        {order.status}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-6 text-gray-500">
+                    No orders found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {selectedOrder && (
         <OrdersModal

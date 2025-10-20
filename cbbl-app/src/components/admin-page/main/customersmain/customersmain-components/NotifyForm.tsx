@@ -4,9 +4,12 @@ export default function NotifyForm({ onClose }: { onClose: () => void }) {
   const [storeStatus, setStoreStatus] = useState<"open" | "closed" | "busy">(
     "open"
   );
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
 
     try {
       const res = await fetch("/api/notifications", {
@@ -20,15 +23,18 @@ export default function NotifyForm({ onClose }: { onClose: () => void }) {
       if (!res.ok) throw new Error(data.error || "Something went wrong");
 
       console.log("Notification sent:", data.notification);
+      alert("Notification sent successfully!");
       onClose();
     } catch (err) {
       console.error(err);
       alert("Failed to send notification");
+    } finally {
+      setLoading(false); // ✅ Re-enable button
     }
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-lg w-full max-w-md"
@@ -79,8 +85,12 @@ export default function NotifyForm({ onClose }: { onClose: () => void }) {
           >
             Cancel
           </button>
-          <button type="submit" className="button-style">
-            Send
+          <button
+            type="submit"
+            disabled={loading}
+            className="button-style disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Sending..." : "Send"}
           </button>
         </div>
       </form>

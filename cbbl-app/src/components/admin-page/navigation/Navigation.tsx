@@ -80,7 +80,17 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
       `}
       >
         {/* Mobile close button */}
-        <div className="sm:hidden flex justify-end mb-4">
+        <div className="sm:hidden flex items-center justify-between mb-10">
+          <div className="relative w-[40px] h-[40px] flex-shrink-0">
+            <Image
+              src="/cbbl-logo.svg"
+              alt="Logo"
+              fill
+              className="object-contain brightness-0 invert"
+              priority
+            />
+          </div>
+
           {toggleMobile && (
             <FontAwesomeIcon
               icon={faBars}
@@ -92,7 +102,7 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
 
         {/* Logo */}
         <div
-          className={`flex items-center gap-2 mb-7 py-2 px-4 ${
+          className={`hidden md:flex items-center gap-2 mb-7 py-2 px-4 ${
             collapsed ? "justify-center" : "justify-start"
           }`}
         >
@@ -102,6 +112,7 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
               alt="Logo"
               fill
               className="object-contain brightness-0 invert"
+              priority
             />
           </div>
           {!collapsed && <h1 className="text-2xl font-semibold">CBBL</h1>}
@@ -137,7 +148,7 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
 
         {/* Avatar */}
         <div
-          className={`flex items-center mt-8 px-4 ${
+          className={`flex items-center mt-4 px-4 ${
             collapsed ? "justify-center" : "justify-start"
           }`}
           onClick={() => setIsProfileOpen(true)}
@@ -150,6 +161,7 @@ function Navigation({ collapsed, mobileOpen, toggleMobile }: NavigationProps) {
                 fill
                 sizes="40px"
                 className="object-cover rounded-full"
+                priority
               />
             </div>
           ) : (

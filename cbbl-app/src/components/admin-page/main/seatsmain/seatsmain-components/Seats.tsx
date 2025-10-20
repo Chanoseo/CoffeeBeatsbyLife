@@ -42,7 +42,7 @@ function Seats({
       <div className="flex flex-col gap-4 mb-4 md:flex-row md:items-center md:justify-between">
         <h1 className="text-lg lg:text-xl xl:text-2xl">Manage Seats</h1>
 
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-center gap-4">
           {/* Time Selection Dropdown */}
           <div className="flex flex-col">
             <div className="relative">
@@ -57,7 +57,7 @@ function Seats({
                   }
                   setSelectedTime(isoStr);
                 }}
-                className="border border-gray-300 rounded-lg px-4 py-2 outline-none bg-white text-gray-800 appearance-none w-48"
+                className="border w-full md:w-48 border-gray-300 rounded-lg px-4 py-2 outline-none bg-white text-gray-800 appearance-none"
               >
                 <option value="">-- Select Time --</option>
                 {timeOptions.map((time) => {
@@ -98,7 +98,7 @@ function Seats({
           {/* Add Seat Button */}
           <button
             onClick={handleToggle}
-            className="bg-[#3C604C] text-sm text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear w-fit text-nowrap lg:text-base flex items-center"
+            className="bg-[#3C604C] text-sm text-white px-4 py-2 rounded cursor-pointer hover:bg-[#2F4A3A] transition-colors duration-200 ease-linear md:w-fit text-nowrap lg:text-base flex justify-between items-center"
           >
             <span>Add Seat</span>
             <FontAwesomeIcon icon={faPlus} className="ml-2" />

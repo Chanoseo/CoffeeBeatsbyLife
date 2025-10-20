@@ -91,11 +91,11 @@ function OrdersModal({ order, onClose }: OrdersModalProps) {
 
   return (
     <div
-      className="fixed inset-0 w-full h-full flex justify-center items-center bg-black/30 p-4 z-50"
+      className="fixed inset-0 w-full h-full md:flex md:justify-center md:items-center bg-black/30 md:p-4 z-50 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-3xl max-h-[90vh] p-6 rounded-3xl shadow-2xl border border-gray-200 overflow-y-auto"
+        className="bg-white w-full max-w-3xl md:max-h-[90vh] p-6 md:rounded-3xl shadow-2xl border border-gray-200 overflow-y-auto scrollbar-hide"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -117,7 +117,7 @@ function OrdersModal({ order, onClose }: OrdersModalProps) {
 
         <div className="flex flex-col gap-6">
           {/* Status Section */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 overflow-x-auto scrollbar-hide">
             {status === "Canceled" ? (
               <div className="px-4 py-2 rounded-full font-semibold text-white bg-red-500 text-center">
                 Canceled

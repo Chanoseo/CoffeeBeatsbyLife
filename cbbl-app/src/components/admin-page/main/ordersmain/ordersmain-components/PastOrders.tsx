@@ -184,8 +184,8 @@ function PastOrders({ searchInput }: PastOrdersProps) {
 
   return (
     <section className="products-card">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl">Past Orders</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
+        <h1 className="text-xl md:text-2xl mb-4 md:mb-0">Past Orders</h1>
         <input
           type="date"
           value={selectedDate}
@@ -194,78 +194,84 @@ function PastOrders({ searchInput }: PastOrdersProps) {
         />
       </div>
 
-      <table className="w-full text-center border-separate border-spacing-y-2 mt-4 bg-white p-4 rounded-xl shadow-sm">
-        <thead>
-          <tr>
-            <th className="dashboard-customer-th-style">Order ID</th>
-            <th className="dashboard-customer-th-style">Customer Name</th>
-            <th className="dashboard-customer-th-style">Amount</th>
-            <th
-              className="dashboard-customer-th-style cursor-pointer"
-              onClick={() => handleSort("time")}
-            >
-              Reservation Time{" "}
-              <FontAwesomeIcon
-                icon={getSortIcon("time")}
-                className="ml-1 text-sm"
-              />
-            </th>
-            <th className="dashboard-customer-th-style">Order Date</th>
-            <th className="dashboard-customer-th-style">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan={6} className="py-6 text-gray-500">
-                Loading past orders...
-              </td>
-            </tr>
-          ) : filteredOrders.length ? (
-            filteredOrders.map((order) => {
-              const timeStr = order.time
-                ? new Date(order.time).toLocaleTimeString([], {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })
-                : "-";
-              const dateStr = order.time
-                ? new Date(order.time).toLocaleDateString()
-                : "-";
-              return (
-                <tr
-                  key={order.id}
-                  className={`${getRowColor(order.status)} cursor-pointer`}
-                  onClick={() => setSelectedOrder(order)}
+      <div className="bg-white p-4 rounded-xl shadow-sm mt-4">
+        <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
+          <table className="w-full text-center border-separate border-spacing-y-2">
+            <thead className="sticky top-0 bg-white z-10">
+              <tr>
+                <th className="dashboard-customer-th-style">Order ID</th>
+                <th className="dashboard-customer-th-style">Customer Name</th>
+                <th className="dashboard-customer-th-style">Amount</th>
+                <th
+                  className="dashboard-customer-th-style cursor-pointer"
+                  onClick={() => handleSort("time")}
                 >
-                  <td className="dashboard-customer-td-style rounded-l-2xl">
-                    {order.displayId}
-                  </td>
-                  <td className="dashboard-customer-td-style">
-                    {order.user?.name || "Unknown"}
-                  </td>
-                  <td className="dashboard-customer-td-style">
-                    ₱{order.totalAmount.toFixed(2)}
-                  </td>
-                  <td className="dashboard-customer-td-style whitespace-nowrap overflow-hidden text-ellipsis">
-                    {timeStr !== "-" ? timeStr : "-"}
-                  </td>
-                  <td className="dashboard-customer-td-style">{dateStr}</td>
-                  <td className="dashboard-customer-td-style rounded-r-2xl">
-                    {order.status}
+                  Reservation Time{" "}
+                  <FontAwesomeIcon
+                    icon={getSortIcon("time")}
+                    className="ml-1 text-sm"
+                  />
+                </th>
+                <th className="dashboard-customer-th-style">Order Date</th>
+                <th className="dashboard-customer-th-style">Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-6 text-gray-500">
+                    Loading past orders...
                   </td>
                 </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td colSpan={6} className="py-6 text-gray-500">
-                No orders found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              ) : filteredOrders.length ? (
+                filteredOrders.map((order) => {
+                  const timeStr = order.time
+                    ? new Date(order.time).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : "-";
+                  const dateStr = order.time
+                    ? new Date(order.time).toLocaleDateString()
+                    : "-";
+
+                  return (
+                    <tr
+                      key={order.id}
+                      className={`${getRowColor(order.status)} cursor-pointer`}
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      <td className="dashboard-customer-td-style rounded-l-2xl">
+                        {order.displayId}
+                      </td>
+                      <td className="dashboard-customer-td-style">
+                        {order.user?.name || "Unknown"}
+                      </td>
+                      <td className="dashboard-customer-td-style">
+                        ₱{order.totalAmount.toFixed(2)}
+                      </td>
+                      <td className="dashboard-customer-td-style whitespace-nowrap overflow-hidden text-ellipsis">
+                        {timeStr !== "-" ? timeStr : "-"}
+                      </td>
+                      <td className="dashboard-customer-td-style">{dateStr}</td>
+                      <td className="dashboard-customer-td-style rounded-r-2xl">
+                        {order.status}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-6 text-gray-500">
+                    No orders found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {selectedOrder && (
         <OrdersModal
