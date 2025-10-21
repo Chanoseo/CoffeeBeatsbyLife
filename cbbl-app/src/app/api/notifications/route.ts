@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     for (const user of users) {
       try {
         await transporter.sendMail({
-          from: `"Coffee Beats" <${process.env.SMTP_USER}>`,
+          from: `"Coffee Beats By Life" <${process.env.SMTP_USER}>`,
           to: user.email,
           subject: `Store Status Update: ${storeStatus.toUpperCase()}`,
           html: `
@@ -100,7 +100,9 @@ export async function POST(req: Request) {
 
                 <!-- Body -->
                 <div style="padding: 35px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
-                  <p style="color: #555555;">Dear ${user.name || "Valued Customer"},</p>
+                  <p style="color: #555555;">Dear ${
+                    user.name || "Valued Customer"
+                  },</p>
 
                   <p style="color: #555555;">
                     <strong>Current Store Status:</strong> ${storeStatus.toUpperCase()}
