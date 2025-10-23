@@ -198,17 +198,17 @@ function SectionThree() {
                 />
               </div>
               <div className="p-4 flex flex-col justify-between gap-4 text-left h-full">
-                <div>
+                <div className="flex-grow">
                   <h1 className="md:text-xl text-lg font-bold">
                     {product.name}
                   </h1>
                   <p className="md:text-sm text-xs mt-1">
                     {product.description}
                   </p>
-                  <p className="md:text-2xl mt-2 underline text-xl">
-                    ₱ {product.price.toFixed(2)}
-                  </p>
                 </div>
+                <p className="md:text-2xl mt-2 underline text-xl">
+                  ₱ {product.price.toFixed(2)}
+                </p>
                 <OrderNowButton
                   onClick={() => setShowSignIn(true)}
                   text={cmsData.landingSecThreeButtonOne}
